@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { useEffect, useState } from "react"
@@ -22,6 +21,7 @@ interface ElectricityTrackerProps {
   initialTokens: TokenPurchase[]
   initialLatestReading: number
   initialTotalUnits: number
+  dbConnected: boolean
 }
 
 export default function ElectricityTracker({
@@ -29,6 +29,7 @@ export default function ElectricityTracker({
   initialTokens,
   initialLatestReading,
   initialTotalUnits,
+  dbConnected,
 }: ElectricityTrackerProps) {
   const [readings, setReadings] = useState<ElectricityReading[]>(initialReadings)
   const [tokens, setTokens] = useState<TokenPurchase[]>(initialTokens)
@@ -39,7 +40,6 @@ export default function ElectricityTracker({
   const [timeUntilUpdate, setTimeUntilUpdate] = useState<string>("")
   const [showNotification, setShowNotification] = useState(false)
   const [latestReading, setLatestReading] = useState(initialLatestReading)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [totalUnits, setTotalUnits] = useState(initialTotalUnits)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showMigrationAlert, setShowMigrationAlert] = useState(false)
@@ -47,11 +47,26 @@ export default function ElectricityTracker({
 
   // Check for local storage data on component mount
   useEffect(() => {
-    const savedReadings = localStorage.getItem("electricityReadings")
-    const savedTokens = localStorage.getItem("electricityTokens")
+    // If database is not connected, load from local storage
+    if (!dbConnected) {
+      const savedReadings = localStorage.getItem("electricityReadings")
+      const savedTokens = localStorage.getItem("electricityTokens")
 
-    if (savedReadings || savedTokens) {
-      setShowMigrationAlert(true)
+      if (savedReadings) {
+        setReadings(JSON.parse(savedReadings))
+      }
+
+      if (savedTokens) {
+        setTokens(JSON.parse(savedTokens))
+      }
+    } else {
+      // If database is connected, check if we need to migrate
+      const savedReadings = localStorage.getItem("electricityReadings")
+      const savedTokens = localStorage.getItem("electricityTokens")
+
+      if (savedReadings || savedTokens) {
+        setShowMigrationAlert(true)
+      }
     }
 
     // Check if notifications were previously enabled
@@ -62,7 +77,21 @@ export default function ElectricityTracker({
     if (notifEnabled && "Notification" in window) {
       Notification.requestPermission()
     }
-  }, [])
+  }, [dbConnected])
+
+  // Save readings to localStorage if database is not connected
+  useEffect(() => {
+    if (!dbConnected) {
+      localStorage.setItem("electricityReadings", JSON.stringify(readings))
+    }
+  }, [readings, dbConnected])
+
+  // Save tokens to localStorage if database is not connected
+  useEffect(() => {
+    if (!dbConnected) {
+      localStorage.setItem("electricityTokens", JSON.stringify(tokens))
+    }
+  }, [tokens, dbConnected])
 
   // Save notification preference
   useEffect(() => {
@@ -127,22 +156,42 @@ export default function ElectricityTracker({
     return "night"
   }
 
-  // Add a new reading
+  // Add a new reading - with fallback to local storage
   const handleAddReading = async () => {
     if (!currentReading || isNaN(Number(currentReading))) return
 
     try {
       setIsSubmitting(true)
-      const newReading = await addElectricityReading(Number(currentReading))
 
-      // Update local state
-      setReadings((prev) => [...prev, newReading])
-      setLatestReading(Number(currentReading))
+      if (dbConnected) {
+        // Use server action if database is connected
+        const newReading = await addElectricityReading(Number(currentReading))
+
+        // Update local state
+        setReadings((prev) => [...prev, newReading])
+        setLatestReading(Number(currentReading))
+      } else {
+        // Use local storage if database is not connected
+        const now = new Date()
+        const period = getPeriodFromHour(now.getHours())
+
+        const newReading: ElectricityReading = {
+          id: Date.now(),
+          reading_id: `reading-${Date.now()}`,
+          timestamp: now,
+          reading: Number(currentReading),
+          period,
+        }
+
+        setReadings((prev) => [...prev, newReading])
+        setLatestReading(Number(currentReading))
+      }
+
       setCurrentReading("")
 
       toast({
         title: "Reading Added",
-        description: `New reading of ${newReading.reading} kWh has been recorded.`,
+        description: `New reading of ${Number(currentReading)} kWh has been recorded.`,
       })
     } catch (error) {
       console.error("Error adding reading:", error)
@@ -156,22 +205,59 @@ export default function ElectricityTracker({
     }
   }
 
-  // Add a new token purchase
+  // Add a new token purchase - with fallback to local storage
   const handleAddToken = async () => {
     if (!tokenUnits || isNaN(Number(tokenUnits))) return
 
     try {
       setIsSubmitting(true)
-      const newToken = await addTokenPurchase(Number(tokenUnits))
 
-      // Update local state
-      setTokens((prev) => [...prev, newToken])
-      setLatestReading(Number(newToken.new_reading))
+      if (dbConnected) {
+        // Use server action if database is connected
+        const newToken = await addTokenPurchase(Number(tokenUnits))
+
+        // Update local state
+        setTokens((prev) => [...prev, newToken])
+        setLatestReading(Number(newToken.new_reading))
+      } else {
+        // Use local storage if database is not connected
+        const units = Number(tokenUnits)
+        const calculatedNewReading = latestReading + units
+
+        // Create token purchase record
+        const newToken: TokenPurchase = {
+          id: Date.now(),
+          token_id: `token-${Date.now()}`,
+          timestamp: new Date(),
+          units,
+          new_reading: calculatedNewReading,
+        }
+
+        // Add to tokens list
+        setTokens((prev) => [...prev, newToken])
+
+        // Create a new reading entry with the updated meter value
+        const now = new Date()
+        const period = getPeriodFromHour(now.getHours())
+
+        const newReadingEntry: ElectricityReading = {
+          id: Date.now() + 1,
+          reading_id: `token-reading-${Date.now()}`,
+          timestamp: now,
+          reading: calculatedNewReading,
+          period,
+        }
+
+        // Add to readings list
+        setReadings((prev) => [...prev, newReadingEntry])
+        setLatestReading(calculatedNewReading)
+      }
+
       setTokenUnits("")
 
       toast({
         title: "Token Added",
-        description: `${newToken.units} kWh added to your meter.`,
+        description: `${Number(tokenUnits)} kWh added to your meter.`,
       })
     } catch (error) {
       console.error("Error adding token:", error)
@@ -201,7 +287,7 @@ export default function ElectricityTracker({
       // Format data for migration
       const localReadings: ElectricityReading[] = savedReadings
         ? JSON.parse(savedReadings).map((r: any) => ({
-            reading_id: r.id,
+            reading_id: r.id || `reading-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             timestamp: new Date(r.timestamp),
             reading: r.reading,
             period: r.period,
@@ -210,31 +296,39 @@ export default function ElectricityTracker({
 
       const localTokens: TokenPurchase[] = savedTokens
         ? JSON.parse(savedTokens).map((t: any) => ({
-            token_id: t.id,
+            token_id: t.id || `token-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             timestamp: new Date(t.timestamp),
             units: t.units,
-            new_reading: t.newReading,
+            new_reading: t.newReading || t.new_reading,
           }))
         : []
 
-      const success = await migrateFromLocalStorage(localReadings, localTokens)
+      if (dbConnected) {
+        const success = await migrateFromLocalStorage(localReadings, localTokens)
 
-      if (success) {
-        // Clear local storage after successful migration
-        localStorage.removeItem("electricityReadings")
-        localStorage.removeItem("electricityTokens")
+        if (success) {
+          // Clear local storage after successful migration
+          localStorage.removeItem("electricityReadings")
+          localStorage.removeItem("electricityTokens")
 
-        setShowMigrationAlert(false)
+          setShowMigrationAlert(false)
 
-        toast({
-          title: "Data Migrated",
-          description: "Your local data has been successfully migrated to the database.",
-        })
+          toast({
+            title: "Data Migrated",
+            description: "Your local data has been successfully migrated to the database.",
+          })
 
-        // Refresh the page to get the latest data
-        window.location.reload()
+          // Refresh the page to get the latest data
+          window.location.reload()
+        } else {
+          throw new Error("Migration failed")
+        }
       } else {
-        throw new Error("Migration failed")
+        toast({
+          title: "Database Not Connected",
+          description: "Cannot migrate data because database is not connected.",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Migration error:", error)
@@ -247,6 +341,21 @@ export default function ElectricityTracker({
       setIsSubmitting(false)
     }
   }
+
+  // Calculate total units used from readings
+  const calculateTotalUnits = (): number => {
+    if (readings.length < 2) return 0
+
+    // Sort readings by timestamp
+    const sortedReadings = [...readings].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+
+    // Calculate difference between first and last reading
+    return Number(sortedReadings[sortedReadings.length - 1].reading) - Number(sortedReadings[0].reading)
+  }
+
+  useEffect(() => {
+    setTotalUnits(calculateTotalUnits())
+  }, [readings])
 
   return (
     <div className="grid gap-6">

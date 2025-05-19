@@ -1,12 +1,20 @@
 "use server"
 
-import { sql } from "@/lib/db"
+import { sql, isDatabaseConnected,  getPeriodFromHour } from "@/lib/db"
 import type { ElectricityReading, TokenPurchase, UsageSummary, DailyUsage } from "@/lib/types"
-import { getPeriodFromHour } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+
+// Check if database is connected before performing operations
+const checkDbConnection = () => {
+  if (!isDatabaseConnected()) {
+    throw new Error("Database is not connected. Please set the DATABASE_URL environment variable.")
+  }
+}
 
 // Add a new electricity reading
 export async function addElectricityReading(reading: number): Promise<ElectricityReading> {
+  checkDbConnection()
+
   const now = new Date()
   const period = getPeriodFromHour(now.getHours())
   const readingId = `reading-${Date.now()}`
@@ -23,6 +31,8 @@ export async function addElectricityReading(reading: number): Promise<Electricit
 
 // Add a new token purchase
 export async function addTokenPurchase(units: number): Promise<TokenPurchase> {
+  checkDbConnection()
+
   // Get the latest reading
   const latestReading = await getLatestReading()
   const newReading = latestReading + units
@@ -52,6 +62,10 @@ export async function addTokenPurchase(units: number): Promise<TokenPurchase> {
 
 // Get all electricity readings
 export async function getElectricityReadings(): Promise<ElectricityReading[]> {
+  if (!isDatabaseConnected()) {
+    return []
+  }
+
   const readings = await sql`
     SELECT id, reading_id, timestamp, reading, period, created_at
     FROM electricity_readings
@@ -67,6 +81,10 @@ export async function getElectricityReadings(): Promise<ElectricityReading[]> {
 
 // Get all token purchases
 export async function getTokenPurchases(): Promise<TokenPurchase[]> {
+  if (!isDatabaseConnected()) {
+    return []
+  }
+
   const tokens = await sql`
     SELECT id, token_id, timestamp, units, new_reading, created_at
     FROM token_purchases
@@ -82,6 +100,10 @@ export async function getTokenPurchases(): Promise<TokenPurchase[]> {
 
 // Get the latest reading value
 export async function getLatestReading(): Promise<number> {
+  if (!isDatabaseConnected()) {
+    return 0
+  }
+
   const result = await sql`
     SELECT reading
     FROM electricity_readings
@@ -94,6 +116,10 @@ export async function getLatestReading(): Promise<number> {
 
 // Get total units used (difference between first and last reading)
 export async function getTotalUnitsUsed(): Promise<number> {
+  if (!isDatabaseConnected()) {
+    return 0
+  }
+
   const result = await sql`
     SELECT 
       (SELECT reading FROM electricity_readings ORDER BY timestamp ASC LIMIT 1) as first_reading,
@@ -109,6 +135,15 @@ export async function getTotalUnitsUsed(): Promise<number> {
 
 // Get usage summary with daily breakdowns
 export async function getUsageSummary(): Promise<UsageSummary> {
+  if (!isDatabaseConnected()) {
+    return {
+      averageUsage: 0,
+      peakUsageDay: { date: "", usage: 0 },
+      totalTokensPurchased: 0,
+      dailyUsage: [],
+    }
+  }
+
   // Get all readings
   const readings = await getElectricityReadings()
 
@@ -203,7 +238,8 @@ export async function getMonthlyUsage(): Promise<{ month: string; usage: number 
     ORDER BY month
   `
 
-  return result.map((row) => ({
+  const rows = Array.isArray(result) ? result : []
+  return rows.map((row) => ({
     month: row.month,
     usage: Number(row.usage),
   }))
