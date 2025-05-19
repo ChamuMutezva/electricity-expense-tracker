@@ -18,6 +18,30 @@ export interface TokenPurchase {
   created_at?: Date
 }
 
+// Database result types
+export interface ElectricityReadingDBResult {
+  id: number
+  reading_id: string
+  timestamp: string
+  reading: number | string
+  period: string
+  created_at?: string
+}
+
+export interface TokenPurchaseDBResult {
+  id: number
+  token_id: string
+  timestamp: string
+  units: number | string
+  new_reading: number | string
+  created_at?: string
+}
+
+export interface MonthlyUsageDBResult {
+  month: string
+  usage: number | string
+}
+
 // Interfaces for local storage data structure
 export interface LocalStorageElectricityReading {
   id?: string | number
