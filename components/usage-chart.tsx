@@ -2,14 +2,8 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { formatDate } from "@/lib/date-utils"
-
-interface ElectricityReading {
-  id: string
-  timestamp: number
-  reading: number
-  period: "morning" | "evening" | "night"
-}
+import type { ElectricityReading } from "@/lib/types"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface UsageChartProps {
   readings: ElectricityReading[]
@@ -19,6 +13,7 @@ export default function UsageChart({ readings }: UsageChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [chartWidth, setChartWidth] = useState(0)
   const [chartHeight, setChartHeight] = useState(0)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // Set canvas dimensions based on container
@@ -35,6 +30,7 @@ export default function UsageChart({ readings }: UsageChartProps) {
     // Initial update and listen for resize
     updateDimensions()
     window.addEventListener("resize", updateDimensions)
+    setLoading(false)
 
     return () => window.removeEventListener("resize", updateDimensions)
   }, [])
@@ -54,11 +50,12 @@ export default function UsageChart({ readings }: UsageChartProps) {
     ctx.clearRect(0, 0, chartWidth, chartHeight)
 
     // Sort readings by timestamp
-    const sortedReadings = [...readings].sort((a, b) => a.timestamp - b.timestamp)
+    const sortedReadings = [...readings].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
 
     // Find min and max values for scaling
-    const minReading = Math.min(...sortedReadings.map((r) => r.reading))
-    const maxReading = Math.max(...sortedReadings.map((r) => r.reading))
+    const readingValues = sortedReadings.map((r) => Number(r.reading))
+    const minReading = Math.min(...readingValues)
+    const maxReading = Math.max(...readingValues)
     const range = maxReading - minReading
 
     // Set padding
@@ -104,7 +101,7 @@ export default function UsageChart({ readings }: UsageChartProps) {
     // Group readings by day for X-axis
     const dayGroups: Record<string, ElectricityReading[]> = {}
     sortedReadings.forEach((reading) => {
-      const date = formatDate(new Date(reading.timestamp))
+      const date = reading.timestamp.toISOString().split("T")[0]
       if (!dayGroups[date]) {
         dayGroups[date] = []
       }
@@ -157,7 +154,7 @@ export default function UsageChart({ readings }: UsageChartProps) {
         }
 
         // Calculate y based on reading value
-        const normalizedValue = range === 0 ? 0.5 : (reading.reading - minReading) / range
+        const normalizedValue = range === 0 ? 0.5 : (Number(reading.reading) - minReading) / range
         const y = chartHeight - padding.bottom - normalizedValue * chartInnerHeight
 
         points.push([x, y])
@@ -197,6 +194,10 @@ export default function UsageChart({ readings }: UsageChartProps) {
     ctx.fillText("Electricity Usage Over Time", chartWidth / 2, 10)
   }, [readings, chartWidth, chartHeight])
 
+  if (loading) {
+    return <LoadingSkeleton />
+  }
+
   if (readings.length < 2) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -233,6 +234,25 @@ export default function UsageChart({ readings }: UsageChartProps) {
             <div className="text-sm text-muted-foreground">9:00 PM</div>
           </CardContent>
         </Card>
+      </div>
+    </div>
+  )
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="w-full h-[300px]" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[1, 2, 3].map((i) => (
+          <Card key={i}>
+            <CardContent className="p-4">
+              <Skeleton className="h-4 w-32 mb-2" />
+              <Skeleton className="h-6 w-24 mb-1" />
+              <Skeleton className="h-4 w-16" />
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   )

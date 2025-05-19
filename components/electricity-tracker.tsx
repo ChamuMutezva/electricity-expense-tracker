@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { useEffect, useState } from "react"
@@ -7,42 +8,50 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Bell, Info, Zap } from "lucide-react"
+import { Bell, Info, Zap, Database, BarChart3 } from "lucide-react"
 import UsageSummary from "@/components/usage-summary"
 import UsageChart from "@/components/usage-chart"
-import { getNextUpdateTime, getTimeString } from "@/lib/date-utils"
+import MonthlyReport from "@/components/monthly-report"
+import { getTimeString, getNextUpdateTime } from "@/lib/date-utils"
+import type { ElectricityReading, TokenPurchase } from "@/lib/types"
+import { addElectricityReading, addTokenPurchase, migrateFromLocalStorage } from "@/actions/electricity-actions"
+import { useToast } from "@/hooks/use-toast"
 
-// Define the structure for electricity readings
-interface ElectricityReading {
-  id: string
-  timestamp: number
-  reading: number
-  period: "morning" | "evening" | "night"
+interface ElectricityTrackerProps {
+  initialReadings: ElectricityReading[]
+  initialTokens: TokenPurchase[]
+  initialLatestReading: number
+  initialTotalUnits: number
 }
 
-// Define the structure for token purchases
-interface TokenPurchase {
-  id: string
-  timestamp: number
-  units: number
-  newReading: number
-}
-
-export default function ElectricityTracker() {
-  const [readings, setReadings] = useState<ElectricityReading[]>([])
+export default function ElectricityTracker({
+  initialReadings,
+  initialTokens,
+  initialLatestReading,
+  initialTotalUnits,
+}: ElectricityTrackerProps) {
+  const [readings, setReadings] = useState<ElectricityReading[]>(initialReadings)
+  const [tokens, setTokens] = useState<TokenPurchase[]>(initialTokens)
   const [currentReading, setCurrentReading] = useState("")
+  const [tokenUnits, setTokenUnits] = useState("")
   const [notificationsEnabled, setNotificationsEnabled] = useState(false)
   const [nextUpdate, setNextUpdate] = useState<Date | null>(null)
   const [timeUntilUpdate, setTimeUntilUpdate] = useState<string>("")
   const [showNotification, setShowNotification] = useState(false)
-  const [tokens, setTokens] = useState<TokenPurchase[]>([])
-  const [tokenUnits, setTokenUnits] = useState("")
+  const [latestReading, setLatestReading] = useState(initialLatestReading)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [totalUnits, setTotalUnits] = useState(initialTotalUnits)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showMigrationAlert, setShowMigrationAlert] = useState(false)
+  const { toast } = useToast()
 
-  // Load saved readings from localStorage on component mount
+  // Check for local storage data on component mount
   useEffect(() => {
     const savedReadings = localStorage.getItem("electricityReadings")
-    if (savedReadings) {
-      setReadings(JSON.parse(savedReadings))
+    const savedTokens = localStorage.getItem("electricityTokens")
+
+    if (savedReadings || savedTokens) {
+      setShowMigrationAlert(true)
     }
 
     // Check if notifications were previously enabled
@@ -54,24 +63,6 @@ export default function ElectricityTracker() {
       Notification.requestPermission()
     }
   }, [])
-
-  // Load saved tokens from localStorage on component mount
-  useEffect(() => {
-    const savedTokens = localStorage.getItem("electricityTokens")
-    if (savedTokens) {
-      setTokens(JSON.parse(savedTokens))
-    }
-  }, [])
-
-  // Save readings to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("electricityReadings", JSON.stringify(readings))
-  }, [readings])
-
-  // Save tokens to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("electricityTokens", JSON.stringify(tokens))
-  }, [tokens])
 
   // Save notification preference
   useEffect(() => {
@@ -137,81 +128,146 @@ export default function ElectricityTracker() {
   }
 
   // Add a new reading
-  const addReading = () => {
+  const handleAddReading = async () => {
     if (!currentReading || isNaN(Number(currentReading))) return
 
-    const now = new Date()
-    const period = getPeriodFromHour(now.getHours())
+    try {
+      setIsSubmitting(true)
+      const newReading = await addElectricityReading(Number(currentReading))
 
-    const newReading: ElectricityReading = {
-      id: Date.now().toString(),
-      timestamp: now.getTime(),
-      reading: Number(currentReading),
-      period,
+      // Update local state
+      setReadings((prev) => [...prev, newReading])
+      setLatestReading(Number(currentReading))
+      setCurrentReading("")
+
+      toast({
+        title: "Reading Added",
+        description: `New reading of ${newReading.reading} kWh has been recorded.`,
+      })
+    } catch (error) {
+      console.error("Error adding reading:", error)
+      toast({
+        title: "Error",
+        description: "Failed to add reading. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
-
-    setReadings((prev) => [...prev, newReading])
-    setCurrentReading("")
   }
 
   // Add a new token purchase
-  const addToken = () => {
+  const handleAddToken = async () => {
     if (!tokenUnits || isNaN(Number(tokenUnits))) return
 
-    const units = Number(tokenUnits)
-    const latestReading = getLatestReading()
-    const calculatedNewReading = latestReading + units
+    try {
+      setIsSubmitting(true)
+      const newToken = await addTokenPurchase(Number(tokenUnits))
 
-    // Create token purchase record
-    const newToken: TokenPurchase = {
-      id: Date.now().toString(),
-      timestamp: new Date().getTime(),
-      units,
-      newReading: calculatedNewReading,
+      // Update local state
+      setTokens((prev) => [...prev, newToken])
+      setLatestReading(Number(newToken.new_reading))
+      setTokenUnits("")
+
+      toast({
+        title: "Token Added",
+        description: `${newToken.units} kWh added to your meter.`,
+      })
+    } catch (error) {
+      console.error("Error adding token:", error)
+      toast({
+        title: "Error",
+        description: "Failed to add token. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
-
-    // Add to tokens list
-    setTokens((prev) => [...prev, newToken])
-
-    // Create a new reading entry with the updated meter value
-    const now = new Date()
-    const period = getPeriodFromHour(now.getHours())
-
-    const newReadingEntry: ElectricityReading = {
-      id: `token-${Date.now().toString()}`,
-      timestamp: now.getTime(),
-      reading: calculatedNewReading,
-      period,
-    }
-
-    // Add to readings list
-    setReadings((prev) => [...prev, newReadingEntry])
-
-    // Clear input
-    setTokenUnits("")
   }
 
-  // Calculate total units used
-  const calculateTotalUnits = (): number => {
-    if (readings.length < 2) return 0
+  // Migrate data from local storage to database
+  const handleMigrateData = async () => {
+    try {
+      const savedReadings = localStorage.getItem("electricityReadings")
+      const savedTokens = localStorage.getItem("electricityTokens")
 
-    // Sort readings by timestamp
-    const sortedReadings = [...readings].sort((a, b) => a.timestamp - b.timestamp)
+      if (!savedReadings && !savedTokens) {
+        setShowMigrationAlert(false)
+        return
+      }
 
-    // Calculate difference between first and last reading
-    return sortedReadings[sortedReadings.length - 1].reading - sortedReadings[0].reading
-  }
+      setIsSubmitting(true)
 
-  // Get the latest reading
-  const getLatestReading = (): number => {
-    if (readings.length === 0) return 0
+      // Format data for migration
+      const localReadings: ElectricityReading[] = savedReadings
+        ? JSON.parse(savedReadings).map((r: any) => ({
+            reading_id: r.id,
+            timestamp: new Date(r.timestamp),
+            reading: r.reading,
+            period: r.period,
+          }))
+        : []
 
-    const sortedReadings = [...readings].sort((a, b) => b.timestamp - a.timestamp)
-    return sortedReadings[0].reading
+      const localTokens: TokenPurchase[] = savedTokens
+        ? JSON.parse(savedTokens).map((t: any) => ({
+            token_id: t.id,
+            timestamp: new Date(t.timestamp),
+            units: t.units,
+            new_reading: t.newReading,
+          }))
+        : []
+
+      const success = await migrateFromLocalStorage(localReadings, localTokens)
+
+      if (success) {
+        // Clear local storage after successful migration
+        localStorage.removeItem("electricityReadings")
+        localStorage.removeItem("electricityTokens")
+
+        setShowMigrationAlert(false)
+
+        toast({
+          title: "Data Migrated",
+          description: "Your local data has been successfully migrated to the database.",
+        })
+
+        // Refresh the page to get the latest data
+        window.location.reload()
+      } else {
+        throw new Error("Migration failed")
+      }
+    } catch (error) {
+      console.error("Migration error:", error)
+      toast({
+        title: "Migration Failed",
+        description: "Failed to migrate data. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <div className="grid gap-6">
+      {showMigrationAlert && (
+        <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+          <Database className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <AlertTitle>Local Data Detected</AlertTitle>
+          <AlertDescription className="flex flex-col gap-2">
+            <p>We found electricity data stored in your browser. Would you like to migrate it to the database?</p>
+            <div className="flex gap-2 mt-2">
+              <Button size="sm" onClick={handleMigrateData} disabled={isSubmitting}>
+                {isSubmitting ? "Migrating..." : "Migrate Data"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setShowMigrationAlert(false)}>
+                Dismiss
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -225,11 +281,11 @@ export default function ElectricityTracker() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
                 <h3 className="text-sm font-medium text-green-800 dark:text-green-300">Latest Reading</h3>
-                <p className="text-2xl font-bold">{getLatestReading()} kWh</p>
+                <p className="text-2xl font-bold">{latestReading} kWh</p>
               </div>
               <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
                 <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">Total Units Used</h3>
-                <p className="text-2xl font-bold">{calculateTotalUnits()} kWh</p>
+                <p className="text-2xl font-bold">{totalUnits} kWh</p>
               </div>
               <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg">
                 <h3 className="text-sm font-medium text-purple-800 dark:text-purple-300">Next Update</h3>
@@ -258,7 +314,9 @@ export default function ElectricityTracker() {
                     type="number"
                     step="0.01"
                   />
-                  <Button onClick={addReading}>Update</Button>
+                  <Button onClick={handleAddReading} disabled={isSubmitting}>
+                    {isSubmitting ? "Updating..." : "Update"}
+                  </Button>
                 </div>
               </div>
 
@@ -279,10 +337,11 @@ export default function ElectricityTracker() {
       </Card>
 
       <Tabs defaultValue="summary">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="summary">Usage Summary</TabsTrigger>
           <TabsTrigger value="chart">Usage Chart</TabsTrigger>
           <TabsTrigger value="token">Add Token</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
         <TabsContent value="summary">
           <Card>
@@ -325,7 +384,9 @@ export default function ElectricityTracker() {
                       type="number"
                       step="0.01"
                     />
-                    <Button onClick={addToken}>Add Token</Button>
+                    <Button onClick={handleAddToken} disabled={isSubmitting}>
+                      {isSubmitting ? "Adding..." : "Add Token"}
+                    </Button>
                   </div>
                 </div>
 
@@ -338,10 +399,10 @@ export default function ElectricityTracker() {
                   <div className="divide-y max-h-[300px] overflow-y-auto">
                     {tokens.length > 0 ? (
                       tokens.map((token) => (
-                        <div key={token.id} className="grid grid-cols-3 p-3 text-sm">
-                          <div>{new Date(token.timestamp).toLocaleDateString()}</div>
+                        <div key={token.token_id} className="grid grid-cols-3 p-3 text-sm">
+                          <div>{token.timestamp.toLocaleDateString()}</div>
                           <div>{token.units} kWh</div>
-                          <div>{token.newReading} kWh</div>
+                          <div>{token.new_reading} kWh</div>
                         </div>
                       ))
                     ) : (
@@ -350,6 +411,20 @@ export default function ElectricityTracker() {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="reports">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-green-500" />
+                Monthly Reports
+              </CardTitle>
+              <CardDescription>View detailed monthly usage reports</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MonthlyReport />
             </CardContent>
           </Card>
         </TabsContent>
