@@ -18,6 +18,24 @@ export interface TokenPurchase {
   created_at?: Date
 }
 
+// Interfaces for local storage data structure
+export interface LocalStorageElectricityReading {
+  id?: string | number
+  reading_id?: string
+  timestamp: string | number | Date
+  reading: number
+  period: "morning" | "evening" | "night"
+}
+
+export interface LocalStorageTokenPurchase {
+  id?: string | number
+  token_id?: string
+  timestamp: string | number | Date
+  units: number
+  newReading?: number
+  new_reading?: number
+}
+
 export interface DailyUsage {
   date: string
   morning?: number

@@ -1,7 +1,8 @@
 "use server"
 
-import { sql, isDatabaseConnected,  getPeriodFromHour } from "@/lib/db"
+import { sql, isDatabaseConnected } from "@/lib/db"
 import type { ElectricityReading, TokenPurchase, UsageSummary, DailyUsage } from "@/lib/types"
+import { getPeriodFromHour } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 
 // Check if database is connected before performing operations
@@ -26,7 +27,18 @@ export async function addElectricityReading(reading: number): Promise<Electricit
   `
 
   revalidatePath("/")
-  return result[0] as ElectricityReading
+
+  // Ensure we return a properly typed object
+  const newReading: ElectricityReading = {
+    id: result[0].id,
+    reading_id: result[0].reading_id,
+    timestamp: new Date(result[0].timestamp),
+    reading: Number(result[0].reading),
+    period: result[0].period as "morning" | "evening" | "night",
+    created_at: result[0].created_at ? new Date(result[0].created_at) : undefined,
+  }
+
+  return newReading
 }
 
 // Add a new token purchase
@@ -57,7 +69,18 @@ export async function addTokenPurchase(units: number): Promise<TokenPurchase> {
   `
 
   revalidatePath("/")
-  return tokenResult[0] as TokenPurchase
+
+  // Ensure we return a properly typed object
+  const newToken: TokenPurchase = {
+    id: tokenResult[0].id,
+    token_id: tokenResult[0].token_id,
+    timestamp: new Date(tokenResult[0].timestamp),
+    units: Number(tokenResult[0].units),
+    new_reading: Number(tokenResult[0].new_reading),
+    created_at: tokenResult[0].created_at ? new Date(tokenResult[0].created_at) : undefined,
+  }
+
+  return newToken
 }
 
 // Get all electricity readings
@@ -72,11 +95,17 @@ export async function getElectricityReadings(): Promise<ElectricityReading[]> {
     ORDER BY timestamp ASC
   `
 
-  return readings.map((reading) => ({
-    ...reading,
-    timestamp: new Date(reading.timestamp),
-    created_at: reading.created_at ? new Date(reading.created_at) : undefined,
-  })) as ElectricityReading[]
+  // Map the SQL result to properly typed objects
+  return readings.map(
+    (row): ElectricityReading => ({
+      id: row.id,
+      reading_id: row.reading_id,
+      timestamp: new Date(row.timestamp),
+      reading: Number(row.reading),
+      period: row.period as "morning" | "evening" | "night",
+      created_at: row.created_at ? new Date(row.created_at) : undefined,
+    }),
+  )
 }
 
 // Get all token purchases
@@ -91,11 +120,17 @@ export async function getTokenPurchases(): Promise<TokenPurchase[]> {
     ORDER BY timestamp ASC
   `
 
-  return tokens.map((token) => ({
-    ...token,
-    timestamp: new Date(token.timestamp),
-    created_at: token.created_at ? new Date(token.created_at) : undefined,
-  })) as TokenPurchase[]
+  // Map the SQL result to properly typed objects
+  return tokens.map(
+    (row): TokenPurchase => ({
+      id: row.id,
+      token_id: row.token_id,
+      timestamp: new Date(row.timestamp),
+      units: Number(row.units),
+      new_reading: Number(row.new_reading),
+      created_at: row.created_at ? new Date(row.created_at) : undefined,
+    }),
+  )
 }
 
 // Get the latest reading value
@@ -223,6 +258,10 @@ export async function getUsageSummary(): Promise<UsageSummary> {
 
 // Get monthly usage data for reporting
 export async function getMonthlyUsage(): Promise<{ month: string; usage: number }[]> {
+  if (!isDatabaseConnected()) {
+    return []
+  }
+
   const result = await sql`
     WITH monthly_readings AS (
       SELECT 
@@ -238,36 +277,57 @@ export async function getMonthlyUsage(): Promise<{ month: string; usage: number 
     ORDER BY month
   `
 
-  const rows = Array.isArray(result) ? result : []
-  return rows.map((row) => ({
+  return result.map((row) => ({
     month: row.month,
     usage: Number(row.usage),
   }))
 }
 
-// Migrate data from local storage to database (if needed)
+// Migrate data from local storage to database
 export async function migrateFromLocalStorage(
-  readings: ElectricityReading[],
-  tokens: TokenPurchase[],
+  readings: Omit<ElectricityReading, "id">[],
+  tokens: Omit<TokenPurchase, "id">[],
 ): Promise<boolean> {
   try {
+    checkDbConnection()
+
     // Begin transaction
     await sql`BEGIN`
 
     // Insert readings
     for (const reading of readings) {
+      if (!reading.reading_id || !reading.timestamp || reading.reading === undefined || !reading.period) {
+        console.warn("Skipping invalid reading:", reading)
+        continue
+      }
+
       await sql`
         INSERT INTO electricity_readings (reading_id, timestamp, reading, period)
-        VALUES (${reading.reading_id}, ${reading.timestamp.toISOString()}, ${reading.reading}, ${reading.period})
+        VALUES (
+          ${reading.reading_id}, 
+          ${reading.timestamp.toISOString()}, 
+          ${Number(reading.reading)}, 
+          ${reading.period}
+        )
         ON CONFLICT (reading_id) DO NOTHING
       `
     }
 
     // Insert tokens
     for (const token of tokens) {
+      if (!token.token_id || !token.timestamp || token.units === undefined || token.new_reading === undefined) {
+        console.warn("Skipping invalid token:", token)
+        continue
+      }
+
       await sql`
         INSERT INTO token_purchases (token_id, timestamp, units, new_reading)
-        VALUES (${token.token_id}, ${token.timestamp.toISOString()}, ${token.units}, ${token.new_reading})
+        VALUES (
+          ${token.token_id}, 
+          ${token.timestamp.toISOString()}, 
+          ${Number(token.units)}, 
+          ${Number(token.new_reading)}
+        )
         ON CONFLICT (token_id) DO NOTHING
       `
     }

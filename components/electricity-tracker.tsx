@@ -24,6 +24,23 @@ interface ElectricityTrackerProps {
   dbConnected: boolean
 }
 
+interface LocalStorageElectricityReading {
+  id?: number
+  reading_id?: string
+  timestamp: string
+  reading: number
+  period: string
+}
+
+interface LocalStorageTokenPurchase {
+  id?: number
+  token_id?: string
+  timestamp: string
+  units: number
+  newReading?: number
+  new_reading?: number
+}
+
 export default function ElectricityTracker({
   initialReadings,
   initialTokens,
@@ -53,11 +70,35 @@ export default function ElectricityTracker({
       const savedTokens = localStorage.getItem("electricityTokens")
 
       if (savedReadings) {
-        setReadings(JSON.parse(savedReadings))
+        try {
+          const parsedReadings: LocalStorageElectricityReading[] = JSON.parse(savedReadings)
+          const formattedReadings: ElectricityReading[] = parsedReadings.map((r) => ({
+            id: typeof r.id === "number" ? r.id : Number.parseInt(r.id as unknown as string) || Date.now(),
+            reading_id: r.reading_id || `reading-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            timestamp: new Date(r.timestamp),
+            reading: r.reading,
+            period: r.period as "morning" | "evening" | "night",
+          }))
+          setReadings(formattedReadings)
+        } catch (error) {
+          console.error("Error parsing readings from local storage:", error)
+        }
       }
 
       if (savedTokens) {
-        setTokens(JSON.parse(savedTokens))
+        try {
+          const parsedTokens: LocalStorageTokenPurchase[] = JSON.parse(savedTokens)
+          const formattedTokens: TokenPurchase[] = parsedTokens.map((t) => ({
+            id: typeof t.id === "number" ? t.id : Number.parseInt(t.id as unknown as string) || Date.now(),
+            token_id: t.token_id || `token-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            timestamp: new Date(t.timestamp),
+            units: t.units,
+            new_reading: t.new_reading || t.newReading || 0,
+          }))
+          setTokens(formattedTokens)
+        } catch (error) {
+          console.error("Error parsing tokens from local storage:", error)
+        }
       }
     } else {
       // If database is connected, check if we need to migrate
@@ -284,10 +325,11 @@ export default function ElectricityTracker({
 
       setIsSubmitting(true)
 
-      // Format data for migration
+      // Format data for migration with proper typing
       const localReadings: ElectricityReading[] = savedReadings
-        ? JSON.parse(savedReadings).map((r: any) => ({
-            reading_id: r.id || `reading-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        ? JSON.parse(savedReadings).map((r: LocalStorageElectricityReading) => ({
+            reading_id:
+              r.reading_id || r.id?.toString() || `reading-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             timestamp: new Date(r.timestamp),
             reading: r.reading,
             period: r.period,
@@ -295,11 +337,12 @@ export default function ElectricityTracker({
         : []
 
       const localTokens: TokenPurchase[] = savedTokens
-        ? JSON.parse(savedTokens).map((t: any) => ({
-            token_id: t.id || `token-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        ? JSON.parse(savedTokens).map((t: LocalStorageTokenPurchase) => ({
+            token_id:
+              t.token_id || t.id?.toString() || `token-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             timestamp: new Date(t.timestamp),
             units: t.units,
-            new_reading: t.newReading || t.new_reading,
+            new_reading: t.new_reading || t.newReading || 0,
           }))
         : []
 
@@ -346,8 +389,12 @@ export default function ElectricityTracker({
   const calculateTotalUnits = (): number => {
     if (readings.length < 2) return 0
 
-    // Sort readings by timestamp
-    const sortedReadings = [...readings].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+    // Sort readings by timestamp, ensuring timestamps are Date objects
+    const sortedReadings = [...readings].sort((a, b) => {
+      const timestampA = a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp)
+      const timestampB = b.timestamp instanceof Date ? b.timestamp : new Date(b.timestamp)
+      return timestampA.getTime() - timestampB.getTime()
+    })
 
     // Calculate difference between first and last reading
     return Number(sortedReadings[sortedReadings.length - 1].reading) - Number(sortedReadings[0].reading)

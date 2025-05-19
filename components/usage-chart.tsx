@@ -49,8 +49,12 @@ export default function UsageChart({ readings }: UsageChartProps) {
     // Clear canvas
     ctx.clearRect(0, 0, chartWidth, chartHeight)
 
-    // Sort readings by timestamp
-    const sortedReadings = [...readings].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+    // Sort readings by timestamp, ensuring timestamps are Date objects
+    const sortedReadings = [...readings].sort((a, b) => {
+      const timestampA = a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp)
+      const timestampB = b.timestamp instanceof Date ? b.timestamp : new Date(b.timestamp)
+      return timestampA.getTime() - timestampB.getTime()
+    })
 
     // Find min and max values for scaling
     const readingValues = sortedReadings.map((r) => Number(r.reading))

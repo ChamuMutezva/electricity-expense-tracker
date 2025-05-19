@@ -9,6 +9,7 @@ import {
 import { isDatabaseConnected } from "@/lib/db"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Database } from "lucide-react"
+import { ElectricityReading, TokenPurchase } from "@/lib/types"
 
 export const metadata: Metadata = {
   title: "Electricity Expense Tracker",
@@ -19,8 +20,8 @@ export default async function HomePage() {
   const dbConnected = isDatabaseConnected()
 
   // Default values in case database is not connected
-  let readings = []
-  let tokens = []
+  let readings: ElectricityReading[] = []
+  let tokens: TokenPurchase[] = []
   let latestReading = 0
   let totalUnits = 0
 
