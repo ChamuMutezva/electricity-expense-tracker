@@ -745,7 +745,7 @@ export default function ElectricityTracker({
             </Card>
 
             <Tabs defaultValue="summary">
-                <TabsList className="grid w-full grid-cols-5">
+                <TabsList className="grid w-full h-[auto] grid-cols-3 sm:grid-cols-5">
                     <TabsTrigger value="summary">Usage Summary</TabsTrigger>
                     <TabsTrigger value="chart">Usage Chart</TabsTrigger>
                     <TabsTrigger value="token">Add Token</TabsTrigger>
