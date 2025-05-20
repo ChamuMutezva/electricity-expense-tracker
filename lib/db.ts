@@ -1,5 +1,8 @@
 import { neon } from "@neondatabase/serverless"
 
+// Update the SqlQueryResult type definition to be more specific
+export type SqlQueryResult<T = any> = T[]
+
 // Create a reusable SQL client with error handling for missing DATABASE_URL
 let sql: ReturnType<typeof neon>
 
