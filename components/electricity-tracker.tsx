@@ -533,7 +533,7 @@ export default function ElectricityTracker({
                 <li key={period}>{period}</li>
               ))}
             </ul>
-            <p className="mt-2">Use the "Backdated Reading" tab to add these readings.</p>
+            <p className="mt-2">Use the &quot;Backdated Reading&quot; tab to add these readings.</p>
           </AlertDescription>
         </Alert>
       )}
@@ -607,7 +607,7 @@ export default function ElectricityTracker({
       </Card>
 
       <Tabs defaultValue="summary">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid h-auto w-full grid-cols-3 sm:grid-cols-5">
           <TabsTrigger value="summary">Usage Summary</TabsTrigger>
           <TabsTrigger value="chart">Usage Chart</TabsTrigger>
           <TabsTrigger value="token">Add Token</TabsTrigger>
