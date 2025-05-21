@@ -16,7 +16,7 @@ interface DailyConsumption {
     period: "morning" | "evening" | "night";
 }
 
-export default function UsageChart({ readings }: UsageChartProps) {
+export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [chartWidth, setChartWidth] = useState(0);
     const [chartHeight, setChartHeight] = useState(0);
@@ -54,7 +54,7 @@ export default function UsageChart({ readings }: UsageChartProps) {
             }
             readingsByDay[date].push(reading);
         });
-
+        // console.log("Readings by day:", readingsByDay);
         // Calculate consumption for each day and period
         const consumption: DailyConsumption[] = [];
 
@@ -75,12 +75,12 @@ export default function UsageChart({ readings }: UsageChartProps) {
 
                 // Only calculate if the current reading is greater than the previous one
                 // (to handle cases where the meter might have been reset)
-                if (currentValue >= prevValue) {
+                if (prevValue >= currentValue) {
                     consumption.push({
                         date,
                         timestamp: currentReading.timestamp,
                         consumption: Number(
-                            (currentValue - prevValue).toFixed(2)
+                            (prevValue - currentValue).toFixed(2)
                         ),
                         period: currentReading.period,
                     });
@@ -106,12 +106,12 @@ export default function UsageChart({ readings }: UsageChartProps) {
                 const currentValue = Number(firstReadingCurrentDay.reading);
 
                 // Only calculate if the current reading is greater than the previous one
-                if (currentValue >= prevValue) {
+                if (prevValue >= currentValue) {
                     consumption.push({
                         date: currentDay,
                         timestamp: firstReadingCurrentDay.timestamp,
                         consumption: Number(
-                            (currentValue - prevValue).toFixed(2)
+                            (prevValue - currentValue).toFixed(2)
                         ),
                         period: firstReadingCurrentDay.period,
                     });
@@ -168,9 +168,9 @@ export default function UsageChart({ readings }: UsageChartProps) {
 
         // Find min and max values for scaling
         const consumptionValues = dailyConsumption.map((r) => r.consumption);
-        const minConsumption = Math.min(...consumptionValues);
+        const minConsumption = 0; // Math.min(...consumptionValues);
         const maxConsumption = Math.max(...consumptionValues);
-        const range = maxConsumption - minConsumption;
+        const range = maxConsumption - minConsumption || 1;
 
         // Set padding
         const padding = { top: 30, right: 20, bottom: 50, left: 60 };
