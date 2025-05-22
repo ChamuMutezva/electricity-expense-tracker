@@ -267,7 +267,7 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
             const date = new Date(item.timestamp);
             const timeOffset =
                 (date.getHours() * 60 + date.getMinutes()) / (24 * 60);
-
+            
             // Position bars within the day based on period
             let periodOffset = 0;
             if (item.period === "morning") periodOffset = -barWidth;

@@ -67,7 +67,7 @@ export default function ElectricityTracker({
     initialLatestReading,
     initialTotalUnits,
     dbConnected,
-}: ElectricityTrackerProps) {
+}: Readonly<ElectricityTrackerProps>) {
     const [readings, setReadings] =
         useState<ElectricityReading[]>(initialReadings);
     const [tokens, setTokens] = useState<TokenPurchase[]>(initialTokens);
