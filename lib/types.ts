@@ -16,6 +16,7 @@ export interface TokenPurchase {
   units: number
   new_reading: number
   created_at?: Date
+  total_cost?: number
 }
 
 // Database result types
@@ -35,6 +36,7 @@ export interface TokenPurchaseDBResult {
   units: number | string
   new_reading: number | string
   created_at?: string
+  total_cost?: number | string
 }
 
 export interface MonthlyUsageDBResult {

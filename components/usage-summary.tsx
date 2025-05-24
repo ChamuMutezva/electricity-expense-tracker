@@ -94,17 +94,19 @@ export default function UsageSummary({ readings, tokens }: UsageSummaryProps) {
         <div className="mt-6">
           <h3 className="text-lg font-medium mb-2">Token Purchase History</h3>
           <div className="border rounded-lg overflow-hidden">
-            <div className="grid grid-cols-3 bg-muted p-3 text-sm font-medium">
+            <div className="grid grid-cols-4 bg-muted p-3 text-sm font-medium">
               <div>Date</div>
               <div>Units Added</div>
               <div>New Reading</div>
+              <div>Total Cost</div>
             </div>
             <div className="divide-y max-h-[300px] overflow-y-auto">
               {tokens.map((token) => (
-                <div key={token.token_id} className="grid grid-cols-3 p-3 text-sm">
+                <div key={token.token_id} className="grid grid-cols-4 p-3 text-sm">
                   <div>{token.timestamp.toLocaleDateString()}</div>
                   <div>{token.units} kWh</div>
                   <div>{token.new_reading} kWh</div>
+                  <div>{token.total_cost ? `$${token.total_cost.toFixed(2)}` : "-"}</div>
                 </div>
               ))}
             </div>

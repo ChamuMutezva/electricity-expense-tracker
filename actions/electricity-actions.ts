@@ -93,7 +93,7 @@ export async function addBackdatedReading(
 }
 
 // Add a new token purchase
-export async function addTokenPurchase(units: number): Promise<TokenPurchase> {
+export async function addTokenPurchase(units: number, cost: number): Promise<TokenPurchase> {
     checkDbConnection();
 
     // Get the latest reading
@@ -105,9 +105,9 @@ export async function addTokenPurchase(units: number): Promise<TokenPurchase> {
 
     // Insert token purchase
     const tokenResult = (await sql`
-    INSERT INTO token_purchases (token_id, timestamp, units, new_reading)
-    VALUES (${tokenId}, ${now.toISOString()}, ${units}, ${newReading})
-    RETURNING id, token_id, timestamp, units, new_reading, created_at
+    INSERT INTO token_purchases (token_id, timestamp, units, new_reading, total_cost)
+    VALUES (${tokenId}, ${now.toISOString()}, ${units}, ${newReading}, ${cost})
+    RETURNING id, token_id, timestamp, units, new_reading, created_at, total_cost
   `) as SqlQueryResult;
 
     // Also add a new reading entry with the updated meter value
@@ -131,6 +131,7 @@ export async function addTokenPurchase(units: number): Promise<TokenPurchase> {
         created_at: tokenResult[0]?.created_at
             ? new Date(tokenResult[0]?.created_at)
             : undefined,
+        total_cost: Number(tokenResult[0]?.total_cost),
     };
 
     return newToken;
@@ -171,7 +172,7 @@ export async function getTokenPurchases(): Promise<TokenPurchase[]> {
     }
 
     const tokens = (await sql`
-    SELECT id, token_id, timestamp, units, new_reading, created_at
+    SELECT id, token_id, timestamp, units, new_reading, created_at, total_cost
     FROM token_purchases
     ORDER BY timestamp ASC
   `) as TokenPurchaseDBResult[];
@@ -188,6 +189,7 @@ export async function getTokenPurchases(): Promise<TokenPurchase[]> {
             units: Number(row.units),
             new_reading: Number(row.new_reading),
             created_at: row.created_at ? new Date(row.created_at) : undefined,
+            total_cost: Number(row.total_cost),
         })
     );
 }

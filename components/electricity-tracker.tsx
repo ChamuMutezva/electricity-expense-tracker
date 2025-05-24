@@ -73,6 +73,7 @@ export default function ElectricityTracker({
     const [tokens, setTokens] = useState<TokenPurchase[]>(initialTokens);
     const [currentReading, setCurrentReading] = useState("");
     const [tokenUnits, setTokenUnits] = useState("");
+    const [tokenCost, setTokenCost] = useState("");
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [nextUpdate, setNextUpdate] = useState<Date | null>(null);
     const [timeUntilUpdate, setTimeUntilUpdate] = useState<string>("");
@@ -83,6 +84,8 @@ export default function ElectricityTracker({
     const [showMigrationAlert, setShowMigrationAlert] = useState(false);
     const [missedReadings, setMissedReadings] = useState<string[]>([]);
     const { toast } = useToast();
+
+    console.log(tokens);
 
     // Check for local storage data on component mount
     useEffect(() => {
@@ -413,13 +416,17 @@ export default function ElectricityTracker({
     // Add a new token purchase - with fallback to local storage
     const handleAddToken = async () => {
         if (!tokenUnits || isNaN(Number(tokenUnits))) return;
+        if (!tokenCost || isNaN(Number(tokenCost))) return;
 
         try {
             setIsSubmitting(true);
 
             if (dbConnected) {
                 // Use server action if database is connected
-                const newToken = await addTokenPurchase(Number(tokenUnits));
+                const newToken = await addTokenPurchase(
+                    Number(tokenUnits),
+                    Number(tokenCost)
+                );
 
                 // Update local state
                 setTokens((prev) => [...prev, newToken]);
@@ -427,6 +434,7 @@ export default function ElectricityTracker({
             } else {
                 // Use local storage if database is not connected
                 const units = Number(tokenUnits);
+                const costs = Number(tokenCost);
                 const calculatedNewReading = latestReading + units;
 
                 // Create token purchase record
@@ -436,6 +444,7 @@ export default function ElectricityTracker({
                     timestamp: new Date(),
                     units,
                     new_reading: calculatedNewReading,
+                    total_cost: costs,
                 };
 
                 // Add to tokens list
@@ -459,6 +468,7 @@ export default function ElectricityTracker({
             }
 
             setTokenUnits("");
+            setTokenCost("");
 
             toast({
                 title: "Token Added",
@@ -795,12 +805,13 @@ export default function ElectricityTracker({
                         </CardHeader>
                         <CardContent>
                             <div className="grid gap-4">
-                                <div className="flex flex-col space-y-1.5">
-                                    <Label htmlFor="tokenUnits">
-                                        Token Units
-                                    </Label>
-                                    <div className="flex gap-2">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-4 space-y-1.5">
+                                    <div className="flex flex-1 flex-col space-y-1.5">
+                                        <Label htmlFor="tokenUnits">
+                                            Token Units
+                                        </Label>
                                         <Input
+                                            required
                                             id="tokenUnits"
                                             placeholder="Enter units from token"
                                             value={tokenUnits}
@@ -810,29 +821,47 @@ export default function ElectricityTracker({
                                             type="number"
                                             step="0.01"
                                         />
-                                        <Button
-                                            onClick={handleAddToken}
-                                            disabled={isSubmitting}
-                                        >
-                                            {isSubmitting
-                                                ? "Adding..."
-                                                : "Add Token"}
-                                        </Button>
                                     </div>
+                                    <div className="flex flex-1 flex-col space-y-1.5">
+                                        <Label htmlFor="tokenCost">
+                                            Token Cost
+                                        </Label>
+                                        <Input
+                                            required
+                                            id="tokenCost"
+                                            placeholder="Enter cost of token"
+                                            value={tokenCost}
+                                            onChange={(e) =>
+                                                setTokenCost(e.target.value)
+                                            }
+                                            type="number"
+                                            step="0.01"
+                                        />
+                                    </div>
+                                    <Button
+                                        className="sm:self-end"
+                                        onClick={handleAddToken}
+                                        disabled={isSubmitting}
+                                    >
+                                        {isSubmitting
+                                            ? "Adding..."
+                                            : "Add Token"}
+                                    </Button>
                                 </div>
 
                                 <div className="border rounded-lg overflow-hidden mt-4">
-                                    <div className="grid grid-cols-3 bg-muted p-3 text-sm font-medium">
+                                    <div className="grid grid-cols-4 bg-muted p-3 text-sm font-medium">
                                         <div>Date</div>
                                         <div>Units Added</div>
                                         <div>New Reading</div>
+                                        <div>Total Cost</div>
                                     </div>
                                     <div className="divide-y max-h-[300px] overflow-y-auto">
                                         {tokens.length > 0 ? (
                                             tokens.map((token) => (
                                                 <div
                                                     key={token.token_id}
-                                                    className="grid grid-cols-3 p-3 text-sm"
+                                                    className="grid grid-cols-4 p-3 text-sm"
                                                 >
                                                     <div>
                                                         {token.timestamp.toLocaleDateString()}
@@ -840,6 +869,12 @@ export default function ElectricityTracker({
                                                     <div>{token.units} kWh</div>
                                                     <div>
                                                         {token.new_reading} kWh
+                                                    </div>
+                                                    <div>
+                                                        $
+                                                        {token.total_cost?.toFixed(
+                                                            2
+                                                        ) ?? "N/A"}
                                                     </div>
                                                 </div>
                                             ))
