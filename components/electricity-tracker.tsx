@@ -13,13 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import MigrationAlert from "@/components/migration-alert";
+import MissedReadings from "@/components/missed-readings";
 import {
     Bell,
     Info,
     Zap,
-    Database,
     BarChart3,
-    History,
     CalendarClock,
 } from "lucide-react";
 import UsageSummary from "@/components/usage-summary";
@@ -44,7 +44,6 @@ interface ElectricityTrackerProps {
     initialTotalUnits: number;
     dbConnected: boolean;
 }
-
 interface LocalStorageElectricityReading {
     id?: number;
     reading_id?: string;
@@ -52,7 +51,6 @@ interface LocalStorageElectricityReading {
     reading: number;
     period: string;
 }
-
 interface LocalStorageTokenPurchase {
     id?: number;
     token_id?: string;
@@ -629,52 +627,19 @@ export default function ElectricityTracker({
 
     return (
         <main className="grid gap-6">
+
+            {/* Migration alert */}
             {showMigrationAlert && (
-                <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-                    <Database className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    <AlertTitle>Local Data Detected</AlertTitle>
-                    <AlertDescription className="flex flex-col gap-2">
-                        <p>
-                            We found electricity data stored in your browser.
-                            Would you like to migrate it to the database?
-                        </p>
-                        <div className="flex gap-2 mt-2">
-                            <Button
-                                size="sm"
-                                onClick={handleMigrateData}
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting ? "Migrating..." : "Migrate Data"}
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setShowMigrationAlert(false)}
-                            >
-                                Dismiss
-                            </Button>
-                        </div>
-                    </AlertDescription>
-                </Alert>
+                <MigrationAlert
+                    handleMigrateData={handleMigrateData}
+                    isSubmitting={isSubmitting}
+                    setShowMigrationAlert={setShowMigrationAlert}
+                />
             )}
 
+            {/* Missed Readings Alert */}
             {missedReadings.length > 0 && (
-                <Alert className="bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
-                    <History className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                    <AlertTitle>Missed Readings</AlertTitle>
-                    <AlertDescription>
-                        <p>You missed the following readings today:</p>
-                        <ul className="list-disc list-inside mt-1">
-                            {missedReadings.map((period) => (
-                                <li key={period}>{period}</li>
-                            ))}
-                        </ul>
-                        <p className="mt-2">
-                            Use the &quot;Backdated Reading&quot; tab to add
-                            these readings.
-                        </p>
-                    </AlertDescription>
-                </Alert>
+                <MissedReadings missedReadings={missedReadings} />
             )}
 
             <Card>

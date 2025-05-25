@@ -32,7 +32,7 @@ interface BackdatedReadingFormProps {
 export default function BackdatedReadingForm({
     onSubmit,
     isSubmitting,
-}: BackdatedReadingFormProps) {
+}: Readonly<BackdatedReadingFormProps>) {
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [time, setTime] = useState("17:00"); // Default to 5:00 PM
     const [reading, setReading] = useState("");
