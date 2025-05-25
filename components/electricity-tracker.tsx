@@ -60,6 +60,7 @@ interface LocalStorageTokenPurchase {
     units: number;
     newReading?: number;
     new_reading?: number;
+    total_cost?: number;
 }
 
 export default function ElectricityTracker({
@@ -84,6 +85,8 @@ export default function ElectricityTracker({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showMigrationAlert, setShowMigrationAlert] = useState(false);
     const [missedReadings, setMissedReadings] = useState<string[]>([]);
+    // Add state for submission tracking
+    const [isSubmitted, setIsSubmitted] = useState(false);
     const { toast } = useToast();
 
     // Check for local storage data on component mount
@@ -143,6 +146,7 @@ export default function ElectricityTracker({
                             timestamp: new Date(t.timestamp),
                             units: t.units,
                             new_reading: t.new_reading ?? t.newReading ?? 0,
+                            total_cost: t.total_cost ?? 0,
                         })
                     );
                     setTokens(formattedTokens);
@@ -304,10 +308,30 @@ export default function ElectricityTracker({
 
     // Add a new reading - with fallback to local storage
     const handleAddReading = async () => {
-        if (!currentReading || isNaN(Number(currentReading))) return;
+        setIsSubmitted(true);
+        // Validate input
+        if (!currentReading || isNaN(Number(currentReading))) {
+            toast({
+                title: "Invalid Input",
+                description: "Please enter a valid meter reading",
+                variant: "destructive",
+            });
+            return;
+        }
 
         try {
             setIsSubmitting(true);
+            const readingValue = Number(currentReading);
+
+            // Additional validation if needed
+            if (readingValue <= 0) {
+                toast({
+                    title: "Invalid Reading",
+                    description: "Reading must be greater than 0",
+                    variant: "destructive",
+                });
+                return;
+            }
 
             if (dbConnected) {
                 // Use server action if database is connected
@@ -721,6 +745,11 @@ export default function ElectricityTracker({
                                         }
                                         type="number"
                                         step="0.01"
+                                        className={
+                                            !currentReading && isSubmitted
+                                                ? "border-red-500"
+                                                : ""
+                                        }
                                     />
                                     <Button
                                         onClick={handleAddReading}
@@ -732,6 +761,12 @@ export default function ElectricityTracker({
                                             : "Update"}
                                     </Button>
                                 </div>
+                                {/* Error message display */}
+                                {!currentReading && isSubmitted && (
+                                    <p className="text-sm text-red-500">
+                                        Please enter a valid reading
+                                    </p>
+                                )}
                             </div>
 
                             {!notificationsEnabled && (
