@@ -15,19 +15,19 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import MigrationAlert from "@/components/migration-alert";
 import MissedReadings from "@/components/missed-readings";
-import {
-    Bell,
-    Info,
-    Zap,
-    BarChart3,
-    CalendarClock,
-} from "lucide-react";
+import { Bell, Info, Zap, BarChart3, CalendarClock } from "lucide-react";
 import UsageSummary from "@/components/usage-summary";
 import UsageChart from "@/components/usage-chart";
 import MonthlyReport from "@/components/monthly-report";
 import BackdatedReadingForm from "@/components/backdated-reading-form";
 import { getTimeString, getNextUpdateTime } from "@/lib/date-utils";
-import type { ElectricityReading, TokenPurchase } from "@/lib/types";
+import type {
+    ElectricityReading,
+    ElectricityTrackerProps,
+    LocalStorageElectricityReading,
+    LocalStorageTokenPurchase,
+    TokenPurchase,
+} from "@/lib/types";
 import {
     addElectricityReading,
     addTokenPurchase,
@@ -36,30 +36,6 @@ import {
 } from "@/actions/electricity-actions";
 import { useToast } from "@/hooks/use-toast";
 import { Period } from "@/lib/types";
-
-interface ElectricityTrackerProps {
-    initialReadings: ElectricityReading[];
-    initialTokens: TokenPurchase[];
-    initialLatestReading: number;
-    initialTotalUnits: number;
-    dbConnected: boolean;
-}
-interface LocalStorageElectricityReading {
-    id?: number;
-    reading_id?: string;
-    timestamp: string;
-    reading: number;
-    period: string;
-}
-interface LocalStorageTokenPurchase {
-    id?: number;
-    token_id?: string;
-    timestamp: string;
-    units: number;
-    newReading?: number;
-    new_reading?: number;
-    total_cost?: number;
-}
 
 export default function ElectricityTracker({
     initialReadings,
@@ -87,93 +63,101 @@ export default function ElectricityTracker({
     const [isSubmitted, setIsSubmitted] = useState(false);
     const { toast } = useToast();
 
-    // Check for local storage data on component mount
-    useEffect(() => {
-        // If database is not connected, load from local storage
-        if (!dbConnected) {
+    function parseLocalStorageReadings(
+        savedReadings: string | null
+    ): ElectricityReading[] {
+        if (!savedReadings) return [];
+        try {
+            const parsed: LocalStorageElectricityReading[] =
+                JSON.parse(savedReadings);
+            return parsed.map((r) => ({
+                id:
+                    typeof r.id === "number"
+                        ? r.id
+                        : Number.parseInt(r.id as string) || Date.now(),
+                reading_id:
+                    r.reading_id ??
+                    `reading-${Date.now()}-${Math.random()
+                        .toString(36)
+                        .substring(2, 9)}`,
+                timestamp: new Date(r.timestamp),
+                reading: r.reading,
+                period: r.period,
+            }));
+        } catch (error) {
+            console.error("Error parsing readings from local storage:", error);
+            return [];
+        }
+    }
+
+    function parseLocalStorageTokens(
+        savedTokens: string | null
+    ): TokenPurchase[] {
+        if (!savedTokens) return [];
+        try {
+            const parsed: LocalStorageTokenPurchase[] = JSON.parse(savedTokens);
+            return parsed.map((t) => ({
+                id:
+                    typeof t.id === "number"
+                        ? t.id
+                        : Number.parseInt(t.id as string) || Date.now(),
+                token_id:
+                    t.token_id ??
+                    `token-${Date.now()}-${Math.random()
+                        .toString(36)
+                        .substring(2, 9)}`,
+                timestamp: new Date(t.timestamp),
+                units: t.units,
+                new_reading: t.new_reading ?? t.newReading ?? 0,
+                total_cost: t.total_cost ?? 0,
+            }));
+        } catch (error) {
+            console.error("Error parsing tokens from local storage:", error);
+            return [];
+        }
+    }
+
+    function setupNotifications(
+        setNotificationsEnabled: (enabled: boolean) => void
+    ) {
+        const notifEnabled =
+            localStorage.getItem("notificationsEnabled") === "true";
+        setNotificationsEnabled(notifEnabled);
+        if (notifEnabled && "Notification" in window) {
+            Notification.requestPermission();
+        }
+    }
+
+    function checkMigration(
+        dbConnected: boolean,
+        setShowMigrationAlert: (show: boolean) => void
+    ) {
+        if (dbConnected) {
             const savedReadings = localStorage.getItem("electricityReadings");
             const savedTokens = localStorage.getItem("electricityTokens");
-
-            if (savedReadings) {
-                try {
-                    const parsedReadings: LocalStorageElectricityReading[] =
-                        JSON.parse(savedReadings);
-                    const formattedReadings: ElectricityReading[] =
-                        parsedReadings.map((r) => ({
-                            id:
-                                typeof r.id === "number"
-                                    ? r.id
-                                    : Number.parseInt(
-                                          r.id as unknown as string
-                                      ) || Date.now(),
-                            reading_id:
-                                r.reading_id ??
-                                `reading-${Date.now()}-${Math.random()
-                                    .toString(36)
-                                    .substring(2, 9)}`,
-                            timestamp: new Date(r.timestamp),
-                            reading: r.reading,
-                            period: r.period as Period,
-                        }));
-                    setReadings(formattedReadings);
-                } catch (error) {
-                    console.error(
-                        "Error parsing readings from local storage:",
-                        error
-                    );
-                }
-            }
-
-            if (savedTokens) {
-                try {
-                    const parsedTokens: LocalStorageTokenPurchase[] =
-                        JSON.parse(savedTokens);
-                    const formattedTokens: TokenPurchase[] = parsedTokens.map(
-                        (t) => ({
-                            id:
-                                typeof t.id === "number"
-                                    ? t.id
-                                    : Number.parseInt(
-                                          t.id as unknown as string
-                                      ) || Date.now(),
-                            token_id:
-                                t.token_id ??
-                                `token-${Date.now()}-${Math.random()
-                                    .toString(36)
-                                    .substring(2, 9)}`,
-                            timestamp: new Date(t.timestamp),
-                            units: t.units,
-                            new_reading: t.new_reading ?? t.newReading ?? 0,
-                            total_cost: t.total_cost ?? 0,
-                        })
-                    );
-                    setTokens(formattedTokens);
-                } catch (error) {
-                    console.error(
-                        "Error parsing tokens from local storage:",
-                        error
-                    );
-                }
-            }
-        } else {
-            // If database is connected, check if we need to migrate
-            const savedReadings = localStorage.getItem("electricityReadings");
-            const savedTokens = localStorage.getItem("electricityTokens");
-
             if (savedReadings || savedTokens) {
                 setShowMigrationAlert(true);
             }
         }
+    }
 
-        // Check if notifications were previously enabled
-        const notifEnabled =
-            localStorage.getItem("notificationsEnabled") === "true";
-        setNotificationsEnabled(notifEnabled);
-
-        // Request notification permission if previously enabled
-        if (notifEnabled && "Notification" in window) {
-            Notification.requestPermission();
+    // Check for local storage data on component mount
+    useEffect(() => {
+        if (!dbConnected) {
+            setReadings(
+                parseLocalStorageReadings(
+                    localStorage.getItem("electricityReadings")
+                )
+            );
+            setTokens(
+                parseLocalStorageTokens(
+                    localStorage.getItem("electricityTokens")
+                )
+            );
+        } else {
+            checkMigration(dbConnected, setShowMigrationAlert);
         }
+        setupNotifications(setNotificationsEnabled);
     }, [dbConnected]);
 
     // Save readings to localStorage if database is not connected
@@ -627,7 +611,6 @@ export default function ElectricityTracker({
 
     return (
         <main className="grid gap-6">
-
             {/* Migration alert */}
             {showMigrationAlert && (
                 <MigrationAlert

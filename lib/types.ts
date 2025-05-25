@@ -60,6 +60,7 @@ export interface LocalStorageTokenPurchase {
     units: number;
     newReading?: number;
     new_reading?: number;
+    total_cost?: number;
 }
 
 export interface DailyUsage {
@@ -78,4 +79,11 @@ export interface UsageSummary {
     };
     totalTokensPurchased: number;
     dailyUsage: DailyUsage[];
+}
+export interface ElectricityTrackerProps {
+    initialReadings: ElectricityReading[];
+    initialTokens: TokenPurchase[];
+    initialLatestReading: number;
+    initialTotalUnits: number;
+    dbConnected: boolean;
 }
