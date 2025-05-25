@@ -35,6 +35,7 @@ import {
     addBackdatedReading,
 } from "@/actions/electricity-actions";
 import { useToast } from "@/hooks/use-toast";
+import { Period } from "@/lib/types";
 
 interface ElectricityTrackerProps {
     initialReadings: ElectricityReading[];
@@ -85,8 +86,6 @@ export default function ElectricityTracker({
     const [missedReadings, setMissedReadings] = useState<string[]>([]);
     const { toast } = useToast();
 
-    console.log(tokens);
-
     // Check for local storage data on component mount
     useEffect(() => {
         // If database is not connected, load from local storage
@@ -113,7 +112,7 @@ export default function ElectricityTracker({
                                     .substring(2, 9)}`,
                             timestamp: new Date(r.timestamp),
                             reading: r.reading,
-                            period: r.period as "morning" | "evening" | "night",
+                            period: r.period as Period,
                         }));
                     setReadings(formattedReadings);
                 } catch (error) {
@@ -511,7 +510,7 @@ export default function ElectricityTracker({
                                   .substring(2, 9)}`,
                           timestamp: new Date(r.timestamp),
                           reading: r.reading,
-                          period: r.period as "morning" | "evening" | "night",
+                          period: r.period as Period,
                       })
                   )
                 : [];
@@ -726,6 +725,7 @@ export default function ElectricityTracker({
                                     <Button
                                         onClick={handleAddReading}
                                         disabled={isSubmitting}
+                                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
                                     >
                                         {isSubmitting
                                             ? "Updating..."
@@ -746,6 +746,7 @@ export default function ElectricityTracker({
                                     <Button
                                         variant="outline"
                                         onClick={enableNotifications}
+                                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
                                     >
                                         Enable
                                     </Button>
@@ -758,16 +759,39 @@ export default function ElectricityTracker({
 
             <Tabs defaultValue="summary">
                 <TabsList className="grid h-auto w-full grid-cols-3 sm:grid-cols-5">
-                    <TabsTrigger value="summary">Usage Summary</TabsTrigger>
-                    <TabsTrigger value="chart">Usage Chart</TabsTrigger>
-                    <TabsTrigger value="token">Add Token</TabsTrigger>
-                    <TabsTrigger value="backdated">
+                    <TabsTrigger
+                        value="summary"
+                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
+                    >
+                        Usage Summary
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="chart"
+                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
+                    >
+                        Usage Chart
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="token"
+                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
+                    >
+                        Add Token
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="backdated"
+                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
+                    >
                         <span className="flex items-center gap-1">
                             <CalendarClock className="h-4 w-4" />
                             <span>Backdated</span>
                         </span>
                     </TabsTrigger>
-                    <TabsTrigger value="reports">Reports</TabsTrigger>
+                    <TabsTrigger
+                        value="reports"
+                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
+                    >
+                        Reports
+                    </TabsTrigger>
                 </TabsList>
                 <TabsContent value="summary">
                     <Card>
@@ -839,7 +863,7 @@ export default function ElectricityTracker({
                                         />
                                     </div>
                                     <Button
-                                        className="sm:self-end"
+                                        className="sm:self-end hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
                                         onClick={handleAddToken}
                                         disabled={isSubmitting}
                                     >

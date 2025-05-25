@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { ElectricityReading } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Period } from "@/lib/types";
 
 interface UsageChartProps {
     readings: ElectricityReading[];
@@ -13,7 +14,7 @@ interface DailyConsumption {
     date: string;
     timestamp: Date;
     consumption: number;
-    period: "morning" | "evening" | "night";
+    period: Period;
 }
 
 export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
