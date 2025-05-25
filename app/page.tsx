@@ -40,27 +40,29 @@ export default async function HomePage() {
 
     return (
         <div className="container mx-auto py-8 px-4">
-            <h1 className="text-3xl font-bold text-center mb-8">
-                Electricity Expense Tracker
-            </h1>
+            <header>
+                <h1 className="text-3xl font-bold text-center mb-8">
+                    Electricity Expense Tracker
+                </h1>
 
-            {!dbConnected && (
-                <Alert className="mb-6 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
-                    <Database className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                    <AlertTitle>Database Connection Issue</AlertTitle>
-                    <AlertDescription>
-                        <p className="mb-2">
-                            The application cannot connect to the database.
-                            Please make sure your DATABASE_URL environment
-                            variable is set correctly.
-                        </p>
-                        <p className="text-sm">
-                            The app will run in local storage mode until the
-                            database connection is established.
-                        </p>
-                    </AlertDescription>
-                </Alert>
-            )}
+                {!dbConnected && (
+                    <Alert className="mb-6 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
+                        <Database className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                        <AlertTitle>Database Connection Issue</AlertTitle>
+                        <AlertDescription>
+                            <p className="mb-2">
+                                The application cannot connect to the database.
+                                Please make sure your DATABASE_URL environment
+                                variable is set correctly.
+                            </p>
+                            <p className="text-sm">
+                                The app will run in local storage mode until the
+                                database connection is established.
+                            </p>
+                        </AlertDescription>
+                    </Alert>
+                )}
+            </header>
 
             <ElectricityTracker
                 initialReadings={readings}

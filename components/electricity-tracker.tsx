@@ -628,7 +628,7 @@ export default function ElectricityTracker({
     }, [readings]);
 
     return (
-        <div className="grid gap-6">
+        <main className="grid gap-6">
             {showMigrationAlert && (
                 <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
                     <Database className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -863,6 +863,7 @@ export default function ElectricityTracker({
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
+                            {/*/*/}
                             <div className="grid gap-4">
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 space-y-1.5">
                                     <div className="flex flex-1 flex-col space-y-1.5">
@@ -907,41 +908,69 @@ export default function ElectricityTracker({
                                             : "Add Token"}
                                     </Button>
                                 </div>
-
                                 <div className="border rounded-lg overflow-hidden mt-4">
-                                    <div className="grid grid-cols-4 bg-muted p-3 text-sm font-medium">
-                                        <div>Date</div>
-                                        <div>Units Added</div>
-                                        <div>New Reading</div>
-                                        <div>Total Cost</div>
-                                    </div>
-                                    <div className="divide-y max-h-[300px] overflow-y-auto">
-                                        {tokens.length > 0 ? (
-                                            tokens.map((token) => (
-                                                <div
-                                                    key={token.token_id}
-                                                    className="grid grid-cols-4 p-3 text-sm"
-                                                >
-                                                    <div>
-                                                        {token.timestamp.toLocaleDateString()}
-                                                    </div>
-                                                    <div>{token.units} kWh</div>
-                                                    <div>
-                                                        {token.new_reading} kWh
-                                                    </div>
-                                                    <div>
-                                                        $
-                                                        {token.total_cost?.toFixed(
-                                                            2
-                                                        ) ?? "N/A"}
-                                                    </div>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div className="p-3 text-center text-muted-foreground">
-                                                No token history available
-                                            </div>
-                                        )}
+                                    <div className="max-h-[300px] overflow-y-auto">
+                                        <table className="w-full">
+                                            {/* Table Header */}
+                                            <thead className="sticky top-0 bg-muted z-10">
+                                                <tr className="text-left">
+                                                    <th className="p-3 text-sm font-medium">
+                                                        Date
+                                                    </th>
+                                                    <th className="p-3 text-sm font-medium">
+                                                        Units Added
+                                                    </th>
+                                                    <th className="p-3 text-sm font-medium">
+                                                        New Reading
+                                                    </th>
+                                                    <th className="p-3 text-sm font-medium">
+                                                        Total Cost
+                                                    </th>
+                                                </tr>
+                                            </thead>
+
+                                            {/* Table Body */}
+                                            <tbody className="divide-y">
+                                                {tokens.length > 0 ? (
+                                                    tokens.map((token) => (
+                                                        <tr
+                                                            key={token.token_id}
+                                                            className="hover:bg-muted/20"
+                                                        >
+                                                            <td className="p-3 text-sm">
+                                                                {token.timestamp.toLocaleDateString()}
+                                                            </td>
+                                                            <td className="p-3 text-sm">
+                                                                {token.units}{" "}
+                                                                kWh
+                                                            </td>
+                                                            <td className="p-3 text-sm">
+                                                                {
+                                                                    token.new_reading
+                                                                }{" "}
+                                                                kWh
+                                                            </td>
+                                                            <td className="p-3 text-sm">
+                                                                $
+                                                                {token.total_cost?.toFixed(
+                                                                    2
+                                                                ) ?? "N/A"}
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td
+                                                            colSpan={4}
+                                                            className="p-3 text-center text-muted-foreground"
+                                                        >
+                                                            No token history
+                                                            available
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -985,6 +1014,6 @@ export default function ElectricityTracker({
                     </Card>
                 </TabsContent>
             </Tabs>
-        </div>
+        </main>
     );
 }
