@@ -9,13 +9,10 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import MigrationAlert from "@/components/migration-alert";
 import MissedReadings from "@/components/missed-readings";
-import { Bell, Info, Zap, BarChart3, CalendarClock } from "lucide-react";
+import { Bell, Zap, BarChart3, CalendarClock } from "lucide-react";
 import UsageSummary from "@/components/usage-summary";
 import UsageChart from "@/components/usage-chart";
 import MonthlyReport from "@/components/monthly-report";
@@ -37,6 +34,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Period } from "@/lib/types";
 import AddToken from "./add-token";
+import { UpdateMeterReading } from "./update-mete-reading";
+import NotificationsAlert from "./NotificationsAlert";
 
 export default function ElectricityTracker({
     initialReadings,
@@ -680,61 +679,17 @@ export default function ElectricityTracker({
                         )}
 
                         <div className="grid gap-4">
-                            <div className="flex flex-col space-y-1.5">
-                                <Label htmlFor="reading">
-                                    Update Electricity Reading
-                                </Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        id="reading"
-                                        placeholder="Enter current meter reading"
-                                        value={currentReading}
-                                        onChange={(e) =>
-                                            setCurrentReading(e.target.value)
-                                        }
-                                        type="number"
-                                        step="0.01"
-                                        className={
-                                            !currentReading && isSubmitted
-                                                ? "border-red-500"
-                                                : ""
-                                        }
-                                    />
-                                    <Button
-                                        onClick={handleAddReading}
-                                        disabled={isSubmitting}
-                                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
-                                    >
-                                        {isSubmitting
-                                            ? "Updating..."
-                                            : "Update"}
-                                    </Button>
-                                </div>
-                                {/* Error message display */}
-                                {!currentReading && isSubmitted && (
-                                    <p className="text-sm text-red-500">
-                                        Please enter a valid reading
-                                    </p>
-                                )}
-                            </div>
-
+                            <UpdateMeterReading
+                                currentReading={currentReading}
+                                setCurrentReading={setCurrentReading}
+                                handleAddReading={handleAddReading}
+                                isSubmitting={isSubmitting}
+                                isSubmitted={isSubmitted}
+                            />
                             {!notificationsEnabled && (
-                                <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50 dark:bg-slate-900">
-                                    <div className="flex items-center gap-2">
-                                        <Info className="h-5 w-5 text-slate-500" />
-                                        <span>
-                                            Enable notifications for update
-                                            reminders
-                                        </span>
-                                    </div>
-                                    <Button
-                                        variant="outline"
-                                        onClick={enableNotifications}
-                                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
-                                    >
-                                        Enable
-                                    </Button>
-                                </div>
+                                <NotificationsAlert
+                                    enableNotifications={enableNotifications}
+                                />
                             )}
                         </div>
                     </div>
