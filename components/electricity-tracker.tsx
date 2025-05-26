@@ -36,6 +36,7 @@ import { Period } from "@/lib/types";
 import AddToken from "./add-token";
 import { UpdateMeterReading } from "./update-mete-reading";
 import NotificationsAlert from "./NotificationsAlert";
+import { parseLocalStorageReadings, parseLocalStorageTokens } from "@/lib/storage";
 
 export default function ElectricityTracker({
     initialReadings,
@@ -62,61 +63,7 @@ export default function ElectricityTracker({
     // Add state for submission tracking
     const [isSubmitted, setIsSubmitted] = useState(false);
     const { toast } = useToast();
-
-    function parseLocalStorageReadings(
-        savedReadings: string | null
-    ): ElectricityReading[] {
-        if (!savedReadings) return [];
-        try {
-            const parsed: LocalStorageElectricityReading[] =
-                JSON.parse(savedReadings);
-            return parsed.map((r) => ({
-                id:
-                    typeof r.id === "number"
-                        ? r.id
-                        : Number.parseInt(r.id as string) || Date.now(),
-                reading_id:
-                    r.reading_id ??
-                    `reading-${Date.now()}-${Math.random()
-                        .toString(36)
-                        .substring(2, 9)}`,
-                timestamp: new Date(r.timestamp),
-                reading: r.reading,
-                period: r.period,
-            }));
-        } catch (error) {
-            console.error("Error parsing readings from local storage:", error);
-            return [];
-        }
-    }
-
-    function parseLocalStorageTokens(
-        savedTokens: string | null
-    ): TokenPurchase[] {
-        if (!savedTokens) return [];
-        try {
-            const parsed: LocalStorageTokenPurchase[] = JSON.parse(savedTokens);
-            return parsed.map((t) => ({
-                id:
-                    typeof t.id === "number"
-                        ? t.id
-                        : Number.parseInt(t.id as string) || Date.now(),
-                token_id:
-                    t.token_id ??
-                    `token-${Date.now()}-${Math.random()
-                        .toString(36)
-                        .substring(2, 9)}`,
-                timestamp: new Date(t.timestamp),
-                units: t.units,
-                new_reading: t.new_reading ?? t.newReading ?? 0,
-                total_cost: t.total_cost ?? 0,
-            }));
-        } catch (error) {
-            console.error("Error parsing tokens from local storage:", error);
-            return [];
-        }
-    }
-
+   
     function setupNotifications(
         setNotificationsEnabled: (enabled: boolean) => void
     ) {
@@ -581,31 +528,30 @@ export default function ElectricityTracker({
         }
     };
 
-    // Calculate total units used from readings
-    const calculateTotalUnits = (): number => {
-        if (readings.length < 2) return 0;
-
-        // Sort readings by timestamp, ensuring timestamps are Date objects
-        const sortedReadings = [...readings].sort((a, b) => {
-            const timestampA =
-                a.timestamp instanceof Date
-                    ? a.timestamp
-                    : new Date(a.timestamp);
-            const timestampB =
-                b.timestamp instanceof Date
-                    ? b.timestamp
-                    : new Date(b.timestamp);
-            return timestampA.getTime() - timestampB.getTime();
-        });
-
-        // Calculate difference between first and last reading
-        return (
-            Number(sortedReadings[sortedReadings.length - 1].reading) -
-            Number(sortedReadings[0].reading)
-        );
-    };
-
     useEffect(() => {
+        const calculateTotalUnits = (): number => {
+            if (readings.length < 2) return 0;
+
+            // Sort readings by timestamp, ensuring timestamps are Date objects
+            const sortedReadings = [...readings].sort((a, b) => {
+                const timestampA =
+                    a.timestamp instanceof Date
+                        ? a.timestamp
+                        : new Date(a.timestamp);
+                const timestampB =
+                    b.timestamp instanceof Date
+                        ? b.timestamp
+                        : new Date(b.timestamp);
+                return timestampA.getTime() - timestampB.getTime();
+            });
+
+            // Calculate difference between first and last reading
+            return (
+                Number(sortedReadings[sortedReadings.length - 1].reading) -
+                Number(sortedReadings[0].reading)
+            );
+        };
+
         setTotalUnits(calculateTotalUnits());
     }, [readings]);
 
