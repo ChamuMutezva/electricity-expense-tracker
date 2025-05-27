@@ -1,3 +1,20 @@
+
+/**
+ * Renders a daily electricity consumption bar chart using a canvas element.
+ * 
+ * The chart visualizes consumption data grouped by day and period (morning, evening, night),
+ * and displays average usage statistics for each period. It automatically resizes to fit its container.
+ * 
+ * @component
+ * @param {Object} props - The component props.
+ * @param {ElectricityReading[]} props.readings - Array of electricity meter readings to visualize.
+ * 
+ * @returns {JSX.Element} The rendered usage chart and statistics cards.
+ * 
+ * @example
+ * <UsageChart readings={readingsArray} />
+ */
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -257,7 +274,7 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
             (chartInnerWidth / (dailyConsumption.length + 1)) * 0.8
         );
 
-        dailyConsumption.forEach((item, index) => {
+        dailyConsumption.forEach((item) => {
             // Calculate x position based on timestamp
             const dayIndex = days.indexOf(item.date);
             const dayX =
@@ -265,9 +282,8 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
                 (chartInnerWidth * dayIndex) / (days.length - 1 || 1);
 
             // Calculate time offset within day (0-1)
-            const date = new Date(item.timestamp);
-            const timeOffset =
-                (date.getHours() * 60 + date.getMinutes()) / (24 * 60);
+          //  const date = new Date(item.timestamp);
+          //  const timeOffset = (date.getHours() * 60 + date.getMinutes()) / (24 * 60);
             
             // Position bars within the day based on period
             let periodOffset = 0;

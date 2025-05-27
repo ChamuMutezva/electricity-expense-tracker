@@ -1,3 +1,27 @@
+/**
+ * AddToken component allows users to input and add new electricity tokens,
+ * displaying a form for entering token units and cost, and a table listing
+ * the history of added tokens.
+ *
+ * @component
+ * @param {Object} props - Component props.
+ * @param {string | number} props.tokenUnits - The current value for the token units input field.
+ * @param {string | number} props.tokenCost - The current value for the token cost input field.
+ * @param {(value: string) => void} props.setTokenCost - Callback to update the token cost value.
+ * @param {(value: string) => void} props.setTokenUnits - Callback to update the token units value.
+ * @param {() => void} props.handleAddToken - Handler function to add a new token entry.
+ * @param {boolean} props.isSubmitting - Indicates if a token is currently being added (disables the button).
+ * @param {Array<{
+ *   token_id: string | number;
+ *   timestamp: Date;
+ *   units: number;
+ *   new_reading: number;
+ *   total_cost?: number;
+ * }>} props.tokens - Array of token objects representing the token history.
+ *
+ * @returns {JSX.Element} The rendered AddToken component.
+ */
+
 import React from "react";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";

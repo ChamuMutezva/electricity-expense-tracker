@@ -1,3 +1,11 @@
+/**
+ * Renders an alert prompting the user to enable notifications for update reminders.
+ *
+ * @component
+ * @param {Object} props - The component props.
+ * @param {() => void} props.enableNotifications - Callback function to enable notifications when the button is clicked.
+ * @returns {JSX.Element} The rendered notifications alert component.
+ */
 import React from "react";
 import { Info } from "lucide-react";
 import { Button } from "@/components/ui/button";

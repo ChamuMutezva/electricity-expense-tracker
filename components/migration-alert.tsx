@@ -1,3 +1,23 @@
+/**
+ * MigrationAlert component displays an alert to the user when local electricity data
+ * is detected in the browser, prompting them to migrate the data to the database.
+ *
+ * @param handleMigrateData - Callback function invoked when the user chooses to migrate data.
+ * @param isSubmitting - Boolean indicating whether the migration process is currently ongoing.
+ * @param setShowMigrationAlert - Function to control the visibility of the migration alert.
+ *
+ * @remarks
+ * This component uses UI primitives for alert and button styling, and provides
+ * feedback to the user during the migration process.
+ *
+ * @example
+ * <MigrationAlert
+ *   handleMigrateData={migrateData}
+ *   isSubmitting={isLoading}
+ *   setShowMigrationAlert={setShowAlert}
+ * />
+ */
+
 import { Database } from "lucide-react";
 import React from "react";
 import { Button } from "./ui/button";

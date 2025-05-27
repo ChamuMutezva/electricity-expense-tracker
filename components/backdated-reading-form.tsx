@@ -1,3 +1,25 @@
+/**
+ * BackdatedReadingForm component allows users to submit a backdated electricity meter reading.
+ *
+ * This form provides UI controls for selecting a date, time (with presets and custom input),
+ * and entering a meter reading value. The period (morning, evening, night) is automatically
+ * determined based on the selected time. Upon submission, the form combines the selected date
+ * and time into a timestamp and calls the provided `onSubmit` handler with the reading data.
+ *
+ * @component
+ * @param {Object} props - Component props.
+ * @param {(reading: Omit<ElectricityReading, "id" | "reading_id">) => Promise<void>} props.onSubmit
+ *   Callback function invoked when the form is submitted. Receives the reading data (without `id` and `reading_id`).
+ * @param {boolean} props.isSubmitting
+ *   Indicates whether the form is currently submitting, disabling the submit button and showing a loading state.
+ *
+ * @example
+ * <BackdatedReadingForm
+ *   onSubmit={handleReadingSubmit}
+ *   isSubmitting={isLoading}
+ * />
+ */
+
 "use client";
 
 import { useState } from "react";

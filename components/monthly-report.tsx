@@ -1,3 +1,18 @@
+/**
+ * MonthlyReport component displays a summary and detailed breakdown of monthly electricity usage.
+ *
+ * Features:
+ * - Fetches and displays monthly usage data.
+ * - Shows total, average, highest, and lowest usage statistics.
+ * - Provides a CSV export option for the monthly report.
+ * - Visualizes usage comparison for each month.
+ * - Offers insights and usage trends based on the data.
+ * - Displays loading skeletons while data is being fetched.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered MonthlyReport component.
+ */
+
 "use client"
 
 import { useEffect, useState } from "react"

@@ -1,3 +1,20 @@
+/**
+ * UpdateMeterReading component allows users to input and submit their current electricity meter reading.
+ *
+ * @component
+ * @param {Object} props - Component props.
+ * @param {string | number} props.currentReading - The current value of the meter reading input.
+ * @param {(value: string) => void} props.setCurrentReading - Function to update the meter reading value.
+ * @param {() => void} props.handleAddReading - Function to handle the submission of the meter reading.
+ * @param {boolean} props.isSubmitting - Indicates if the submission is in progress.
+ * @param {boolean} props.isSubmitted - Indicates if the form has been submitted.
+ * @param {string} [props.label] - Optional label for the input field. Defaults to "Update Electricity Reading".
+ * @param {string} [props.placeholder] - Optional placeholder for the input field. Defaults to "Enter current meter reading".
+ * @param {string} [props.buttonText] - Optional text for the submit button. Defaults to "Update".
+ * @param {string} [props.loadingText] - Optional text for the button while submitting. Defaults to "Updating...".
+ *
+ * @returns {JSX.Element} The rendered UpdateMeterReading component.
+ */
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

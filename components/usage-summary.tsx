@@ -1,3 +1,16 @@
+/**
+ * Displays a summary of electricity usage and token purchase history.
+ *
+ * Fetches and presents aggregated usage statistics such as average daily usage,
+ * peak usage day, total tokens purchased, and a breakdown of daily usage.
+ * Also displays a history of token purchases if available.
+ *
+ * @component
+ * @param {Object} props - Component props.
+ * @param {ElectricityReading[]} props.readings - Array of electricity meter readings.
+ * @param {TokenPurchase[]} props.tokens - Array of token purchase records.
+ * @returns {JSX.Element} The rendered usage summary UI.
+ */
 "use client"
 
 import { useEffect, useState } from "react"
@@ -11,7 +24,7 @@ interface UsageSummaryProps {
   tokens: TokenPurchase[]
 }
 
-export default function UsageSummary({ readings, tokens }: UsageSummaryProps) {
+export default function UsageSummary({ readings, tokens }: Readonly<UsageSummaryProps>) {
   const [summary, setSummary] = useState<UsageSummaryType | null>(null)
   const [loading, setLoading] = useState(true)
 
