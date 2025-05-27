@@ -9,10 +9,9 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import MigrationAlert from "@/components/migration-alert";
 import MissedReadings from "@/components/missed-readings";
-import { Bell, Zap, BarChart3, CalendarClock } from "lucide-react";
+import { Zap, BarChart3, CalendarClock } from "lucide-react";
 import UsageSummary from "@/components/usage-summary";
 import UsageChart from "@/components/usage-chart";
 import MonthlyReport from "@/components/monthly-report";
@@ -36,7 +35,12 @@ import { Period } from "@/lib/types";
 import AddToken from "./add-token";
 import { UpdateMeterReading } from "./update-mete-reading";
 import NotificationsAlert from "./NotificationsAlert";
-import { parseLocalStorageReadings, parseLocalStorageTokens } from "@/lib/storage";
+import {
+    parseLocalStorageReadings,
+    parseLocalStorageTokens,
+} from "@/lib/storage";
+import UpdateReminderNotification from "./UpdateReminderNotification";
+import DashboardSummary from "./DashboardSummary";
 
 export default function ElectricityTracker({
     initialReadings,
@@ -63,7 +67,7 @@ export default function ElectricityTracker({
     // Add state for submission tracking
     const [isSubmitted, setIsSubmitted] = useState(false);
     const { toast } = useToast();
-   
+
     function setupNotifications(
         setNotificationsEnabled: (enabled: boolean) => void
     ) {
@@ -583,46 +587,15 @@ export default function ElectricityTracker({
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-green-800 dark:text-green-300">
-                                    Latest Reading
-                                </h3>
-                                <p className="text-2xl font-bold">
-                                    {latestReading} kWh
-                                </p>
-                            </div>
-                            <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">
-                                    Total Units Used
-                                </h3>
-                                <p className="text-2xl font-bold">
-                                    {totalUnits.toFixed(2)} kWh
-                                </p>
-                            </div>
-                            <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-purple-800 dark:text-purple-300">
-                                    Next Update
-                                </h3>
-                                <p className="text-2xl font-bold">
-                                    {nextUpdate
-                                        ? getTimeString(nextUpdate)
-                                        : "--:--"}
-                                </p>
-                                <p className="text-sm">In {timeUntilUpdate}</p>
-                            </div>
-                        </div>
+                        <DashboardSummary
+                            latestReading={latestReading}
+                            totalUnits={totalUnits}
+                            nextUpdate={nextUpdate}
+                            getTimeString={getTimeString}
+                            timeUntilUpdate={timeUntilUpdate}
+                        />
 
-                        {showNotification && (
-                            <Alert className="bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
-                                <Bell className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                                <AlertTitle>Update Reminder</AlertTitle>
-                                <AlertDescription>
-                                    It&apos;s almost time for your electricity
-                                    reading update!
-                                </AlertDescription>
-                            </Alert>
-                        )}
+                        {showNotification && <UpdateReminderNotification />}
 
                         <div className="grid gap-4">
                             <UpdateMeterReading
