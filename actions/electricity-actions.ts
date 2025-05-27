@@ -8,11 +8,17 @@ import type {
     TokenPurchaseDBResult,
     UsageSummary,
     DailyUsage,
+    Period,
 } from "@/lib/types";
 import { getPeriodFromHour } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
-// Check if database is connected before performing operations
+/**
+ * Checks if the database connection is established.
+ *
+ * @throws {Error} If the database is not connected, throws an error with a message
+ *         instructing to set the DATABASE_URL environment variable.
+ */
 const checkDbConnection = () => {
     if (!isDatabaseConnected()) {
         throw new Error(
@@ -26,7 +32,18 @@ type MonthlyUsageRow = {
     usage: number | string; // usage may come as string from SQL, so handle both
 };
 
-// Add a new electricity reading
+/**
+ * Adds a new electricity reading to the database.
+ *
+ * @param reading - The meter reading value to be added.
+ * @returns A promise that resolves to the newly created {@link ElectricityReading} object.
+ * @throws {Error} If the database connection is not established.
+ *
+ * @remarks
+ * - Generates a unique reading ID and determines the period (morning, evening, or night) based on the current hour.
+ * - Inserts the reading into the `electricity_readings` table and revalidates the root path cache.
+ * - The returned object includes the database-generated ID, reading ID, timestamp, reading value, period, and creation date.
+ */
 export async function addElectricityReading(
     reading: number
 ): Promise<ElectricityReading> {
@@ -40,7 +57,7 @@ export async function addElectricityReading(
     INSERT INTO electricity_readings (reading_id, timestamp, reading, period)
     VALUES (${readingId}, ${now.toISOString()}, ${reading}, ${period})
     RETURNING id, reading_id, timestamp, reading, period, created_at
-  `) as SqlQueryResult;
+  `) as SqlQueryResult<ElectricityReadingDBResult>;
 
     revalidatePath("/");
 
@@ -50,7 +67,7 @@ export async function addElectricityReading(
         reading_id: result[0]?.reading_id,
         timestamp: new Date(result[0]?.timestamp),
         reading: Number(result[0]?.reading),
-        period: result[0]?.period as "morning" | "evening" | "night",
+        period: result[0]?.period as Period,
         created_at: result[0]?.created_at
             ? new Date(result[0]?.created_at)
             : undefined,
@@ -59,7 +76,17 @@ export async function addElectricityReading(
     return newReading;
 }
 
-// Add a backdated electricity reading
+/**
+ * Adds a backdated electricity reading to the database.
+ *
+ * This function inserts a new electricity reading record with a generated backdated reading ID,
+ * and returns the newly created reading as a typed object. It also triggers a revalidation of the root path.
+ *
+ * @param readingData - The electricity reading data to insert, excluding `id` and `reading_id`.
+ * @returns A promise that resolves to the newly created `ElectricityReading` object.
+ *
+ * @throws Will throw an error if the database connection is not available or if the insertion fails.
+ */
 export async function addBackdatedReading(
     readingData: Omit<ElectricityReading, "id" | "reading_id">
 ): Promise<ElectricityReading> {
@@ -73,7 +100,7 @@ export async function addBackdatedReading(
         readingData.reading
     }, ${readingData.period})
     RETURNING id, reading_id, timestamp, reading, period, created_at
-  `) as SqlQueryResult;
+  `) as SqlQueryResult<ElectricityReadingDBResult>;
 
     revalidatePath("/");
 
@@ -83,7 +110,7 @@ export async function addBackdatedReading(
         reading_id: result[0]?.reading_id,
         timestamp: new Date(result[0]?.timestamp),
         reading: Number(result[0]?.reading),
-        period: result[0]?.period as "morning" | "evening" | "night",
+        period: result[0]?.period as Period,
         created_at: result[0]?.created_at
             ? new Date(result[0]?.created_at)
             : undefined,
@@ -92,8 +119,23 @@ export async function addBackdatedReading(
     return newReading;
 }
 
-// Add a new token purchase
-export async function addTokenPurchase(units: number, cost: number): Promise<TokenPurchase> {
+/* Adds a new token purchase to the database and updates the electricity readings accordingly.
+ *
+ * @param units - The number of electricity units purchased.
+ * @param cost - The total cost of the token purchase.
+ * @returns A promise that resolves to the newly created {@link TokenPurchase} object.
+ * @throws {Error} If the database connection is not established.
+ *
+ * @remarks
+ * - Retrieves the latest electricity reading and calculates the new reading after the token purchase.
+ * - Inserts a new record into the `token_purchases` table and a corresponding reading into the `electricity_readings` table.
+ * - Triggers a cache revalidation for the root path.
+ * - The returned object includes the database-generated ID, token ID, timestamp, units, new reading, creation date, and total cost.
+ */
+export async function addTokenPurchase(
+    units: number,
+    cost: number
+): Promise<TokenPurchase> {
     checkDbConnection();
 
     // Get the latest reading
@@ -108,7 +150,7 @@ export async function addTokenPurchase(units: number, cost: number): Promise<Tok
     INSERT INTO token_purchases (token_id, timestamp, units, new_reading, total_cost)
     VALUES (${tokenId}, ${now.toISOString()}, ${units}, ${newReading}, ${cost})
     RETURNING id, token_id, timestamp, units, new_reading, created_at, total_cost
-  `) as SqlQueryResult;
+  `) as SqlQueryResult<TokenPurchaseDBResult>;
 
     // Also add a new reading entry with the updated meter value
     const period = getPeriodFromHour(now.getHours());
@@ -137,7 +179,16 @@ export async function addTokenPurchase(units: number, cost: number): Promise<Tok
     return newToken;
 }
 
-// Get all electricity readings
+/* Retrieves all electricity readings from the database.
+ *
+ * @returns A promise that resolves to an array of {@link ElectricityReading} objects,
+ *          ordered by timestamp in ascending order. If the database is not connected,
+ *          returns an empty array.
+ *
+ * @remarks
+ * - Each reading includes its ID, reading ID, timestamp, reading value, period, and creation date.
+ * - Ensures proper type conversion for each field.
+ */
 export async function getElectricityReadings(): Promise<ElectricityReading[]> {
     if (!isDatabaseConnected()) {
         return [];
@@ -165,7 +216,16 @@ export async function getElectricityReadings(): Promise<ElectricityReading[]> {
     );
 }
 
-// Get all token purchases
+/* Retrieves all token purchases from the database.
+ *
+ * @returns A promise that resolves to an array of {@link TokenPurchase} objects,
+ *          ordered by timestamp in ascending order. If the database is not connected,
+ *          returns an empty array.
+ *
+ * @remarks
+ * - Each token purchase includes its ID, token ID, timestamp, units, new reading, creation date, and total cost.
+ * - Ensures proper type conversion for each field.
+ */
 export async function getTokenPurchases(): Promise<TokenPurchase[]> {
     if (!isDatabaseConnected()) {
         return [];
@@ -194,7 +254,17 @@ export async function getTokenPurchases(): Promise<TokenPurchase[]> {
     );
 }
 
-// Get the latest reading value
+/* Retrieves the latest electricity meter reading from the database.
+ *
+ * @returns A promise that resolves to the latest reading value as a number.
+ *          If the database is not connected or there are no readings, returns 0.
+ *
+ * @throws No explicit errors are thrown; returns 0 if the database is not connected.
+ *
+ * @remarks
+ * - Queries the `electricity_readings` table for the most recent reading based on timestamp.
+ * - Ensures the returned value is a number.
+ */
 export async function getLatestReading(): Promise<number> {
     if (!isDatabaseConnected()) {
         return 0;
@@ -205,12 +275,22 @@ export async function getLatestReading(): Promise<number> {
     FROM electricity_readings
     ORDER BY timestamp DESC
     LIMIT 1
-  `) as SqlQueryResult;
+  `) as SqlQueryResult<ElectricityReadingDBResult>;
 
     return result.length > 0 ? Number(result[0]?.reading) : 0;
 }
 
-// Get total units used (difference between first and last reading)
+/* Retrieves the total units of electricity used, calculated as the difference between
+ * the first and last meter readings in the database.
+ *
+ * @returns A promise that resolves to the total units used as a number, rounded to two decimal places.
+ *          Returns 0 if the database is not connected or if readings are unavailable.
+ *
+ * @remarks
+ * - Queries the `electricity_readings` table for the earliest and latest readings based on timestamp.
+ * - If either reading is missing, returns 0.
+ * - Ensures the returned value is a number with two decimal precision.
+ */
 export async function getTotalUnitsUsed(): Promise<number> {
     if (!isDatabaseConnected()) {
         return 0;
@@ -220,7 +300,7 @@ export async function getTotalUnitsUsed(): Promise<number> {
     SELECT 
       (SELECT reading FROM electricity_readings ORDER BY timestamp ASC LIMIT 1) as first_reading,
       (SELECT reading FROM electricity_readings ORDER BY timestamp DESC LIMIT 1) as last_reading
-  `) as SqlQueryResult;
+  `) as SqlQueryResult<{ first_reading: number; last_reading: number }>;
 
     if (
         result.length === 0 ||
@@ -235,7 +315,20 @@ export async function getTotalUnitsUsed(): Promise<number> {
     return Number.parseFloat(difference.toFixed(2)); // Round to 2 decimal places
 }
 
-// Get usage summary with daily breakdowns
+/* Retrieves a usage summary of electricity consumption and token purchases.
+ *
+ * @returns A promise that resolves to a {@link UsageSummary} object containing:
+ * - `averageUsage`: The average daily electricity usage.
+ * - `peakUsageDay`: An object with the date and usage value of the day with the highest usage.
+ * - `totalTokensPurchased`: The total number of electricity units purchased via tokens.
+ * - `dailyUsage`: An array of daily usage breakdowns, each including readings for morning, evening, night, and total usage for the day.
+ *
+ * @remarks
+ * - If the database is not connected, returns a summary with zeroed/default values.
+ * - Groups all electricity readings by day and calculates usage between periods (morning, evening, night).
+ * - Calculates the average daily usage and identifies the day with the highest usage.
+ * - Sums all token purchases to compute the total tokens purchased.
+ */
 export async function getUsageSummary(): Promise<UsageSummary> {
     if (!isDatabaseConnected()) {
         return {
@@ -335,7 +428,17 @@ export async function getUsageSummary(): Promise<UsageSummary> {
     };
 }
 
-// Get monthly usage data for reporting
+/* Retrieves monthly electricity usage data for reporting purposes.
+ *
+ * @returns A promise that resolves to an array of objects, each containing:
+ *   - `month`: The month in 'YYYY-MM' format.
+ *   - `usage`: The total electricity usage for that month as a number.
+ *
+ * @remarks
+ * - If the database is not connected, returns an empty array.
+ * - Calculates usage for each month as the difference between the first and last readings within that month.
+ * - Results are ordered by month in ascending order.
+ */
 export async function getMonthlyUsage(): Promise<
     { month: string; usage: number }[]
 > {
@@ -367,7 +470,20 @@ export async function getMonthlyUsage(): Promise<
     }));
 }
 
-// Migrate data from local storage to database
+/* Migrates electricity readings and token purchases from local storage to the database.
+ *
+ * @param readings - An array of electricity readings to migrate, each omitting the `id` field.
+ * @param tokens - An array of token purchases to migrate, each omitting the `id` field.
+ * @returns A promise that resolves to `true` if the migration succeeds, or `false` if an error occurs.
+ *
+ * @remarks
+ * - Begins a database transaction to ensure atomicity of the migration.
+ * - Each reading and token is inserted into the respective table if it does not already exist (using `ON CONFLICT DO NOTHING`).
+ * - Skips invalid readings or tokens and logs a warning to the console.
+ * - Commits the transaction on success, or rolls back if any error occurs.
+ * - Triggers a cache revalidation for the root path after successful migration.
+ * - Returns `false` and logs an error if the migration fails.
+ */
 export async function migrateFromLocalStorage(
     readings: Omit<ElectricityReading, "id">[],
     tokens: Omit<TokenPurchase, "id">[]
