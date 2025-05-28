@@ -31,7 +31,6 @@ import {
     addBackdatedReading,
 } from "@/actions/electricity-actions";
 import { useToast } from "@/hooks/use-toast";
-import { Period } from "@/lib/types";
 import AddToken from "./add-token";
 import { UpdateMeterReading } from "./update-mete-reading";
 import NotificationsAlert from "./NotificationsAlert";
@@ -467,7 +466,7 @@ export default function ElectricityTracker({
                                   .substring(2, 9)}`,
                           timestamp: new Date(r.timestamp),
                           reading: r.reading,
-                          period: r.period as Period,
+                          period: r.period,
                       })
                   )
                 : [];
@@ -560,7 +559,7 @@ export default function ElectricityTracker({
     }, [readings]);
 
     return (
-        <main className="grid gap-6">
+        <div className="grid gap-6">
             {/* Migration alert */}
             {showMigrationAlert && (
                 <MigrationAlert
@@ -735,6 +734,6 @@ export default function ElectricityTracker({
                     </Card>
                 </TabsContent>
             </Tabs>
-        </main>
+        </div>
     );
 }

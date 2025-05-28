@@ -39,8 +39,8 @@ export default async function HomePage() {
     }
 
     return (
-        <div className="container mx-auto py-8 px-4">
-            <header>
+        <main className="container mx-auto py-8 px-4">
+            <div>
                 <h1 className="text-3xl font-bold text-center mb-8">
                     Electricity Expense Tracker
                 </h1>
@@ -62,7 +62,7 @@ export default async function HomePage() {
                         </AlertDescription>
                     </Alert>
                 )}
-            </header>
+            </div>
 
             <ElectricityTracker
                 initialReadings={readings}
@@ -71,6 +71,6 @@ export default async function HomePage() {
                 initialTotalUnits={totalUnits}
                 dbConnected={dbConnected}
             />
-        </div>
+        </main>
     );
 }
