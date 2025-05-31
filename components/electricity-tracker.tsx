@@ -292,6 +292,7 @@ export default function ElectricityTracker({
             }
 
             setCurrentReading("");
+            setIsSubmitted(false); // Reset submission state after success
 
             toast({
                 title: "Reading Added",

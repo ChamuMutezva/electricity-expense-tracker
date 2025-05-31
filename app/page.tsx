@@ -10,6 +10,7 @@ import { isDatabaseConnected } from "@/lib/db";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Database } from "lucide-react";
 import { ElectricityReading, TokenPurchase } from "@/lib/types";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const metadata: Metadata = {
     title: "Electricity Expense Tracker",
@@ -41,9 +42,12 @@ export default async function HomePage() {
     return (
         <main className="container mx-auto py-8 px-4">
             <div>
-                <h1 className="text-3xl font-bold text-center mb-8">
-                    Electricity Expense Tracker
-                </h1>
+                <div className="flex justify-between items-start">
+                    <h1 className="text-3xl font-bold mb-8">
+                        Electricity Expense Tracker
+                    </h1>
+                    <ThemeToggle />
+                </div>
 
                 {!dbConnected && (
                     <Alert className="mb-6 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
