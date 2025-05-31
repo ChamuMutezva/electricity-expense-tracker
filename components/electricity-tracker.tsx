@@ -548,11 +548,12 @@ export default function ElectricityTracker({
                         : new Date(b.timestamp);
                 return timestampA.getTime() - timestampB.getTime();
             });
+            console.log("Sorted Readings:", sortedReadings);
 
             // Calculate difference between first and last reading
             return (
-                Number(sortedReadings[sortedReadings.length - 1].reading) -
-                Number(sortedReadings[0].reading)
+                Number(sortedReadings[0].reading) -
+                Number(sortedReadings[sortedReadings.length - 1].reading)
             );
         };
 

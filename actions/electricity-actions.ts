@@ -339,21 +339,20 @@ export async function getUsageSummary(): Promise<UsageSummary> {
         };
     }
 
-    // Get all readings
-    const readings = await getElectricityReadings();
+    // Get all readings and sort chronologically
+    const readings = (await getElectricityReadings())
+        .map(r => ({ ...r, reading: Number(r.reading) }))
+        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 
     // Get all token purchases
     const tokens = await getTokenPurchases();
-
-    // Calculate total tokens purchased
     const totalTokensPurchased = tokens.reduce(
         (sum, token) => sum + Number(token.units),
         0
     );
 
-    // Group readings by day
+    // Group readings by date (day)
     const dailyReadingsMap: Record<string, ElectricityReading[]> = {};
-
     readings.forEach((reading) => {
         const date = reading.timestamp.toISOString().split("T")[0];
         if (!dailyReadingsMap[date]) {
@@ -362,58 +361,79 @@ export async function getUsageSummary(): Promise<UsageSummary> {
         dailyReadingsMap[date].push(reading);
     });
 
-    // Calculate daily usage
+    // Get all unique dates sorted
+    const allDates = Object.keys(dailyReadingsMap).sort();
+
     const dailyUsage: DailyUsage[] = [];
+    let previousNightReading: number | null = null;
 
-    Object.entries(dailyReadingsMap).forEach(([date, dayReadings]) => {
-        // Sort readings by timestamp
-        dayReadings.sort(
-            (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
-        );
+    for (let i = 0; i < allDates.length; i++) {
+        const date = allDates[i];
+        const dayReadings = dailyReadingsMap[date];
+        
+        // Sort readings within the day
+        dayReadings.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 
-        // Get readings by period
-        const morningReading = dayReadings.find((r) => r.period === "morning");
-        const eveningReading = dayReadings.find((r) => r.period === "evening");
-        const nightReading = dayReadings.find((r) => r.period === "night");
+        // Find readings by period
+        const morningReading = dayReadings.find(r => r.period === "morning");
+        const eveningReading = dayReadings.find(r => r.period === "evening");
+        const nightReading = dayReadings.find(r => r.period === "night");
 
-        // Calculate differences between periods
-        let morningToEvening = 0;
-        let eveningToNight = 0;
+        // Calculate consumption periods
+        let morningUsage = 0;
+        let eveningUsage = 0;
+        let nightUsage = 0;
 
-        if (morningReading && eveningReading) {
-            morningToEvening =
-                Number(eveningReading.reading) - Number(morningReading.reading);
+        // 1. Morning usage (from previous night to current morning)
+        if (morningReading) {
+            if (i > 0) {
+                // Get previous day's night reading
+                const prevDate = allDates[i-1];
+                const prevDayReadings = dailyReadingsMap[prevDate];
+                const prevNightReading = prevDayReadings.find(r => r.period === "night");
+                
+                if (prevNightReading) {
+                    morningUsage = prevNightReading.reading - morningReading.reading;
+                }
+            } else if (previousNightReading !== null) {
+                // For first day if we have a previous night reading
+                morningUsage = previousNightReading - morningReading.reading;
+            }
         }
 
+        // 2. Evening usage (from morning to evening)
+        if (morningReading && eveningReading) {
+            eveningUsage = morningReading.reading - eveningReading.reading;
+        }
+
+        // 3. Night usage (from evening to night)
         if (eveningReading && nightReading) {
-            eveningToNight =
-                Number(nightReading.reading) - Number(eveningReading.reading);
+            nightUsage = eveningReading.reading - nightReading.reading;
+        }
+
+        // Store the last night reading for next day's morning calculation
+        if (nightReading) {
+            previousNightReading = nightReading.reading;
         }
 
         // Calculate total for the day
-        const total = morningToEvening + eveningToNight;
+        const total = morningUsage + eveningUsage + nightUsage;
 
         dailyUsage.push({
             date,
-            morning: morningReading
-                ? Number(morningReading.reading)
-                : undefined,
-            evening: eveningReading
-                ? Number(eveningReading.reading)
-                : undefined,
-            night: nightReading ? Number(nightReading.reading) : undefined,
+            morning: morningReading?.reading,
+            evening: eveningReading?.reading,
+            night: nightReading?.reading,  
             total,
         });
-    });
+    }
 
     // Calculate average usage
     const totalDailyUsage = dailyUsage.reduce((sum, day) => sum + day.total, 0);
-    const averageUsage =
-        dailyUsage.length > 0 ? totalDailyUsage / dailyUsage.length : 0;
+    const averageUsage = dailyUsage.length > 0 ? totalDailyUsage / dailyUsage.length : 0;
 
     // Find peak usage day
     let peakUsageDay = { date: "", usage: 0 };
-
     dailyUsage.forEach((day) => {
         if (day.total > peakUsageDay.usage) {
             peakUsageDay = { date: day.date, usage: day.total };
