@@ -580,7 +580,7 @@ export default function ElectricityTracker({
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Zap className="h-5 w-5 text-yellow-500" />
-                        Current Electricity Status
+                        <h2>Current Electricity Status</h2>
                     </CardTitle>
                     <CardDescription>
                         Track and update your electricity meter readings
