@@ -341,7 +341,7 @@ export async function getUsageSummary(): Promise<UsageSummary> {
 
     // Get all readings and sort chronologically
     const readings = (await getElectricityReadings())
-        .map(r => ({ ...r, reading: Number(r.reading) }))
+        .map((r) => ({ ...r, reading: Number(r.reading) }))
         .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 
     // Get all token purchases
@@ -370,14 +370,16 @@ export async function getUsageSummary(): Promise<UsageSummary> {
     for (let i = 0; i < allDates.length; i++) {
         const date = allDates[i];
         const dayReadings = dailyReadingsMap[date];
-        
+
         // Sort readings within the day
-        dayReadings.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+        dayReadings.sort(
+            (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+        );
 
         // Find readings by period
-        const morningReading = dayReadings.find(r => r.period === "morning");
-        const eveningReading = dayReadings.find(r => r.period === "evening");
-        const nightReading = dayReadings.find(r => r.period === "night");
+        const morningReading = dayReadings.find((r) => r.period === "morning");
+        const eveningReading = dayReadings.find((r) => r.period === "evening");
+        const nightReading = dayReadings.find((r) => r.period === "night");
 
         // Calculate consumption periods
         let morningUsage = 0;
@@ -388,12 +390,15 @@ export async function getUsageSummary(): Promise<UsageSummary> {
         if (morningReading) {
             if (i > 0) {
                 // Get previous day's night reading
-                const prevDate = allDates[i-1];
+                const prevDate = allDates[i - 1];
                 const prevDayReadings = dailyReadingsMap[prevDate];
-                const prevNightReading = prevDayReadings.find(r => r.period === "night");
-                
+                const prevNightReading = prevDayReadings.find(
+                    (r) => r.period === "night"
+                );
+
                 if (prevNightReading) {
-                    morningUsage = prevNightReading.reading - morningReading.reading;
+                    morningUsage =
+                        prevNightReading.reading - morningReading.reading;
                 }
             } else if (previousNightReading !== null) {
                 // For first day if we have a previous night reading
@@ -423,14 +428,15 @@ export async function getUsageSummary(): Promise<UsageSummary> {
             date,
             morning: morningReading?.reading,
             evening: eveningReading?.reading,
-            night: nightReading?.reading,  
+            night: nightReading?.reading,
             total,
         });
     }
 
     // Calculate average usage
     const totalDailyUsage = dailyUsage.reduce((sum, day) => sum + day.total, 0);
-    const averageUsage = dailyUsage.length > 0 ? totalDailyUsage / dailyUsage.length : 0;
+    const averageUsage =
+        dailyUsage.length > 0 ? totalDailyUsage / dailyUsage.length : 0;
 
     // Find peak usage day
     let peakUsageDay = { date: "", usage: 0 };
@@ -448,16 +454,17 @@ export async function getUsageSummary(): Promise<UsageSummary> {
     };
 }
 
-/* Retrieves monthly electricity usage data for reporting purposes.
+/**
+ * Retrieves the monthly electricity usage based on readings from the database.
  *
- * @returns A promise that resolves to an array of objects, each containing:
- *   - `month`: The month in 'YYYY-MM' format.
- *   - `usage`: The total electricity usage for that month as a number.
+ * This function calculates the total consumption for each month by summing up
+ * only the decreases in the electricity meter readings (i.e., actual consumption).
+ * It returns an array of objects, each containing the month (in 'YYYY-MM' format)
+ * and the corresponding usage value.
  *
- * @remarks
- * - If the database is not connected, returns an empty array.
- * - Calculates usage for each month as the difference between the first and last readings within that month.
- * - Results are ordered by month in ascending order.
+ * If the database is not connected, an empty array is returned.
+ *
+ * @returns {Promise<{ month: string; usage: number }[]>} A promise that resolves to an array of monthly usage objects.
  */
 export async function getMonthlyUsage(): Promise<
     { month: string; usage: number }[]
@@ -467,20 +474,31 @@ export async function getMonthlyUsage(): Promise<
     }
 
     const result = (await sql`
-    WITH monthly_readings AS (
-      SELECT 
-        date_trunc('month', timestamp) as month,
-        first_value(reading) OVER (PARTITION BY date_trunc('month', timestamp) ORDER BY timestamp ASC) as first_reading,
-        first_value(reading) OVER (PARTITION BY date_trunc('month', timestamp) ORDER BY timestamp DESC) as last_reading
-      FROM electricity_readings
-    )
-    SELECT DISTINCT
-      to_char(month, 'YYYY-MM') as month,
-      (last_reading - first_reading) as usage
-    FROM monthly_readings
-    ORDER BY month
+WITH reading_changes AS (
+  SELECT 
+    timestamp,
+    reading,
+    LAG(reading) OVER (ORDER BY timestamp) as prev_reading,
+    date_trunc('month', timestamp) as month
+  FROM electricity_readings
+),
+consumption_periods AS (
+  SELECT
+    month,
+    -- Only count decreases in reading (actual consumption)
+    SUM(CASE WHEN reading < prev_reading THEN prev_reading - reading ELSE 0 END) as usage
+  FROM reading_changes
+  WHERE prev_reading IS NOT NULL
+  GROUP BY month
+)
+SELECT 
+  to_char(month, 'YYYY-MM') as month,
+  usage
+FROM consumption_periods
+ORDER BY month
   `) as MonthlyUsageRow[];
 
+    console.log("Monthly Usage Result:", result);
     // Ensure result is treated as an array with a map method
     const resultArray = Array.isArray(result) ? result : [];
 
