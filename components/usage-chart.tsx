@@ -1,27 +1,33 @@
-
 /**
  * Renders a daily electricity consumption bar chart using a canvas element.
- * 
+ *
  * The chart visualizes consumption data grouped by day and period (morning, evening, night),
  * and displays average usage statistics for each period. It automatically resizes to fit its container.
- * 
+ *
  * @component
  * @param {Object} props - The component props.
  * @param {ElectricityReading[]} props.readings - Array of electricity meter readings to visualize.
- * 
+ *
  * @returns {JSX.Element} The rendered usage chart and statistics cards.
- * 
+ *
  * @example
  * <UsageChart readings={readingsArray} />
  */
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import type { ElectricityReading } from "@/lib/types";
+import type { ElectricityReading, Period } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Period } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface UsageChartProps {
     readings: ElectricityReading[];
@@ -34,6 +40,8 @@ interface DailyConsumption {
     period: Period;
 }
 
+type TimePeriod = "weekly" | "monthly" | "all";
+
 export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [chartWidth, setChartWidth] = useState(0);
@@ -42,8 +50,10 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
     const [dailyConsumption, setDailyConsumption] = useState<
         DailyConsumption[]
     >([]);
+    const [timePeriod, setTimePeriod] = useState<TimePeriod>("weekly");
+    const [currentWeekStart, setCurrentWeekStart] = useState<Date>(new Date());
 
-    // Calculate daily consumption from readings
+    // Calculate daily consumption from readings - KEEPING ORIGINAL LOGIC
     useEffect(() => {
         if (readings.length < 2) {
             setDailyConsumption([]);
@@ -72,7 +82,7 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
             }
             readingsByDay[date].push(reading);
         });
-        // console.log("Readings by day:", readingsByDay);
+
         // Calculate consumption for each day and period
         const consumption: DailyConsumption[] = [];
 
@@ -143,10 +153,20 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
         );
 
         setDailyConsumption(consumption);
+
+        // Set current week to the most recent week
+        if (consumption.length > 0) {
+            const latestDate = new Date(
+                consumption[consumption.length - 1].date
+            );
+            const weekStart = new Date(latestDate);
+            weekStart.setDate(weekStart.getDate() - 6); // Start of the week (7 days including today)
+            setCurrentWeekStart(weekStart);
+        }
     }, [readings]);
 
+    // KEEPING ORIGINAL DIMENSION LOGIC BUT ADDING TAB SWITCH DETECTION
     useEffect(() => {
-        // Set canvas dimensions based on container
         const updateDimensions = () => {
             if (canvasRef.current) {
                 const container = canvasRef.current.parentElement;
@@ -162,43 +182,120 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
         window.addEventListener("resize", updateDimensions);
         setLoading(false);
 
-        return () => window.removeEventListener("resize", updateDimensions);
+        // Add a small delay to handle tab switching
+        const timeoutId = setTimeout(updateDimensions, 100);
+
+        return () => {
+            window.removeEventListener("resize", updateDimensions);
+            clearTimeout(timeoutId);
+        };
     }, []);
 
+    // Add effect to handle tab switching - trigger when component receives new data
     useEffect(() => {
-        if (
-            !canvasRef.current ||
-            dailyConsumption.length === 0 ||
-            chartWidth === 0
-        )
+        if (dailyConsumption.length > 0) {
+            const updateDimensions = () => {
+                if (canvasRef.current) {
+                    const container = canvasRef.current.parentElement;
+                    if (container) {
+                        setChartWidth(container.clientWidth);
+                        setChartHeight(300);
+                    }
+                }
+            };
+
+            // Small delay to ensure tab is fully switched
+            const timeoutId = setTimeout(updateDimensions, 50);
+            return () => clearTimeout(timeoutId);
+        }
+    }, [dailyConsumption]);
+
+    // Filter data based on time period
+    const getFilteredData = (): DailyConsumption[] => {
+        if (timePeriod === "all") {
+            return dailyConsumption;
+        }
+
+        if (timePeriod === "weekly") {
+            const weekEnd = new Date(currentWeekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+
+            return dailyConsumption.filter((item) => {
+                const itemDate = new Date(item.date);
+                return itemDate >= currentWeekStart && itemDate <= weekEnd;
+            });
+        }
+
+        if (timePeriod === "monthly") {
+            const monthStart = new Date(currentWeekStart);
+            monthStart.setDate(1);
+
+            const monthEnd = new Date(monthStart);
+            monthEnd.setMonth(monthEnd.getMonth() + 1);
+            monthEnd.setDate(0);
+
+            return dailyConsumption.filter((item) => {
+                const itemDate = new Date(item.date);
+                return itemDate >= monthStart && itemDate <= monthEnd;
+            });
+        }
+
+        return dailyConsumption;
+    };
+
+    const filteredData = getFilteredData();
+
+    // Enhanced drawing with gradients and shadows
+    useEffect(() => {
+        if (!canvasRef.current || filteredData.length === 0 || chartWidth === 0)
             return;
 
         const canvas = canvasRef.current;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        // Set canvas dimensions
-        canvas.width = chartWidth;
-        canvas.height = chartHeight;
+        // Set canvas dimensions with device pixel ratio for crisp rendering
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = chartWidth * dpr;
+        canvas.height = chartHeight * dpr;
+        canvas.style.width = chartWidth + "px";
+        canvas.style.height = chartHeight + "px";
+        ctx.scale(dpr, dpr);
 
-        // Clear canvas
-        ctx.clearRect(0, 0, chartWidth, chartHeight);
+        // Clear canvas with subtle background
+        ctx.fillStyle = "#fafafa";
+        ctx.fillRect(0, 0, chartWidth, chartHeight);
 
         // Find min and max values for scaling
-        const consumptionValues = dailyConsumption.map((r) => r.consumption);
-        const minConsumption = 0; // Math.min(...consumptionValues);
+        const consumptionValues = filteredData.map((r) => r.consumption);
+        const minConsumption = 0;
         const maxConsumption = Math.max(...consumptionValues);
         const range = maxConsumption - minConsumption || 1;
 
         // Set padding
-        const padding = { top: 30, right: 20, bottom: 50, left: 60 };
+        const padding = { top: 40, right: 30, bottom: 70, left: 80 };
         const chartInnerWidth = chartWidth - padding.left - padding.right;
         const chartInnerHeight = chartHeight - padding.top - padding.bottom;
 
-        // Draw axes
-        ctx.beginPath();
-        ctx.strokeStyle = "#94a3b8"; // slate-400
+        // Draw subtle background grid
+        ctx.strokeStyle = "#f1f5f9";
         ctx.lineWidth = 1;
+
+        const yLabelCount = 5;
+        for (let i = 0; i <= yLabelCount; i++) {
+            const y =
+                padding.top +
+                (chartInnerHeight * (yLabelCount - i)) / yLabelCount;
+            ctx.beginPath();
+            ctx.moveTo(padding.left, y);
+            ctx.lineTo(chartWidth - padding.right, y);
+            ctx.stroke();
+        }
+
+        // Draw main axes with enhanced styling
+        ctx.beginPath();
+        ctx.strokeStyle = "#64748b";
+        ctx.lineWidth = 2;
 
         // Y-axis
         ctx.moveTo(padding.left, padding.top);
@@ -209,82 +306,60 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
         ctx.lineTo(chartWidth - padding.right, chartHeight - padding.bottom);
         ctx.stroke();
 
-        // Draw Y-axis labels
+        // Enhanced Y-axis labels with better typography
         ctx.textAlign = "right";
         ctx.textBaseline = "middle";
-        ctx.fillStyle = "#64748b"; // slate-500
-        ctx.font = "12px sans-serif";
+        ctx.fillStyle = "#475569";
+        ctx.font = "600 12px system-ui, -apple-system, sans-serif";
 
-        const yLabelCount = 5;
         for (let i = 0; i <= yLabelCount; i++) {
             const y =
                 padding.top +
                 (chartInnerHeight * (yLabelCount - i)) / yLabelCount;
             const value = minConsumption + (range * i) / yLabelCount;
-
-            ctx.fillText(value.toFixed(1) + " kWh", padding.left - 10, y);
-
-            // Grid line
-            ctx.beginPath();
-            ctx.strokeStyle = "#e2e8f0"; // slate-200
-            ctx.moveTo(padding.left, y);
-            ctx.lineTo(chartWidth - padding.right, y);
-            ctx.stroke();
+            ctx.fillText(value.toFixed(1) + " kWh", padding.left - 15, y);
         }
 
         // Group consumption by day for X-axis
         const dayGroups: Record<string, DailyConsumption[]> = {};
-        dailyConsumption.forEach((item) => {
+        filteredData.forEach((item) => {
             if (!dayGroups[item.date]) {
                 dayGroups[item.date] = [];
             }
             dayGroups[item.date].push(item);
         });
 
-        const days = Object.keys(dayGroups);
+        const days = Object.keys(dayGroups).sort();
 
-        // Draw X-axis labels
+        // Enhanced X-axis labels
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
+        ctx.fillStyle = "#475569";
+        ctx.font = "500 11px system-ui, -apple-system, sans-serif";
 
         days.forEach((day, i) => {
             const x =
                 padding.left + (chartInnerWidth * i) / (days.length - 1 || 1);
-
-            // Format date for display (e.g., "May 20")
             const dateObj = new Date(day);
             const formattedDate = dateObj.toLocaleDateString(undefined, {
                 month: "short",
                 day: "numeric",
             });
-
-            ctx.fillText(formattedDate, x, chartHeight - padding.bottom + 10);
-
-            // Grid line
-            ctx.beginPath();
-            ctx.strokeStyle = "#e2e8f0"; // slate-200
-            ctx.moveTo(x, padding.top);
-            ctx.lineTo(x, chartHeight - padding.bottom);
-            ctx.stroke();
+            ctx.fillText(formattedDate, x, chartHeight - padding.bottom + 15);
         });
 
-        // Draw bar chart
+        // Enhanced bar chart with gradients and shadows
         const barWidth = Math.min(
-            30,
-            (chartInnerWidth / (dailyConsumption.length + 1)) * 0.8
+            35,
+            (chartInnerWidth / (filteredData.length + 1)) * 0.8
         );
 
-        dailyConsumption.forEach((item) => {
-            // Calculate x position based on timestamp
+        filteredData.forEach((item) => {
             const dayIndex = days.indexOf(item.date);
             const dayX =
                 padding.left +
                 (chartInnerWidth * dayIndex) / (days.length - 1 || 1);
 
-            // Calculate time offset within day (0-1)
-          //  const date = new Date(item.timestamp);
-          //  const timeOffset = (date.getHours() * 60 + date.getMinutes()) / (24 * 60);
-            
             // Position bars within the day based on period
             let periodOffset = 0;
             if (item.period === "morning") periodOffset = -barWidth;
@@ -292,14 +367,28 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
             else if (item.period === "night") periodOffset = barWidth;
 
             const x = dayX + periodOffset;
-
-            // Calculate bar height based on consumption
             const normalizedValue =
                 range === 0 ? 0.5 : (item.consumption - minConsumption) / range;
             const barHeight = normalizedValue * chartInnerHeight;
 
-            // Draw bar
-            ctx.fillStyle = getColorForPeriod(item.period);
+            // Create gradient for each bar
+            const gradient = ctx.createLinearGradient(
+                0,
+                chartHeight - padding.bottom - barHeight,
+                0,
+                chartHeight - padding.bottom
+            );
+            const colors = getEnhancedColorsForPeriod(item.period);
+            gradient.addColorStop(0, colors.top);
+            gradient.addColorStop(1, colors.bottom);
+
+            // Draw shadow
+            ctx.shadowColor = "rgba(0, 0, 0, 0.1)";
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetY = 2;
+
+            // Draw bar with gradient
+            ctx.fillStyle = gradient;
             ctx.fillRect(
                 x - barWidth / 2,
                 chartHeight - padding.bottom - barHeight,
@@ -307,66 +396,111 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
                 barHeight
             );
 
-            // Draw consumption value above bar
-            ctx.textAlign = "center";
-            ctx.textBaseline = "bottom";
-            ctx.fillStyle = "#334155"; // slate-700
-            ctx.font = "10px sans-serif";
-            ctx.fillText(
-                item.consumption.toFixed(1),
-                x,
-                chartHeight - padding.bottom - barHeight - 5
-            );
+            // Reset shadow
+            ctx.shadowColor = "transparent";
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+
+            // Enhanced consumption value labels
+            if (barHeight > 20) {
+                ctx.textAlign = "center";
+                ctx.textBaseline = "bottom";
+                ctx.fillStyle = "#1e293b";
+                ctx.font = "600 10px system-ui, -apple-system, sans-serif";
+
+                // Add subtle background for text readability
+                const textWidth = ctx.measureText(
+                    item.consumption.toFixed(1)
+                ).width;
+                ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+                ctx.fillRect(
+                    x - textWidth / 2 - 3,
+                    chartHeight - padding.bottom - barHeight - 20,
+                    textWidth + 6,
+                    16
+                );
+
+                ctx.fillStyle = "#1e293b";
+                ctx.fillText(
+                    item.consumption.toFixed(1),
+                    x,
+                    chartHeight - padding.bottom - barHeight - 8
+                );
+            }
         });
 
-        // Draw title
+        // Enhanced title with better typography
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
-        ctx.fillStyle = "#334155"; // slate-700
-        ctx.font = "bold 14px sans-serif";
-        ctx.fillText("Daily Electricity Consumption", chartWidth / 2, 10);
+        ctx.fillStyle = "#1e293b";
+        ctx.font = "700 16px system-ui, -apple-system, sans-serif";
+        ctx.fillText("Daily Electricity Consumption", chartWidth / 2, 15);
 
-        // Draw legend
-        const legendY = chartHeight - 15;
-        const legendSpacing = 80;
+        // Enhanced legend with better spacing and styling
+        const legendY = chartHeight - 25;
+        const legendSpacing = 100;
+        const legendStartX = (chartWidth - legendSpacing * 2) / 2;
 
-        // Morning
-        ctx.fillStyle = getColorForPeriod("morning");
-        ctx.fillRect(padding.left, legendY, 15, 10);
-        ctx.textAlign = "left";
-        ctx.fillStyle = "#334155";
-        ctx.fillText("Morning", padding.left + 20, legendY + 5);
+        const periods = [
+            { name: "Morning", period: "morning" as const },
+            { name: "Evening", period: "evening" as const },
+            { name: "Night", period: "night" as const },
+        ];
 
-        // Evening
-        ctx.fillStyle = getColorForPeriod("evening");
-        ctx.fillRect(padding.left + legendSpacing, legendY, 15, 10);
-        ctx.fillStyle = "#334155";
-        ctx.fillText("Evening", padding.left + legendSpacing + 20, legendY + 5);
+        periods.forEach((item, index) => {
+            const x = legendStartX + legendSpacing * index;
+            const colors = getEnhancedColorsForPeriod(item.period);
 
-        // Night
-        ctx.fillStyle = getColorForPeriod("night");
-        ctx.fillRect(padding.left + legendSpacing * 2, legendY, 15, 10);
-        ctx.fillStyle = "#334155";
-        ctx.fillText(
-            "Night",
-            padding.left + legendSpacing * 2 + 20,
-            legendY + 5
-        );
-    }, [dailyConsumption, chartWidth, chartHeight]);
+            // Create mini gradient for legend
+            const legendGradient = ctx.createLinearGradient(
+                0,
+                legendY,
+                0,
+                legendY + 12
+            );
+            legendGradient.addColorStop(0, colors.top);
+            legendGradient.addColorStop(1, colors.bottom);
 
-    // Helper function to get color based on period
-    const getColorForPeriod = (
+            ctx.fillStyle = legendGradient;
+            ctx.fillRect(x, legendY, 18, 12);
+
+            // Legend text
+            ctx.textAlign = "left";
+            ctx.fillStyle = "#374151";
+            ctx.font = "500 12px system-ui, -apple-system, sans-serif";
+            ctx.fillText(item.name, x + 25, legendY + 6);
+        });
+    }, [filteredData, chartWidth, chartHeight]);
+
+    // Enhanced color function with gradients
+    const getEnhancedColorsForPeriod = (
         period: "morning" | "evening" | "night"
-    ): string => {
+    ) => {
         switch (period) {
             case "morning":
-                return "#10b981"; // emerald-500
+                return {
+                    top: "#34d399", // emerald-400
+                    bottom: "#059669", // emerald-600
+                    solid: "#10b981", // emerald-500
+                };
             case "evening":
-                return "#f59e0b"; // amber-500
+                return {
+                    top: "#fbbf24", // amber-400
+                    bottom: "#d97706", // amber-600
+                    solid: "#f59e0b", // amber-500
+                };
             case "night":
-                return "#6366f1"; // indigo-500
+                return {
+                    top: "#818cf8", // indigo-400
+                    bottom: "#4338ca", // indigo-600
+                    solid: "#6366f1", // indigo-500
+                };
             default:
-                return "#10b981"; // default to emerald-500
+                return {
+                    top: "#34d399",
+                    bottom: "#059669",
+                    solid: "#10b981",
+                };
         }
     };
 
@@ -374,7 +508,7 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
     const getAverageByPeriod = (
         period: "morning" | "evening" | "night"
     ): number => {
-        const periodConsumption = dailyConsumption.filter(
+        const periodConsumption = filteredData.filter(
             (item) => item.period === period
         );
         if (periodConsumption.length === 0) return 0;
@@ -384,6 +518,58 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
             0
         );
         return Number((total / periodConsumption.length).toFixed(2));
+    };
+
+    // Navigation functions
+    const goToPreviousWeek = () => {
+        const newDate = new Date(currentWeekStart);
+        if (timePeriod === "weekly") {
+            newDate.setDate(newDate.getDate() - 7);
+        } else if (timePeriod === "monthly") {
+            newDate.setMonth(newDate.getMonth() - 1);
+        }
+        setCurrentWeekStart(newDate);
+    };
+
+    const goToNextWeek = () => {
+        const newDate = new Date(currentWeekStart);
+        const today = new Date();
+
+        if (timePeriod === "weekly") {
+            newDate.setDate(newDate.getDate() + 7);
+            if (newDate > today) return;
+        } else if (timePeriod === "monthly") {
+            newDate.setMonth(newDate.getMonth() + 1);
+            if (
+                newDate.getMonth() > today.getMonth() &&
+                newDate.getFullYear() >= today.getFullYear()
+            )
+                return;
+        }
+
+        setCurrentWeekStart(newDate);
+    };
+
+    const formatCurrentPeriod = (): string => {
+        if (timePeriod === "weekly") {
+            const weekEnd = new Date(currentWeekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            return `${currentWeekStart.toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+            })} - ${weekEnd.toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+            })}`;
+        } else if (timePeriod === "monthly") {
+            return currentWeekStart.toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "long",
+            });
+        } else {
+            return "All Data";
+        }
     };
 
     if (loading) {
@@ -413,46 +599,127 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
 
     return (
         <div className="space-y-6">
-            <div className="relative w-full h-[300px]">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 p-4 bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl border border-slate-200">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200">
+                        <Calendar className="h-5 w-5 text-slate-600" />
+                    </div>
+                    <Select
+                        value={timePeriod}
+                        onValueChange={(value) =>
+                            setTimePeriod(value as TimePeriod)
+                        }
+                    >
+                        <SelectTrigger className="w-[180px] bg-white border-slate-300 shadow-sm hover:border-slate-400 transition-colors">
+                            <SelectValue placeholder="Select time period" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-slate-200 shadow-lg">
+                            <SelectItem
+                                value="weekly"
+                                className="hover:bg-slate-50"
+                            >
+                                📅 Weekly View
+                            </SelectItem>
+                            <SelectItem
+                                value="monthly"
+                                className="hover:bg-slate-50"
+                            >
+                                📊 Monthly View
+                            </SelectItem>
+                            <SelectItem
+                                value="all"
+                                className="hover:bg-slate-50"
+                            >
+                                🔍 All Data
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {timePeriod !== "all" && (
+                    <div className="flex items-center gap-3 bg-white rounded-lg p-2 shadow-sm border border-slate-200">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={goToPreviousWeek}
+                            className="h-8 w-8 border-slate-300 hover:bg-slate-50 hover:border-slate-400 transition-all"
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <div className="flex items-center gap-2 min-w-[180px] justify-center px-3 py-1 bg-slate-50 rounded-md">
+                            <span className="text-sm font-medium text-slate-700">
+                                {formatCurrentPeriod()}
+                            </span>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={goToNextWeek}
+                            className="h-8 w-8 border-slate-300 hover:bg-slate-50 hover:border-slate-400 transition-all"
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                )}
+            </div>
+
+            <div className="relative w-full h-[300px] bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <canvas ref={canvasRef} className="w-full h-full" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                    <CardContent className="p-4">
-                        <div className="text-sm font-medium text-muted-foreground">
-                            Morning Usage
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 shadow-sm hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-emerald-100 rounded-lg">
+                                <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                            </div>
+                            <div className="text-sm font-medium text-emerald-800">
+                                Morning Usage
+                            </div>
                         </div>
-                        <div className="text-lg font-bold text-emerald-600">
+                        <div className="text-2xl font-bold text-emerald-700 mb-1">
                             {morningAvg} kWh
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-sm text-emerald-600">
                             Average at 7:00 AM
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardContent className="p-4">
-                        <div className="text-sm font-medium text-muted-foreground">
-                            Evening Usage
+
+                <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 shadow-sm hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-amber-100 rounded-lg">
+                                <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
+                            </div>
+                            <div className="text-sm font-medium text-amber-800">
+                                Evening Usage
+                            </div>
                         </div>
-                        <div className="text-lg font-bold text-amber-600">
+                        <div className="text-2xl font-bold text-amber-700 mb-1">
                             {eveningAvg} kWh
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-sm text-amber-600">
                             Average at 5:00 PM
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardContent className="p-4">
-                        <div className="text-sm font-medium text-muted-foreground">
-                            Night Usage
+
+                <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 shadow-sm hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-indigo-100 rounded-lg">
+                                <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                            </div>
+                            <div className="text-sm font-medium text-indigo-800">
+                                Night Usage
+                            </div>
                         </div>
-                        <div className="text-lg font-bold text-indigo-600">
+                        <div className="text-2xl font-bold text-indigo-700 mb-1">
                             {nightAvg} kWh
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-sm text-indigo-600">
                             Average at 9:00 PM
                         </div>
                     </CardContent>
