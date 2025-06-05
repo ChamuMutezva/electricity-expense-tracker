@@ -548,16 +548,16 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 p-4 bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl border border-slate-200">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 p-4 rounded-xl border">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200">
-            <Calendar className="h-5 w-5 text-slate-600" />
+          <div className="p-2 rounded-lg shadow-sm border">
+            <Calendar className="h-5 w-5" />
           </div>
           <Select value={timePeriod} onValueChange={(value) => setTimePeriod(value as TimePeriod)}>
-            <SelectTrigger className="w-[180px] bg-white border-slate-300 shadow-sm hover:border-slate-400 transition-colors">
+            <SelectTrigger className="w-[180px] shadow-sm hover:border-slate-400 transition-colors">
               <SelectValue placeholder="Select time period" />
             </SelectTrigger>
-            <SelectContent className="bg-white border-slate-200 shadow-lg">
+            <SelectContent className="shadow-lg">
               <SelectItem value="weekly" className="hover:bg-slate-50">
                 📅 Weekly View
               </SelectItem>
@@ -572,23 +572,23 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
         </div>
 
         {timePeriod !== "all" && (
-          <div className="flex items-center gap-3 bg-white rounded-lg p-2 shadow-sm border border-slate-200">
+          <div className="flex items-center gap-3 rounded-lg p-2 shadow-sm border border-slate-200">
             <Button
               variant="outline"
               size="icon"
               onClick={goToPreviousWeek}
-              className="h-8 w-8 border-slate-300 hover:bg-slate-50 hover:border-slate-400 transition-all"
+              className="h-8 w-8 transition-all"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center gap-2 min-w-[180px] justify-center px-3 py-1 bg-slate-50 rounded-md">
-              <span className="text-sm font-medium text-slate-700">{formatCurrentPeriod()}</span>
+            <div className="flex items-center gap-2 min-w-[180px] justify-center px-3 py-1 rounded-md">
+              <span className="text-sm font-medium">{formatCurrentPeriod()}</span>
             </div>
             <Button
               variant="outline"
               size="icon"
               onClick={goToNextWeek}
-              className="h-8 w-8 border-slate-300 hover:bg-slate-50 hover:border-slate-400 transition-all"
+              className="h-8 w-8 transition-all"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -596,12 +596,12 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
         )}
       </div>
 
-      <div className="relative w-full h-[300px] bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="relative w-full h-[300px] rounded-xl shadow-sm border overflow-hidden">
         <canvas ref={canvasRef} className="w-full h-full" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 shadow-sm hover:shadow-md transition-shadow">
+        <Card className="border-emerald-200 bg-gradient-to-br shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 bg-emerald-100 rounded-lg">
@@ -614,7 +614,7 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
           </CardContent>
         </Card>
 
-        <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 shadow-sm hover:shadow-md transition-shadow">
+        <Card className="border-amber-200 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 bg-amber-100 rounded-lg">
@@ -627,7 +627,7 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
           </CardContent>
         </Card>
 
-        <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 shadow-sm hover:shadow-md transition-shadow">
+        <Card className="border-indigo-200 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 bg-indigo-100 rounded-lg">

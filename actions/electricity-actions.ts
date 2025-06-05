@@ -33,9 +33,75 @@ type MonthlyUsageRow = {
 };
 
 /**
+ * Checks if a reading already exists for the current period today
+ */
+export async function checkExistingReading(
+    period: Period
+): Promise<ElectricityReading | null> {
+    checkDbConnection();
+
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+
+    const result = (await sql`
+        SELECT id, reading_id, timestamp, reading, period, created_at
+        FROM electricity_readings
+        WHERE DATE(timestamp) = ${todayStr} AND period = ${period}
+        ORDER BY timestamp DESC
+        LIMIT 1
+    `) as SqlQueryResult<ElectricityReadingDBResult>;
+
+    if (result.length === 0) {
+        return null;
+    }
+
+    return {
+        id: result[0]?.id,
+        reading_id: result[0]?.reading_id,
+        timestamp: new Date(result[0]?.timestamp),
+        reading: Number(result[0]?.reading),
+        period: result[0]?.period as Period,
+        created_at: result[0]?.created_at
+            ? new Date(result[0]?.created_at)
+            : undefined,
+    };
+}
+
+/**
+ * Updates an existing electricity reading
+ */
+export async function updateElectricityReading(
+    readingId: string,
+    newReading: number
+): Promise<ElectricityReading> {
+    checkDbConnection();
+
+    const result = (await sql`
+        UPDATE electricity_readings 
+        SET reading = ${newReading}, created_at = NOW()
+        WHERE reading_id = ${readingId}
+        RETURNING id, reading_id, timestamp, reading, period, created_at
+    `) as SqlQueryResult<ElectricityReadingDBResult>;
+
+    revalidatePath("/");
+
+    return {
+        id: result[0]?.id,
+        reading_id: result[0]?.reading_id,
+        timestamp: new Date(result[0]?.timestamp),
+        reading: Number(result[0]?.reading),
+        period: result[0]?.period as Period,
+        created_at: result[0]?.created_at
+            ? new Date(result[0]?.created_at)
+            : undefined,
+    };
+}
+
+/**
  * Adds a new electricity reading to the database.
  *
  * @param reading - The meter reading value to be added.
+ * @param forceUpdate - Whether to force update if reading exists for this period
  * @returns A promise that resolves to the newly created {@link ElectricityReading} object.
  * @throws {Error} If the database connection is not established.
  *
@@ -45,23 +111,54 @@ type MonthlyUsageRow = {
  * - The returned object includes the database-generated ID, reading ID, timestamp, reading value, period, and creation date.
  */
 export async function addElectricityReading(
-    reading: number
-): Promise<ElectricityReading> {
+    reading: number,
+    forceUpdate = false
+): Promise<{
+    reading: ElectricityReading;
+    isUpdate: boolean;
+    existingReading?: ElectricityReading;
+}> {
     checkDbConnection();
 
     const now = new Date();
     const period = getPeriodFromHour(now.getHours());
+
+    // Check if reading already exists for this period today
+    const existingReading = await checkExistingReading(period);
+
+    if (existingReading && !forceUpdate) {
+        // Return the existing reading with a flag indicating it exists
+        return {
+            reading: existingReading,
+            isUpdate: false,
+            existingReading,
+        };
+    }
+
+    if (existingReading && forceUpdate) {
+        // Update the existing reading
+        const updatedReading = await updateElectricityReading(
+            existingReading.reading_id,
+            reading
+        );
+        return {
+            reading: updatedReading,
+            isUpdate: true,
+            existingReading,
+        };
+    }
+
+    // Create new reading
     const readingId = `reading-${Date.now()}`;
 
     const result = (await sql`
-    INSERT INTO electricity_readings (reading_id, timestamp, reading, period)
-    VALUES (${readingId}, ${now.toISOString()}, ${reading}, ${period})
-    RETURNING id, reading_id, timestamp, reading, period, created_at
-  `) as SqlQueryResult<ElectricityReadingDBResult>;
+        INSERT INTO electricity_readings (reading_id, timestamp, reading, period)
+        VALUES (${readingId}, ${now.toISOString()}, ${reading}, ${period})
+        RETURNING id, reading_id, timestamp, reading, period, created_at
+    `) as SqlQueryResult<ElectricityReadingDBResult>;
 
     revalidatePath("/");
 
-    // Ensure we return a properly typed object
     const newReading: ElectricityReading = {
         id: result[0]?.id,
         reading_id: result[0]?.reading_id,
@@ -73,7 +170,10 @@ export async function addElectricityReading(
             : undefined,
     };
 
-    return newReading;
+    return {
+        reading: newReading,
+        isUpdate: false,
+    };
 }
 
 /**
