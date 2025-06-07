@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { Inter, Roboto_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
     title: "v0 App",
@@ -40,6 +41,7 @@ export default function RootLayout({
                     disableTransitionOnChange
                 >
                     {children}
+                    <Analytics />
                 </ThemeProvider>
             </body>
         </html>
