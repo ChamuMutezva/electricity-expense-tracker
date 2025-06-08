@@ -4,10 +4,10 @@ export async function POST(req: Request) {
   try {
     console.log("Chat API called")
 
-    // Check if DeepSeek API key is configured
-    if (!process.env.DEEPSEEK_API_KEY) {
-      console.error("DEEPSEEK_API_KEY not configured")
-      return new Response(JSON.stringify({ error: "DeepSeek API key not configured" }), {
+    // Check if Google Gemini API key is configured
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      console.error("GOOGLE_GENERATIVE_AI_API_KEY not configured")
+      return new Response(JSON.stringify({ error: "Google Gemini API key not configured" }), {
         status: 500,
         headers: { "Content-Type": "application/json" },
       })
