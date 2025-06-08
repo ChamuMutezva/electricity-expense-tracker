@@ -22,6 +22,7 @@ import {
     Sparkles,
     AlertCircle,
     Settings,
+    Star,
 } from "lucide-react";
 import { generateElectricityInsights } from "@/actions/ai-analysis-actions";
 import { useChat } from "ai/react";
@@ -31,7 +32,7 @@ interface AIInsightsProps {
     hasData: boolean;
 }
 
-export default function AIInsights({ hasData }: AIInsightsProps) {
+export default function AIInsights({ hasData }: Readonly<AIInsightsProps>) {
     const [insights, setInsights] = useState<string>("");
     const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
     const [lastGenerated, setLastGenerated] = useState<Date | null>(null);
@@ -96,7 +97,8 @@ export default function AIInsights({ hasData }: AIInsightsProps) {
                 setLastGenerated(new Date());
                 toast({
                     title: "Insights Generated",
-                    description: "AI has analyzed your electricity data!",
+                    description:
+                        "Google Gemini has analyzed your electricity data!",
                 });
             }
         } catch (error) {
@@ -153,7 +155,7 @@ export default function AIInsights({ hasData }: AIInsightsProps) {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Brain className="h-5 w-5 text-purple-600" />
-                        AI Insights (Powered by DeepSeek - Free!)
+                        AI Insights (Powered by Google Gemini - Free!)
                     </CardTitle>
                     <CardDescription>
                         Get AI-powered analysis of your electricity usage
@@ -179,11 +181,11 @@ export default function AIInsights({ hasData }: AIInsightsProps) {
         <div className="space-y-6">
             {/* Configuration Error Alert */}
             {configError && (
-                <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950">
+                <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
-                            <Settings className="h-5 w-5" />
-                            DeepSeek AI Setup Required (Free!)
+                            <Star className="h-5 w-5" />
+                            Google Gemini Setup Required (Free & Powerful!)
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -191,26 +193,27 @@ export default function AIInsights({ hasData }: AIInsightsProps) {
                             {formatInsights(configError)}
                         </div>
                         <div className="mt-4 p-4 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                            <h4 className="font-semibold mb-2 text-green-700 dark:text-green-300">
-                                🆓 Free Setup Instructions:
+                            <h4 className="font-semibold mb-2 text-blue-700 dark:text-blue-300">
+                                🌟 Free Setup Instructions:
                             </h4>
                             <ol className="list-decimal list-inside space-y-2 text-sm">
                                 <li>
                                     Go to{" "}
                                     <a
-                                        href="https://platform.deepseek.com"
+                                        href="https://aistudio.google.com/app/apikey"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="underline font-medium"
+                                        className="underline font-medium text-blue-600 hover:text-blue-800"
                                     >
-                                        platform.deepseek.com
+                                        Google AI Studio (aistudio.google.com)
                                     </a>{" "}
-                                    and create a free account
+                                    and sign in with your Google account
                                 </li>
                                 <li>
-                                    Navigate to API Keys section and create a
-                                    new API key
+                                    Click &quot;Get API Key&quot; and then &quot;Create API
+                                    Key&quot;
                                 </li>
+                                <li>Copy the generated API key</li>
                                 <li>
                                     Add it to your{" "}
                                     <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">
@@ -218,16 +221,57 @@ export default function AIInsights({ hasData }: AIInsightsProps) {
                                     </code>{" "}
                                     file as:{" "}
                                     <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">
-                                        DEEPSEEK_API_KEY=your_key_here
+                                        GOOGLE_GENERATIVE_AI_API_KEY=your_key_here
                                     </code>
                                 </li>
                                 <li>Restart your development server</li>
                                 <li>Try generating insights again</li>
                             </ol>
-                            <div className="mt-3 p-2 bg-green-100 dark:bg-green-900 rounded text-sm">
-                                <strong>💡 Why DeepSeek?</strong> It&apos;s
-                                completely free, fast, and great for analysis
-                                tasks!
+
+                            <div className="mt-4 p-3 bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 rounded text-sm">
+                                <strong>🚀 Why Google Gemini?</strong>
+                                <ul className="list-disc list-inside mt-1 space-y-1">
+                                    <li>
+                                        <strong>Completely Free</strong> - Very
+                                        generous free tier (15 requests/minute)
+                                    </li>
+                                    <li>
+                                        <strong>Latest AI</strong> - Google&apos;s
+                                        most advanced AI model
+                                    </li>
+                                    <li>
+                                        <strong>Reliable</strong> - Backed by
+                                        Google&apos;s infrastructure
+                                    </li>
+                                    <li>
+                                        <strong>Smart Analysis</strong> -
+                                        Excellent for data analysis tasks
+                                    </li>
+                                    <li>
+                                        <strong>No Credit Card</strong> - Just
+                                        sign in with Google account
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div className="mt-3 p-3 bg-yellow-100 dark:bg-yellow-900 rounded text-sm">
+                                <strong>📊 Free Tier Limits:</strong>
+                                <ul className="list-disc list-inside mt-1 space-y-1">
+                                    <li>
+                                        <strong>15 requests per minute</strong>{" "}
+                                        - Perfect for personal use
+                                    </li>
+                                    <li>
+                                        <strong>1,500 requests per day</strong>{" "}
+                                        - Very generous daily limit
+                                    </li>
+                                    <li>
+                                        <strong>
+                                            1 million tokens per month
+                                        </strong>{" "}
+                                        - More than enough for analysis
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                     </CardContent>
@@ -262,9 +306,9 @@ export default function AIInsights({ hasData }: AIInsightsProps) {
                                         Electricity Usage Analysis
                                         <Badge
                                             variant="secondary"
-                                            className="text-xs bg-green-100 text-green-700"
+                                            className="text-xs bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700"
                                         >
-                                            Powered by DeepSeek (Free!)
+                                            Powered by Google Gemini
                                         </Badge>
                                     </CardTitle>
                                     <CardDescription>
@@ -309,7 +353,7 @@ export default function AIInsights({ hasData }: AIInsightsProps) {
                                     <div className="flex items-center gap-2 text-blue-600">
                                         <Brain className="h-5 w-5 animate-pulse" />
                                         <span>
-                                            DeepSeek AI is analyzing your
+                                            Google Gemini is analyzing your
                                             electricity data...
                                         </span>
                                     </div>
@@ -346,9 +390,9 @@ export default function AIInsights({ hasData }: AIInsightsProps) {
                                 Chat with AI Assistant
                                 <Badge
                                     variant="secondary"
-                                    className="text-xs bg-green-100 text-green-700"
+                                    className="text-xs bg-gradient-to-r from-green-100 to-blue-100 text-green-700"
                                 >
-                                    Free with DeepSeek!
+                                    Google Gemini
                                 </Badge>
                             </CardTitle>
                             <CardDescription>
@@ -364,8 +408,8 @@ export default function AIInsights({ hasData }: AIInsightsProps) {
                                         AI Chat is not available
                                     </p>
                                     <p className="text-sm text-gray-400">
-                                        Please configure your DeepSeek API key
-                                        first
+                                        Please configure your Google Gemini API
+                                        key first
                                     </p>
                                 </div>
                             ) : (
@@ -396,6 +440,11 @@ export default function AIInsights({ hasData }: AIInsightsProps) {
                                                         &quot;Are there any unusual
                                                         patterns in my usage?&quot;
                                                     </p>
+                                                    <p>
+                                                        &quot;What appliances might
+                                                        be using the most
+                                                        power?&quot;
+                                                    </p>
                                                 </div>
                                             </div>
                                         ) : (
@@ -412,7 +461,7 @@ export default function AIInsights({ hasData }: AIInsightsProps) {
                                                         className={`max-w-[80%] rounded-lg px-4 py-2 ${
                                                             message.role ===
                                                             "user"
-                                                                ? "bg-blue-600 text-white"
+                                                                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
                                                                 : "bg-white dark:bg-gray-800 border"
                                                         }`}
                                                     >
@@ -429,7 +478,7 @@ export default function AIInsights({ hasData }: AIInsightsProps) {
                                                 <div className="bg-white dark:bg-gray-800 border rounded-lg px-4 py-2">
                                                     <div className="flex items-center gap-2">
                                                         <div className="animate-pulse">
-                                                            DeepSeek AI is
+                                                            Google Gemini is
                                                             thinking...
                                                         </div>
                                                         <RefreshCw className="h-4 w-4 animate-spin" />
@@ -465,7 +514,7 @@ export default function AIInsights({ hasData }: AIInsightsProps) {
                                             disabled={
                                                 isChatLoading || !input.trim()
                                             }
-                                            className="self-end"
+                                            className="self-end bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                                         >
                                             <Send className="h-4 w-4" />
                                         </Button>

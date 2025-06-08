@@ -698,7 +698,7 @@ export default function ElectricityTracker({
             </Card>
 
             <Tabs defaultValue="summary">
-                <TabsList className="grid h-auto w-full grid-cols-3 sm:grid-cols-6">
+                <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
                     <TabsTrigger
                         value="summary"
                         className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
