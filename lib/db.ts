@@ -6,14 +6,23 @@ export type SqlQueryResult<T = unknown> = T[];
 // Create a reusable SQL client with error handling for missing DATABASE_URL
 let sql: ReturnType<typeof neon>;
 
-try {
-    if (!process.env.DATABASE_URL) {
-        throw new Error("DATABASE_URL environment variable is not set");
+// Only initialize in server environment
+if (typeof window === "undefined") {
+    try {
+        if (!process.env.DATABASE_URL) {
+            throw new Error("DATABASE_URL environment variable is not set");
+        }
+        sql = neon(process.env.DATABASE_URL);
+    } catch (error) {
+        console.error("Database connection error:", error);
+        // Create a dummy SQL function that returns empty arrays for development/fallback
+        sql = (() => {
+            const dummyFn = () => Promise.resolve([]);
+            return dummyFn as unknown as ReturnType<typeof neon>;
+        })();
     }
-    sql = neon(process.env.DATABASE_URL);
-} catch (error) {
-    console.error("Database connection error:", error);
-    // Create a dummy SQL function that returns empty arrays for development/fallback
+} else {
+    // Client-side dummy implementation
     sql = (() => {
         const dummyFn = () => Promise.resolve([]);
         return dummyFn as unknown as ReturnType<typeof neon>;
