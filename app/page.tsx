@@ -1,3 +1,16 @@
+/**
+ * HomePage is the main entry point for the Electricity Expense Tracker application.
+ * 
+ * This Next.js page component is responsible for:
+ * - Setting the page metadata (title and description).
+ * - Checking the database connection status.
+ * - Fetching initial electricity readings, token purchases, latest reading, and total units used from the database if connected.
+ * - Displaying an alert if the database is not connected, with a fallback to local storage mode.
+ * - Rendering the main ElectricityTracker component with the fetched or default data.
+ * - Providing a theme toggle for light/dark mode.
+ * 
+ * @returns {Promise<JSX.Element>} The rendered home page component.
+ */
 import type { Metadata } from "next";
 import ElectricityTracker from "@/components/electricity-tracker";
 import {

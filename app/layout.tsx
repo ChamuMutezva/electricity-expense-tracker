@@ -1,3 +1,17 @@
+/**
+ * Root layout component for the Electricity Expense Tracker Next.js application.
+ *
+ * @remarks
+ * This layout sets up global styles, font variables, and theme provider for the app.
+ * It also injects Vercel Analytics for tracking.
+ *
+ * @param props - The props for the layout component.
+ * @param props.children - The React node(s) to be rendered within the layout.
+ *
+ * @returns The root HTML structure with theme and analytics providers.
+ *
+ * @see {@link https://nextjs.org/docs/pages/building-your-application/routing/pages-and-layouts#layouts}
+ */
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
@@ -5,8 +19,8 @@ import { Inter, Roboto_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
-    title: "v0 App",
-    description: "Created with v0",
+    title: "Electricity Expense Tracker",
+    description: "Track your daily electricity usage and expenses",
     generator: "v0.dev",
 };
 

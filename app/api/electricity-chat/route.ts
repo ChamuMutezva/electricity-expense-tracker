@@ -1,3 +1,27 @@
+/**
+ * Handles POST requests to the electricity chat API endpoint.
+ *
+ * This endpoint receives a list of chat messages, validates the input,
+ * and generates a response using the Google Gemini API via the `chatAboutElectricity` action.
+ * It expects the request body to contain a `messages` array, where each message has a `role` and `content`.
+ * The latest user message is used as the prompt, and previous messages are used as conversation history.
+ *
+ * @param req - The incoming HTTP request object.
+ * @returns A `Response` object containing the AI-generated reply or an error message.
+ *
+ * @throws {Error} Returns a 500 response if the Google Gemini API key is not configured,
+ *                 if the request body is invalid, or if an unexpected error occurs.
+ *
+ * @example
+ * // Request body format:
+ * {
+ *   "messages": [
+ *     { "role": "user", "content": "How can I save electricity?" },
+ *     { "role": "assistant", "content": "You can start by..." },
+ *     { "role": "user", "content": "What about using LED bulbs?" }
+ *   ]
+ * }
+ */
 import { chatAboutElectricity } from "@/actions/ai-analysis-actions"
 
 export async function POST(req: Request) {
