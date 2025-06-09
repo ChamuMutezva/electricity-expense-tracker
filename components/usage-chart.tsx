@@ -1,14 +1,34 @@
+/**
+ * UsageChart component displays electricity consumption data in a visually enhanced chart.
+ *
+ * - Renders a tabbed interface with two main views: "Enhanced Charts" and "Quick Overview".
+ * - The "Enhanced Charts" tab shows a custom-drawn bar chart of daily electricity consumption,
+ *   grouped by period (morning, evening, night), with gradients, shadows, and legends.
+ * - The "Quick Overview" tab provides summary statistics and period distribution.
+ * - Handles responsive resizing and updates chart dimensions on window resize or tab switch.
+ * - Calculates daily consumption from an array of electricity readings, supporting
+ *   grouping by day and period, and handles meter resets.
+ *
+ * @component
+ * @param {Object} props - Component props.
+ * @param {ElectricityReading[]} props.readings - Array of electricity readings to visualize.
+ * @returns {JSX.Element} The rendered UsageChart component.
+ */
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import type { ElectricityReading } from "@/lib/types";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
+import type { ElectricityReading, Period } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Period } from "@/lib/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EnhancedUsageCharts from "./enhanced-usage-charts";
 import { BarChart3, TrendingUp, PieChart, Activity } from "lucide-react";
-import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface UsageChartProps {
     readings: ElectricityReading[];
@@ -31,7 +51,7 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
     const [dailyConsumption, setDailyConsumption] = useState<
         DailyConsumption[]
     >([]);
-    const [timePeriod, setTimePeriod] = useState<TimePeriod>("weekly");
+    const [timePeriod] = useState<TimePeriod>("weekly");
     const [currentWeekStart, setCurrentWeekStart] = useState<Date>(new Date());
 
     // Calculate daily consumption from readings - KEEPING ORIGINAL LOGIC
@@ -518,74 +538,6 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
         }
     };
 
-    // Calculate average consumption by period
-    const getAverageByPeriod = (
-        period: "morning" | "evening" | "night"
-    ): number => {
-        const periodConsumption = filteredData.filter(
-            (item) => item.period === period
-        );
-        if (periodConsumption.length === 0) return 0;
-
-        const total = periodConsumption.reduce(
-            (sum, item) => sum + item.consumption,
-            0
-        );
-        return Number((total / periodConsumption.length).toFixed(2));
-    };
-
-    // Navigation functions
-    const goToPreviousWeek = () => {
-        const newDate = new Date(currentWeekStart);
-        if (timePeriod === "weekly") {
-            newDate.setDate(newDate.getDate() - 7);
-        } else if (timePeriod === "monthly") {
-            newDate.setMonth(newDate.getMonth() - 1);
-        }
-        setCurrentWeekStart(newDate);
-    };
-
-    const goToNextWeek = () => {
-        const newDate = new Date(currentWeekStart);
-        const today = new Date();
-
-        if (timePeriod === "weekly") {
-            newDate.setDate(newDate.getDate() + 7);
-            if (newDate > today) return;
-        } else if (timePeriod === "monthly") {
-            newDate.setMonth(newDate.getMonth() + 1);
-            if (
-                newDate.getMonth() > today.getMonth() &&
-                newDate.getFullYear() >= today.getFullYear()
-            )
-                return;
-        }
-
-        setCurrentWeekStart(newDate);
-    };
-
-    const formatCurrentPeriod = (): string => {
-        if (timePeriod === "weekly") {
-            const weekEnd = new Date(currentWeekStart);
-            weekEnd.setDate(weekEnd.getDate() + 6);
-            return `${currentWeekStart.toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-            })} - ${weekEnd.toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-            })}`;
-        } else if (timePeriod === "monthly") {
-            return currentWeekStart.toLocaleDateString(undefined, {
-                year: "numeric",
-                month: "long",
-            });
-        } else {
-            return "All Data";
-        }
-    };
-
     if (loading) {
         return <LoadingSkeleton />;
     }
@@ -606,10 +558,6 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
             </div>
         );
     }
-
-    const morningAvg = getAverageByPeriod("morning");
-    const eveningAvg = getAverageByPeriod("evening");
-    const nightAvg = getAverageByPeriod("night");
 
     return (
         <div className="space-y-6">

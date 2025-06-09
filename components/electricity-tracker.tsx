@@ -1,3 +1,68 @@
+
+/**
+ * ElectricityTracker is the main component for tracking and managing electricity meter readings and token purchases.
+ * 
+ * This component provides a dashboard interface for users to:
+ * - View and update current electricity meter readings.
+ * - Add new readings (with duplicate detection and update support).
+ * - Add electricity tokens (units purchased).
+ * - Record backdated readings for missed periods.
+ * - Visualize usage summaries and charts.
+ * - View monthly reports and AI-generated insights.
+ * - Receive browser notifications for reading reminders.
+ * - Migrate local storage data to a connected database.
+ * 
+ * Features:
+ * - Handles both local storage and database-backed data, with seamless migration.
+ * - Notifies users of missed readings and upcoming update times.
+ * - Supports enabling/disabling browser notifications.
+ * - Provides a tabbed interface for summary, charts, token entry, backdated readings, reports, and AI insights.
+ * 
+ * Props:
+ * @param {ElectricityReading[]} initialReadings - Initial list of electricity readings (from server or local storage).
+ * @param {TokenPurchase[]} initialTokens - Initial list of token purchases (from server or local storage).
+ * @param {number} initialLatestReading - The latest meter reading value.
+ * @param {number} initialTotalUnits - The total units consumed (calculated from readings).
+ * @param {boolean} dbConnected - Indicates if the app is connected to a backend database.
+ * 
+ * State:
+ * - readings: List of all electricity readings.
+ * - tokens: List of all token purchases.
+ * - currentReading: Input value for the current reading.
+ * - tokenUnits: Input value for token units.
+ * - tokenCost: Input value for token cost.
+ * - notificationsEnabled: Whether browser notifications are enabled.
+ * - nextUpdate: Date/time of the next expected reading update.
+ * - timeUntilUpdate: String representing time left until next update.
+ * - showNotification: Whether to show the update reminder notification.
+ * - latestReading: The most recent meter reading value.
+ * - totalUnits: Total units consumed (difference between first and last reading).
+ * - isSubmitting: Whether a form submission is in progress.
+ * - showMigrationAlert: Whether to show the migration alert for local data.
+ * - missedReadings: List of missed reading periods for today.
+ * - isSubmitted: Tracks if the reading form has been submitted.
+ * 
+ * Methods:
+ * - handleAddReading: Adds or updates a meter reading, with duplicate detection.
+ * - handleAddBackdatedReading: Adds a reading for a past date/time.
+ * - handleAddToken: Adds a new token purchase and updates readings.
+ * - handleMigrateData: Migrates local storage data to the database.
+ * - enableNotifications: Requests browser notification permissions.
+ * - showUpdateNotification: Triggers a browser notification for reading reminders.
+ * 
+ * Effects:
+ * - Loads initial data from local storage or server.
+ * - Persists readings and tokens to local storage if not connected to a database.
+ * - Calculates next update time and missed readings.
+ * - Calculates total units consumed.
+ * 
+ * UI:
+ * - Dashboard summary card with current status and update form.
+ * - Alerts for migration and missed readings.
+ * - Tabbed interface for summary, chart, token entry, backdated readings, reports, and AI insights.
+ * 
+ * @component
+ */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -698,7 +763,7 @@ export default function ElectricityTracker({
             </Card>
 
             <Tabs defaultValue="summary">
-                <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
+                <TabsList className="grid h-auto grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
                     <TabsTrigger
                         value="summary"
                         className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"

@@ -1,3 +1,17 @@
+/**
+ * Generates actionable AI insights about electricity usage patterns using Google Gemini.
+ *
+ * This function retrieves electricity readings, token purchases, and usage summary,
+ * formats the data for AI analysis, and then uses the Google Gemini model to generate
+ * a detailed report with insights, tips, and recommendations. The insights focus on
+ * usage patterns, peak consumption periods, cost-saving opportunities, energy efficiency,
+ * and detection of unusual patterns or anomalies.
+ *
+ * @returns {Promise<string>} A promise that resolves to a string containing the AI-generated insights.
+ *
+ * @throws {Error} If the Google Gemini API key is not configured, if the API quota is exceeded,
+ * if rate limits are hit, or if there are permission/access issues.
+ */
 "use server";
 
 import { generateText, streamText } from "ai";

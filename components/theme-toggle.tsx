@@ -1,4 +1,18 @@
-// components/theme-toggle.tsx
+/**
+ * A theme toggle dropdown component for switching between light, dark, and system themes.
+ *
+ * This component uses the `next-themes` hook to change the application's theme.
+ * It displays a button with sun and moon icons, and when clicked, shows a dropdown menu
+ * with options to select the desired theme.
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <ThemeToggle />
+ * ```
+ *
+ * @returns {JSX.Element} The rendered theme toggle dropdown component.
+ */
 "use client";
 
 import { Moon, Sun } from "lucide-react";

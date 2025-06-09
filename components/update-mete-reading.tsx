@@ -1,3 +1,31 @@
+/**
+ * UpdateMeterReading component allows users to input and update the current electricity meter reading
+ * for a specific period (morning, evening, or night). It handles duplicate reading detection and provides
+ * an option to force update an existing reading.
+ *
+ * @component
+ * @param {Object} props - Component props.
+ * @param {string | number} props.currentReading - The current value of the meter reading input.
+ * @param {(value: string) => void} props.setCurrentReading - Function to update the current reading state.
+ * @param {(forceUpdate?: boolean) => Promise<void>} props.handleAddReading - Function to submit the new reading. Accepts an optional boolean to force update.
+ * @param {boolean} props.isSubmitting - Indicates if the form submission is in progress.
+ * @param {boolean} props.isSubmitted - Indicates if the form has been submitted.
+ * @param {string} [props.label] - Optional label for the input field. Defaults to "Update Electricity Reading".
+ * @param {string} [props.placeholder] - Optional placeholder for the input field. Defaults to "Enter current meter reading".
+ * @param {string} [props.buttonText] - Optional text for the submit button. Defaults to "Update".
+ * @param {string} [props.loadingText] - Optional text for the submit button while loading. Defaults to "Updating...".
+ *
+ * @returns {JSX.Element} The rendered UpdateMeterReading component.
+ *
+ * @example
+ * <UpdateMeterReading
+ *   currentReading={reading}
+ *   setCurrentReading={setReading}
+ *   handleAddReading={handleAddReading}
+ *   isSubmitting={isSubmitting}
+ *   isSubmitted={isSubmitted}
+ * />
+ */
 "use client";
 
 import { useState } from "react";

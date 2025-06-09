@@ -1,3 +1,28 @@
+/**
+ * EnhancedUsageCharts component displays interactive electricity consumption charts and statistics.
+ *
+ * @component
+ * @param {Object} props - Component props.
+ * @param {ElectricityReading[]} props.readings - Array of electricity readings to visualize.
+ *
+ * @description
+ * This component provides a dashboard for visualizing electricity usage trends over time.
+ * It supports multiple chart types (area, line, bar, radial, composed) and allows users to filter data
+ * by weekly, monthly, or all-time periods. Users can navigate between weeks or months and view
+ * detailed statistics for morning, evening, and night consumption.
+ *
+ * Features:
+ * - Interactive chart type and period selection.
+ * - Navigation controls for weekly/monthly views.
+ * - Multiple chart visualizations using Recharts.
+ * - Consumption breakdown by period with statistics cards and pie chart.
+ * - Responsive and accessible UI.
+ *
+ * @example
+ * ```tsx
+ * <EnhancedUsageCharts readings={myReadingsArray} />
+ * ```
+ */
 "use client"
 
 import { useMemo, useState } from "react"
@@ -43,13 +68,6 @@ interface ProcessedData {
   total: number
   formattedDate: string
   dayOfWeek: string
-}
-
-interface PeriodData {
-  period: string
-  consumption: number
-  percentage: number
-  color: string
 }
 
 type TimePeriod = "weekly" | "monthly" | "all"

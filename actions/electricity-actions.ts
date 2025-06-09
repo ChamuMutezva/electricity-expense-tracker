@@ -1,3 +1,19 @@
+/**
+ * Provides server-side actions for managing electricity readings and token purchases.
+ *
+ * This module includes functions to:
+ * - Add, update, and backdate electricity readings.
+ * - Add token purchases and update readings accordingly.
+ * - Retrieve all readings and token purchases.
+ * - Calculate usage summaries, total units used, and monthly usage.
+ * - Migrate data from local storage to the database.
+ * - Ensure proper timezone handling for all date and time operations.
+ *
+ * All actions ensure the database connection is established before proceeding,
+ * and trigger cache revalidation as needed.
+ *
+ * @module actions/electricity-actions
+ */
 "use server"
 
 import { sql, isDatabaseConnected, type SqlQueryResult } from "@/lib/db"
