@@ -33,7 +33,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, Clock, RefreshCw } from "lucide-react";
+import {
+    AlertTriangle,
+    Clock,
+    RefreshCw,
+    CheckCircle,
+    Zap,
+} from "lucide-react";
 import { getCurrentPeriod } from "@/lib/db";
 
 type UpdateMeterReadingProps = {
@@ -60,8 +66,13 @@ export const UpdateMeterReading = ({
     loadingText = "Updating...",
 }: UpdateMeterReadingProps) => {
     const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
-    const [existingReading, setExistingReading] = useState<{ reading: number } | null>(null);
+    const [existingReading, setExistingReading] = useState<{
+        reading: number;
+    } | null>(null);
     const [pendingReading, setPendingReading] = useState<string>("");
+    const [lastSuccessfulReading, setLastSuccessfulReading] =
+        useState<string>("");
+    const [showSuccess, setShowSuccess] = useState(false);
 
     // Get current period for display
     const getCurrentPeriodForDisplay = () => {
@@ -90,6 +101,12 @@ export const UpdateMeterReading = ({
 
         try {
             await handleAddReading(false); // First try without force update
+            // Success feedback
+            setLastSuccessfulReading(currentReading.toString());
+            setShowSuccess(true);
+
+            // Hide success message after 3 seconds
+            setTimeout(() => setShowSuccess(false), 3000);
         } catch (error: unknown) {
             // Check if this is a duplicate reading error
             if (
@@ -194,6 +211,18 @@ export const UpdateMeterReading = ({
                 </div>
             </div>
 
+            {showSuccess && (
+                <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+                    <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
+                        <CheckCircle className="h-4 w-4" />
+                        <span className="text-sm font-medium">
+                            ✅ Successfully recorded {lastSuccessfulReading} kWh
+                            for {getPeriodDisplayName(currentPeriod)}
+                        </span>
+                    </div>
+                </div>
+            )}
+
             {/* Reading Input */}
             <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="reading">{label}</Label>
@@ -215,9 +244,21 @@ export const UpdateMeterReading = ({
                     <Button
                         onClick={handleSubmit}
                         disabled={isSubmitting || showDuplicateAlert}
-                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
+                        className={`hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white transition-all duration-200 ${
+                            isSubmitting ? "bg-blue-400 cursor-not-allowed" : ""
+                        }`}
                     >
-                        {isSubmitting ? loadingText : buttonText}
+                        {isSubmitting ? (
+                            <div className="flex items-center gap-2">
+                                <RefreshCw className="h-4 w-4 animate-spin" />
+                                {loadingText}
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <Zap className="h-4 w-4" />
+                                {buttonText}
+                            </div>
+                        )}
                     </Button>
                 </div>
                 {/* Error message display */}

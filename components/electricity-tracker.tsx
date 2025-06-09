@@ -1,7 +1,6 @@
-
 /**
  * ElectricityTracker is the main component for tracking and managing electricity meter readings and token purchases.
- * 
+ *
  * This component provides a dashboard interface for users to:
  * - View and update current electricity meter readings.
  * - Add new readings (with duplicate detection and update support).
@@ -11,20 +10,20 @@
  * - View monthly reports and AI-generated insights.
  * - Receive browser notifications for reading reminders.
  * - Migrate local storage data to a connected database.
- * 
+ *
  * Features:
  * - Handles both local storage and database-backed data, with seamless migration.
  * - Notifies users of missed readings and upcoming update times.
  * - Supports enabling/disabling browser notifications.
  * - Provides a tabbed interface for summary, charts, token entry, backdated readings, reports, and AI insights.
- * 
+ *
  * Props:
  * @param {ElectricityReading[]} initialReadings - Initial list of electricity readings (from server or local storage).
  * @param {TokenPurchase[]} initialTokens - Initial list of token purchases (from server or local storage).
  * @param {number} initialLatestReading - The latest meter reading value.
  * @param {number} initialTotalUnits - The total units consumed (calculated from readings).
  * @param {boolean} dbConnected - Indicates if the app is connected to a backend database.
- * 
+ *
  * State:
  * - readings: List of all electricity readings.
  * - tokens: List of all token purchases.
@@ -41,7 +40,7 @@
  * - showMigrationAlert: Whether to show the migration alert for local data.
  * - missedReadings: List of missed reading periods for today.
  * - isSubmitted: Tracks if the reading form has been submitted.
- * 
+ *
  * Methods:
  * - handleAddReading: Adds or updates a meter reading, with duplicate detection.
  * - handleAddBackdatedReading: Adds a reading for a past date/time.
@@ -49,18 +48,18 @@
  * - handleMigrateData: Migrates local storage data to the database.
  * - enableNotifications: Requests browser notification permissions.
  * - showUpdateNotification: Triggers a browser notification for reading reminders.
- * 
+ *
  * Effects:
  * - Loads initial data from local storage or server.
  * - Persists readings and tokens to local storage if not connected to a database.
  * - Calculates next update time and missed readings.
  * - Calculates total units consumed.
- * 
+ *
  * UI:
  * - Dashboard summary card with current status and update form.
  * - Alerts for migration and missed readings.
  * - Tabbed interface for summary, chart, token entry, backdated readings, reports, and AI insights.
- * 
+ *
  * @component
  */
 "use client";
@@ -106,6 +105,7 @@ import {
 import UpdateReminderNotification from "./UpdateReminderNotification";
 import DashboardSummary from "./DashboardSummary";
 import AIInsights from "./ai-insights";
+import { Button } from "./ui/button";
 
 export default function ElectricityTracker({
     initialReadings,
@@ -311,10 +311,11 @@ export default function ElectricityTracker({
         // Validate input
         if (!currentReading || isNaN(Number(currentReading))) {
             toast({
-                title: "Invalid Input",
+                title: "❌ Invalid Input",
                 description: "Please enter a valid meter reading",
                 variant: "destructive",
             });
+            setIsSubmitted(false);
             return;
         }
 
@@ -325,12 +326,19 @@ export default function ElectricityTracker({
             // Additional validation if needed
             if (readingValue <= 0) {
                 toast({
-                    title: "Invalid Reading",
+                    title: "❌ Invalid Reading",
                     description: "Reading must be greater than 0",
                     variant: "destructive",
                 });
+                setIsSubmitted(false);
                 return;
             }
+
+            // Show loading feedback
+            toast({
+                title: "⏳ Processing...",
+                description: "Adding your electricity reading",
+            });
 
             if (dbConnected) {
                 // Use server action if database is connected
@@ -367,13 +375,17 @@ export default function ElectricityTracker({
                         description: `${getPeriodFromHour(
                             new Date().getHours()
                         )} reading updated to ${readingValue} kWh.`,
+                        className:
+                            "border-green-500 bg-green-50 text-green-800",
                     });
                 } else {
                     // Add new reading
                     setReadings((prev) => [...prev, result.reading]);
                     toast({
-                        title: "Reading Added",
+                        title: "✅ Reading Added Successfully!",
                         description: `New reading of ${readingValue} kWh has been recorded.`,
+                        className:
+                            "border-green-500 bg-green-50 text-green-800",
                     });
                 }
 
@@ -413,8 +425,9 @@ export default function ElectricityTracker({
                     };
                     setReadings(updatedReadings);
                     toast({
-                        title: "Reading Updated",
+                        title: "✅ Reading Updated Successfully!",
                         description: `${period} reading updated to ${readingValue} kWh.`,
+                        className: "border-blue-500 bg-blue-50 text-blue-800",
                     });
                 } else {
                     // Add new reading
@@ -427,8 +440,9 @@ export default function ElectricityTracker({
                     };
                     setReadings((prev) => [...prev, newReading]);
                     toast({
-                        title: "Reading Added",
+                        title: "✅ Reading Added Successfully!",
                         description: `New reading of ${readingValue} kWh has been recorded.`,
+                        className: "border-blue-500 bg-blue-50 text-blue-800",
                     });
                 }
 
@@ -441,16 +455,33 @@ export default function ElectricityTracker({
             if (
                 typeof error === "object" &&
                 error !== null &&
-                "existingReading" in error
+                "existingReading" in error &&
+                "navigator" in window &&
+                "vibrate" in navigator
             ) {
                 // This will be handled by the UpdateMeterReading component
+                navigator.vibrate(100);
                 throw error;
             } else {
                 console.error("Error adding reading:", error);
+                const errorMessage =
+                    error instanceof Error
+                        ? error.message
+                        : "Unknown error occurred";
                 toast({
-                    title: "Error",
-                    description: "Failed to add reading. Please try again.",
+                    title: "❌ Failed to Add Reading",
+                    description: `Error: ${errorMessage}. Please try again or check your connection.`,
                     variant: "destructive",
+                    action: (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAddReading(forceUpdate)}
+                            className="ml-2"
+                        >
+                            Retry
+                        </Button>
+                    ),
                 });
             }
         } finally {
