@@ -28,7 +28,7 @@
  */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,7 +40,7 @@ import {
     CheckCircle,
     Zap,
 } from "lucide-react";
-import { getPeriodFromHour, getCurrentLocalTime } from "@/lib/timezone-utils";
+import { getPeriodFromHour } from "@/lib/timezone-utils";
 
 type UpdateMeterReadingProps = {
     currentReading: string | number;
@@ -66,23 +66,37 @@ export const UpdateMeterReading = ({
     loadingText = "Updating...",
 }: UpdateMeterReadingProps) => {
     const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
-    const [existingReading, setExistingReading] = useState<{
-        reading: number;
-    } | null>(null);
+    const [existingReading, setExistingReading] = useState<{ reading: number } | null>(null);
     const [pendingReading, setPendingReading] = useState<string>("");
     // Add states for success feedback
     const [showSuccess, setShowSuccess] = useState(false);
     const [lastSuccessfulReading, setLastSuccessfulReading] =
         useState<string>("");
+    // Add state for client-side rendered time
+    const [currentTime, setCurrentTime] = useState<string>("");
+    const [mounted, setMounted] = useState(false);
+
+    // Use useEffect to handle client-side time rendering to avoid hydration mismatch
+    useEffect(() => {
+        // Mark component as mounted
+        setMounted(true);
+
+        // Set initial time
+        setCurrentTime(new Date().toLocaleString());
+
+        // Update time every second
+        const timer = setInterval(() => {
+            setCurrentTime(new Date().toLocaleString());
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, []);
 
     // Get current period for display
     const getCurrentPeriodForDisplay = () => {
         const now = new Date();
         const localHour = now.getHours();
         const period = getPeriodFromHour(localHour);
-        console.log(
-            `[CLIENT] Current time: ${now.toLocaleString()}, Hour: ${localHour}, Period: ${period}`
-        );
         return period;
     };
 
@@ -133,7 +147,7 @@ export const UpdateMeterReading = ({
             }
         }
     };
-
+   
     const handleForceUpdate = async () => {
         try {
             await handleAddReading(true); // Force update
@@ -165,7 +179,6 @@ export const UpdateMeterReading = ({
     };
 
     const currentPeriod = getCurrentPeriodForDisplay();
-    const now = getCurrentLocalTime();
 
     return (
         <div className="space-y-4">
@@ -240,7 +253,9 @@ export const UpdateMeterReading = ({
                                 been recorded for{" "}
                                 {getPeriodDisplayName(currentPeriod)}.
                             </p>
-                            <p className="text-xs">{now.toLocaleString()}</p>
+                            {mounted && (
+                                <p className="text-xs">{currentTime}</p>
+                            )}
                         </div>
                     </AlertDescription>
                 </Alert>
@@ -255,9 +270,12 @@ export const UpdateMeterReading = ({
                         <strong>{getPeriodDisplayName(currentPeriod)}</strong>
                     </span>
                 </div>
-                <div className="text-xs text-blue-600 dark:text-blue-300 mt-1">
-                    Current time: {now.toLocaleString()} ({now.getHours()}:00)
-                </div>
+                {/* Only render time when component is mounted (client-side) */}
+                {mounted && (
+                    <div className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                        Current time: {currentTime}
+                    </div>
+                )}
             </div>
 
             {/* Reading Input */}
