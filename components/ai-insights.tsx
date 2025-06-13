@@ -475,7 +475,7 @@ export default function AIInsights({ hasData }: Readonly<AIInsightsProps>) {
                                                     }`}
                                                 >
                                                     <div
-                                                        className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                                                        className={`md:max-w-[80%] rounded-lg px-4 py-2 ${
                                                             message.role ===
                                                             "user"
                                                                 ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"

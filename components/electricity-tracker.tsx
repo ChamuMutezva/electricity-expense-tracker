@@ -133,6 +133,7 @@ export default function ElectricityTracker({
     const [isSubmitted, setIsSubmitted] = useState(false);
     const { toast } = useToast();
 
+    
     function setupNotifications(
         setNotificationsEnabled: (enabled: boolean) => void
     ) {

@@ -40,7 +40,7 @@ import {
     CheckCircle,
     Zap,
 } from "lucide-react";
-import { getCurrentPeriod } from "@/lib/db";
+import { getPeriodFromHour, getCurrentLocalTime } from "@/lib/timezone-utils";
 
 type UpdateMeterReadingProps = {
     currentReading: string | number;
@@ -70,23 +70,30 @@ export const UpdateMeterReading = ({
         reading: number;
     } | null>(null);
     const [pendingReading, setPendingReading] = useState<string>("");
+    // Add states for success feedback
+    const [showSuccess, setShowSuccess] = useState(false);
     const [lastSuccessfulReading, setLastSuccessfulReading] =
         useState<string>("");
-    const [showSuccess, setShowSuccess] = useState(false);
 
     // Get current period for display
     const getCurrentPeriodForDisplay = () => {
-        return getCurrentPeriod(); // This now uses local time consistently
+        const now = new Date();
+        const localHour = now.getHours();
+        const period = getPeriodFromHour(localHour);
+        console.log(
+            `[CLIENT] Current time: ${now.toLocaleString()}, Hour: ${localHour}, Period: ${period}`
+        );
+        return period;
     };
 
     const getPeriodDisplayName = (period: string) => {
         switch (period) {
             case "morning":
-                return "Morning (5:00 AM - 12:00 PM)";
+                return "Morning (5:00 AM - 11:59 AM)";
             case "evening":
-                return "Evening (12:00 PM - 8:00 PM)";
+                return "Evening (12:00 PM - 7:59 PM)";
             case "night":
-                return "Night (8:00 PM - 5:00 AM)";
+                return "Night (8:00 PM - 4:59 AM)";
             default:
                 return period;
         }
@@ -101,12 +108,16 @@ export const UpdateMeterReading = ({
 
         try {
             await handleAddReading(false); // First try without force update
+
             // Success feedback
             setLastSuccessfulReading(currentReading.toString());
             setShowSuccess(true);
+            setCurrentReading(""); // Clear input on success
 
-            // Hide success message after 3 seconds
-            setTimeout(() => setShowSuccess(false), 3000);
+            // Hide success message after 5 seconds
+            setTimeout(() => {
+                setShowSuccess(false);
+            }, 5000);
         } catch (error: unknown) {
             // Check if this is a duplicate reading error
             if (
@@ -126,9 +137,21 @@ export const UpdateMeterReading = ({
     const handleForceUpdate = async () => {
         try {
             await handleAddReading(true); // Force update
+
+            // Success feedback for force update
+            setLastSuccessfulReading(pendingReading);
+            setShowSuccess(true);
+
+            // Reset states
             setShowDuplicateAlert(false);
             setExistingReading(null);
             setPendingReading("");
+            setCurrentReading("");
+
+            // Hide success message after 5 seconds
+            setTimeout(() => {
+                setShowSuccess(false);
+            }, 5000);
         } catch (error) {
             console.error("Error forcing update:", error);
         }
@@ -142,6 +165,7 @@ export const UpdateMeterReading = ({
     };
 
     const currentPeriod = getCurrentPeriodForDisplay();
+    const now = getCurrentLocalTime();
 
     return (
         <div className="space-y-4">
@@ -201,27 +225,40 @@ export const UpdateMeterReading = ({
                 </Alert>
             )}
 
+            {/* Success Alert */}
+            {showSuccess && (
+                <Alert className="border-green-200 bg-green-50 dark:bg-green-950">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <AlertTitle className="text-green-800 dark:text-green-200">
+                        Reading Updated Successfully
+                    </AlertTitle>
+                    <AlertDescription className="text-green-700 dark:text-green-300">
+                        <div className="space-y-1 mt-1">
+                            <p>
+                                Reading of{" "}
+                                <strong>{lastSuccessfulReading} kWh</strong> has
+                                been recorded for{" "}
+                                {getPeriodDisplayName(currentPeriod)}.
+                            </p>
+                            <p className="text-xs">{now.toLocaleString()}</p>
+                        </div>
+                    </AlertDescription>
+                </Alert>
+            )}
+
             {/* Current Period Info */}
             <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
                 <div className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
                     <Clock className="h-4 w-4" />
                     <span className="text-sm font-medium">
-                        Current Period: {getPeriodDisplayName(currentPeriod)}
+                        Current Period:{" "}
+                        <strong>{getPeriodDisplayName(currentPeriod)}</strong>
                     </span>
                 </div>
-            </div>
-
-            {showSuccess && (
-                <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
-                    <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
-                        <CheckCircle className="h-4 w-4" />
-                        <span className="text-sm font-medium">
-                            ✅ Successfully recorded {lastSuccessfulReading} kWh
-                            for {getPeriodDisplayName(currentPeriod)}
-                        </span>
-                    </div>
+                <div className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                    Current time: {now.toLocaleString()} ({now.getHours()}:00)
                 </div>
-            )}
+            </div>
 
             {/* Reading Input */}
             <div className="flex flex-col space-y-1.5">
@@ -243,7 +280,11 @@ export const UpdateMeterReading = ({
                     />
                     <Button
                         onClick={handleSubmit}
-                        disabled={isSubmitting || showDuplicateAlert}
+                        disabled={
+                            isSubmitting ||
+                            showDuplicateAlert ||
+                            !currentReading
+                        }
                         className={`hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white transition-all duration-200 ${
                             isSubmitting ? "bg-blue-400 cursor-not-allowed" : ""
                         }`}
