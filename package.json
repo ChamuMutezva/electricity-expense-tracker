@@ -1,5 +1,7 @@
 {
-  "name": "my-v0-project",
+  "name": "electicity-expense-tracker",
+  "description": "A modern expense tracker with AI-powered insights, built with Next.js, Radix UI, and Tailwind CSS.",
+  "author": "Chamu Mutezva",
   "version": "0.1.0",
   "private": true,
   "scripts": {

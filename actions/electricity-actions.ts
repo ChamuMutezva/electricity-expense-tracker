@@ -1,19 +1,3 @@
-/**
- * Provides server-side actions for managing electricity readings and token purchases.
- *
- * This module includes functions to:
- * - Add, update, and backdate electricity readings.
- * - Add token purchases and update readings accordingly.
- * - Retrieve all readings and token purchases.
- * - Calculate usage summaries, total units used, and monthly usage.
- * - Migrate data from local storage to the database.
- * - Ensure proper timezone handling for all date and time operations.
- *
- * All actions ensure the database connection is established before proceeding,
- * and trigger cache revalidation as needed.
- *
- * @module actions/electricity-actions
- */
 "use server";
 
 import { sql, isDatabaseConnected, type SqlQueryResult } from "@/lib/db";
@@ -76,10 +60,7 @@ type MonthlyUsageRow = {
 
 /**
  * Checks if a reading already exists for the current period today
- */
-
-/**
- * Checks if a reading already exists for the current period today
+ * FIXED: Now properly handles timezone by comparing local dates and using period
  */
 export async function checkExistingReading(
     period: Period
@@ -92,11 +73,11 @@ export async function checkExistingReading(
         `[SERVER] Checking for existing reading on ${todayStr} for period ${period}`
     );
 
-    // Use AT TIME ZONE to ensure consistent timezone handling
+    // FIXED: Query by date and period, not trying to do timezone conversion in SQL
     const result = (await sql`
       SELECT id, reading_id, timestamp, reading, period, created_at
       FROM electricity_readings
-      WHERE DATE(timestamp AT TIME ZONE 'UTC') = ${todayStr} 
+      WHERE DATE(timestamp) = ${todayStr} 
       AND period = ${period}
       ORDER BY timestamp DESC
       LIMIT 1
@@ -155,19 +136,7 @@ export async function updateElectricityReading(
 
 /**
  * Adds a new electricity reading to the database.
- *
- * @param reading - The meter reading value to be added.
- * @param forceUpdate - Whether to force update if reading exists for this period
- * @returns A promise that resolves to the newly created {@link ElectricityReading} object.
- * @throws {Error} If the database connection is not established.
- *
- * @remarks
- * - Generates a unique reading ID and determines the period (morning, evening, or night) based on the current hour.
- * - Inserts the reading into the `electricity_readings` table and revalidates the root path cache.
- * - The returned object includes the database-generated ID, reading ID, timestamp, reading value, period, and creation date.
- */
-/**
- * Adds a new electricity reading to the database.
+ * FIXED: Now preserves the user's local time intent correctly
  */
 export async function addElectricityReading(
     reading: number,
@@ -248,17 +217,7 @@ export async function addElectricityReading(
 
 /**
  * Adds a backdated electricity reading to the database.
- *
- * This function inserts a new electricity reading record with a generated backdated reading ID,
- * and returns the newly created reading as a typed object. It also triggers a revalidation of the root path.
- *
- * @param readingData - The electricity reading data to insert, excluding `id` and `reading_id`.
- * @returns A promise that resolves to the newly created `ElectricityReading` object.
- *
- * @throws Will throw an error if the database connection is not available or if the insertion fails.
- */
-/**
- * Adds a backdated electricity reading to the database.
+ * FIXED: Now correctly preserves the intended time and calculates period properly
  */
 export async function addBackdatedReading(
     readingData: Omit<ElectricityReading, "id" | "reading_id">
@@ -276,7 +235,7 @@ export async function addBackdatedReading(
         `[SERVER] Original period: ${readingData.period}, Calculated period: ${calculatedPeriod}`
     );
 
-    // Format the timestamp with timezone information
+    // FIXED: Use the simplified formatDateWithTimezone that preserves local time
     const formattedTimestamp = formatDateWithTimezone(readingData.timestamp);
 
     console.log(
@@ -304,6 +263,7 @@ export async function addBackdatedReading(
 
     return newReading;
 }
+
 /* Adds a new token purchase to the database and updates the electricity readings accordingly.
  *
  * @param units - The number of electricity units purchased.

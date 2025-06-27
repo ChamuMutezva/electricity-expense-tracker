@@ -228,7 +228,7 @@ export default function ElectricityTracker({
             } else {
                 setShowNotification(false);
             }
-        }, 30000); // Check every 30 seconds
+        }, 60000); // Check every 1 minute
 
         return () => clearInterval(interval);
     }, [notificationsEnabled]);
