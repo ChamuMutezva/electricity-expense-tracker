@@ -107,16 +107,16 @@ export default function UsageSummary({
                         {/* Header */}
                         <thead className="sticky top-0 z-10">
                             <tr className="bg-muted text-sm font-medium">
-                                <th className="p-3 text-left min-w-[120px]">
+                                <th className="p-3 text-left min-w-[80px]">
                                     Date
                                 </th>
-                                <th className="p-3 text-left min-w-[120px]">
+                                <th className="p-3 text-left min-w-[80px]">
                                     Morning
                                 </th>
-                                <th className="p-3 text-left min-w-[120px]">
+                                <th className="p-3 text-left min-w-[80px]">
                                     Evening
                                 </th>
-                                <th className="p-3 text-left min-w-[120px]">
+                                <th className="p-3 text-left min-w-[80px]">
                                     Night
                                 </th>
                             </tr>
@@ -172,16 +172,16 @@ export default function UsageSummary({
                                 {/* Header */}
                                 <thead className="sticky top-0 z-10">
                                     <tr className="bg-muted text-sm font-medium">
-                                        <th className="p-3 text-left min-w-[120px]">
+                                        <th className="p-3 text-left min-w-[80px]">
                                             Date
                                         </th>
-                                        <th className="p-3 text-left min-w-[120px]">
+                                        <th className="p-3 text-left min-w-[80px]">
                                             Units Added
                                         </th>
-                                        <th className="p-3 text-left min-w-[120px]">
+                                        <th className="p-3 text-left min-w-[80px]">
                                             New Reading
                                         </th>
-                                        <th className="p-3 text-left min-w-[120px]">
+                                        <th className="p-3 text-left min-w-[80px]">
                                             Total Cost
                                         </th>
                                     </tr>
