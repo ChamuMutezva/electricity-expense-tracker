@@ -106,6 +106,7 @@ import UpdateReminderNotification from "./UpdateReminderNotification";
 import DashboardSummary from "./DashboardSummary";
 import AIInsights from "./ai-insights";
 import { Button } from "./ui/button";
+import WeatherUsageCorrelation from "./WeatherUsageCorelation";
 
 export default function ElectricityTracker({
     initialReadings,
@@ -133,7 +134,6 @@ export default function ElectricityTracker({
     const [isSubmitted, setIsSubmitted] = useState(false);
     const { toast } = useToast();
 
-    
     function setupNotifications(
         setNotificationsEnabled: (enabled: boolean) => void
     ) {
@@ -772,8 +772,9 @@ export default function ElectricityTracker({
                             nextUpdate={nextUpdate}
                             getTimeString={getTimeString}
                             timeUntilUpdate={timeUntilUpdate}
+                            readings={readings}
                         />
-
+                        <WeatherUsageCorrelation />
                         {showNotification && <UpdateReminderNotification />}
 
                         <div className="grid gap-4">
@@ -918,7 +919,7 @@ export default function ElectricityTracker({
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <MonthlyReport />
+                            <MonthlyReport readings={readings} tokens={tokens} />
                         </CardContent>
                     </Card>
                 </TabsContent>
