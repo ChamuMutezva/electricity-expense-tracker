@@ -107,6 +107,7 @@ import DashboardSummary from "./DashboardSummary";
 import AIInsights from "./ai-insights";
 import { Button } from "./ui/button";
 import WeatherUsageCorrelation from "./WeatherUsageCorelation";
+import { LowBalanceNotification } from "./low-balance-notification";
 
 export default function ElectricityTracker({
     initialReadings,
@@ -130,6 +131,7 @@ export default function ElectricityTracker({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showMigrationAlert, setShowMigrationAlert] = useState(false);
     const [missedReadings, setMissedReadings] = useState<string[]>([]);
+     const [activeTab, setActiveTab] = useState("update")
     // Add state for submission tracking
     const [isSubmitted, setIsSubmitted] = useState(false);
     const { toast } = useToast();
@@ -738,8 +740,16 @@ export default function ElectricityTracker({
         setTotalUnits(calculateTotalUnits());
     }, [readings]);
 
+    const handleBuyTokens = () => {
+        setActiveTab("tokens");
+    };
+
     return (
         <div className="grid gap-6">
+            <LowBalanceNotification
+                currentBalance={latestReading}
+                onBuyTokens={handleBuyTokens}
+            />
             {/* Migration alert */}
             {showMigrationAlert && (
                 <MigrationAlert
@@ -795,7 +805,7 @@ export default function ElectricityTracker({
                 </CardContent>
             </Card>
 
-            <Tabs defaultValue="summary">
+            <Tabs defaultValue="summary" value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid h-auto grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
                     <TabsTrigger
                         value="summary"
@@ -919,7 +929,10 @@ export default function ElectricityTracker({
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <MonthlyReport readings={readings} tokens={tokens} />
+                            <MonthlyReport
+                                readings={readings}
+                                tokens={tokens}
+                            />
                         </CardContent>
                     </Card>
                 </TabsContent>
