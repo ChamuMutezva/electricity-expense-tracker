@@ -131,7 +131,7 @@ export default function ElectricityTracker({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showMigrationAlert, setShowMigrationAlert] = useState(false);
     const [missedReadings, setMissedReadings] = useState<string[]>([]);
-     const [activeTab, setActiveTab] = useState("update")
+    const [activeTab, setActiveTab] = useState("update");
     // Add state for submission tracking
     const [isSubmitted, setIsSubmitted] = useState(false);
     const { toast } = useToast();
@@ -744,6 +744,8 @@ export default function ElectricityTracker({
         setActiveTab("tokens");
     };
 
+    console.log("Client component rendered with readings:");
+
     return (
         <div className="grid gap-6">
             <LowBalanceNotification
@@ -805,7 +807,11 @@ export default function ElectricityTracker({
                 </CardContent>
             </Card>
 
-            <Tabs defaultValue="summary" value={activeTab} onValueChange={setActiveTab}>
+            <Tabs
+                defaultValue="summary"
+                value={activeTab}
+                onValueChange={setActiveTab}
+            >
                 <TabsList className="grid h-auto grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
                     <TabsTrigger
                         value="summary"
