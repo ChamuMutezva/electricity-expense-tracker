@@ -69,10 +69,13 @@ export default function BackdatedReadingForm({
     const [lastSubmittedTime, setLastSubmittedTime] = useState<string>("");
 
     // Get current date and time for validation
-    const now = new Date();
+    const now = useMemo(() => new Date(), []);
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const today = useMemo(
+        () => new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+        [now]
+    );
 
     console.log(period);
 
