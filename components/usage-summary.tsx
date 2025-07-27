@@ -22,6 +22,7 @@ import type {
 } from "@/lib/types";
 import { getUsageSummary } from "@/actions/electricity-actions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDate } from "@/lib/date-utils";
 
 interface UsageSummaryProps {
     readings: ElectricityReading[];
@@ -195,7 +196,7 @@ export default function UsageSummary({
                                             className="border-t text-sm"
                                         >
                                             <td className="p-3">
-                                                {token.timestamp.toLocaleDateString()}
+                                                {formatDate(token.timestamp)}
                                             </td>
                                             <td className="p-3">
                                                 {token.units} kWh

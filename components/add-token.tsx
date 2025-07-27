@@ -26,6 +26,7 @@ import React from "react";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { formatDate } from "@/lib/date-utils";
 
 type AddTokenProps = {
     tokenUnits: string | number;
@@ -117,7 +118,7 @@ export default function AddToken({
                                         className="hover:bg-muted/20"
                                     >
                                         <td className="p-3 text-sm">
-                                            {token.timestamp.toLocaleDateString()}
+                                            {formatDate(token.timestamp)}
                                         </td>
                                         <td className="p-3 text-sm">
                                             {token.units} kWh
