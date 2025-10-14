@@ -444,23 +444,30 @@ export async function getTotalUnitsUsed(): Promise<number> {
         return 0;
     }
 
-    const result = (await sql`
-    SELECT 
-      (SELECT reading FROM electricity_readings ORDER BY timestamp ASC LIMIT 1) as first_reading,
-      (SELECT reading FROM electricity_readings ORDER BY timestamp DESC LIMIT 1) as last_reading
-  `) as SqlQueryResult<{ first_reading: number; last_reading: number }>;
+    const readings = (await sql`
+    SELECT reading, timestamp
+    FROM electricity_readings 
+    ORDER BY timestamp ASC
+  `) as SqlQueryResult<{ reading: number; timestamp: string }>;
 
-    if (
-        result.length === 0 ||
-        !result[0]?.first_reading ||
-        !result[0]?.last_reading
-    ) {
+    if (readings.length < 2) {
         return 0;
     }
 
-    const difference =
-        Number(result[0]?.last_reading) - Number(result[0]?.first_reading);
-    return Number.parseFloat(difference.toFixed(2)); // Round to 2 decimal places
+    let totalConsumption = 0;
+    // Calculate consumption between consecutive readings
+    for (let i = 1; i < readings.length; i++) {
+        const prevReading = Number(readings[i - 1].reading);
+        const currentReading = Number(readings[i].reading);
+
+        // Only count decreases (actual consumption)
+        // Ignore increases (token purchases)
+        if (prevReading > currentReading) {
+            totalConsumption += prevReading - currentReading;
+        }
+    }
+
+    return Number.parseFloat(totalConsumption.toFixed(2));
 }
 
 /* Retrieves a usage summary of electricity consumption and token purchases.

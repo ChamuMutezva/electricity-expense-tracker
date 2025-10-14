@@ -93,6 +93,7 @@ import {
     addTokenPurchase,
     migrateFromLocalStorage,
     addBackdatedReading,
+    getTotalUnitsUsed,
 } from "@/actions/electricity-actions";
 import { useToast } from "@/hooks/use-toast";
 import AddToken from "./add-token";
@@ -108,6 +109,7 @@ import AIInsights from "./ai-insights";
 import { Button } from "./ui/button";
 import WeatherUsageCorrelation from "./WeatherUsageCorelation";
 import { LowBalanceNotification } from "./low-balance-notification";
+import { useElectricityStorage } from "@/hooks/use-local-storage";
 
 export default function ElectricityTracker({
     initialReadings,
@@ -122,7 +124,7 @@ export default function ElectricityTracker({
     const [currentReading, setCurrentReading] = useState("");
     const [tokenUnits, setTokenUnits] = useState("");
     const [tokenCost, setTokenCost] = useState("");
-    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+    // const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [nextUpdate, setNextUpdate] = useState<Date | null>(null);
     const [timeUntilUpdate, setTimeUntilUpdate] = useState<string>("");
     const [showNotification, setShowNotification] = useState(false);
@@ -134,32 +136,15 @@ export default function ElectricityTracker({
     const [activeTab, setActiveTab] = useState("update");
     // Add state for submission tracking
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
-    function setupNotifications(
-        setNotificationsEnabled: (enabled: boolean) => void
-    ) {
-        const notifEnabled =
-            localStorage.getItem("notificationsEnabled") === "true";
-        setNotificationsEnabled(notifEnabled);
-        if (notifEnabled && "Notification" in window) {
-            Notification.requestPermission();
-        }
-    }
-
-    function checkMigration(
-        dbConnected: boolean,
-        setShowMigrationAlert: (show: boolean) => void
-    ) {
-        if (dbConnected) {
-            const savedReadings = localStorage.getItem("electricityReadings");
-            const savedTokens = localStorage.getItem("electricityTokens");
-            if (savedReadings || savedTokens) {
-                setShowMigrationAlert(true);
-            }
-        }
-    }
-
+    const {
+        notificationsEnabled,
+        setNotificationsEnabled,
+        checkMigrationNeeded,
+        clearElectricityData,
+    } = useElectricityStorage(dbConnected);
     // Check for local storage data on component mount
     useEffect(() => {
         if (!dbConnected) {
@@ -174,10 +159,9 @@ export default function ElectricityTracker({
                 )
             );
         } else {
-            checkMigration(dbConnected, setShowMigrationAlert);
+            setShowMigrationAlert(checkMigrationNeeded());
         }
-        setupNotifications(setNotificationsEnabled);
-    }, [dbConnected]);
+    }, [dbConnected, checkMigrationNeeded]);
 
     // Save readings to localStorage if database is not connected
     useEffect(() => {
@@ -186,23 +170,9 @@ export default function ElectricityTracker({
                 "electricityReadings",
                 JSON.stringify(readings)
             );
-        }
-    }, [readings, dbConnected]);
-
-    // Save tokens to localStorage if database is not connected
-    useEffect(() => {
-        if (!dbConnected) {
             localStorage.setItem("electricityTokens", JSON.stringify(tokens));
         }
-    }, [tokens, dbConnected]);
-
-    // Save notification preference
-    useEffect(() => {
-        localStorage.setItem(
-            "notificationsEnabled",
-            notificationsEnabled.toString()
-        );
-    }, [notificationsEnabled]);
+    }, [readings, tokens, dbConnected]);
 
     // Calculate next update time and set timer
     useEffect(() => {
@@ -675,10 +645,7 @@ export default function ElectricityTracker({
                 );
 
                 if (success) {
-                    // Clear local storage after successful migration
-                    localStorage.removeItem("electricityReadings");
-                    localStorage.removeItem("electricityTokens");
-
+                    clearElectricityData();
                     setShowMigrationAlert(false);
 
                     toast({
@@ -713,38 +680,29 @@ export default function ElectricityTracker({
     };
 
     useEffect(() => {
-        const calculateTotalUnits = (): number => {
-            if (readings.length < 2) return 0;
-
-            // Sort readings by timestamp, ensuring timestamps are Date objects
-            const sortedReadings = [...readings].sort((a, b) => {
-                const timestampA =
-                    a.timestamp instanceof Date
-                        ? a.timestamp
-                        : new Date(a.timestamp);
-                const timestampB =
-                    b.timestamp instanceof Date
-                        ? b.timestamp
-                        : new Date(b.timestamp);
-                return timestampA.getTime() - timestampB.getTime();
-            });
-            console.log("Sorted Readings:", sortedReadings);
-
-            // Calculate difference between first and last reading
-            return (
-                Number(sortedReadings[0].reading) -
-                Number(sortedReadings[sortedReadings.length - 1].reading)
-            );
+        const fetchMonthlyData = async () => {
+            try {
+                setIsLoading(true);
+                const data = await getTotalUnitsUsed();
+                console.log("Monthly usage data from API:", data);
+                setTotalUnits(data);
+            } catch (error) {
+                console.error("Error fetching monthly data:", error);
+            } finally {
+                setIsLoading(false);
+            }
         };
-
-        setTotalUnits(calculateTotalUnits());
-    }, [readings]);
+        // console.log(totalUnits)
+        fetchMonthlyData();
+    }, [tokens, readings]);
 
     const handleBuyTokens = () => {
         setActiveTab("tokens");
     };
 
-    console.log("Client component rendered with readings:");
+    if (isLoading) {
+        return <div>Loading units used readings </div>;
+    }
 
     return (
         <div className="grid gap-6">
