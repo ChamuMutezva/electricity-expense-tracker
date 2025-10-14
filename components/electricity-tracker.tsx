@@ -75,7 +75,16 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MigrationAlert from "@/components/migration-alert";
 import MissedReadings from "@/components/missed-readings";
-import { Zap, BarChart3, CalendarClock, Brain } from "lucide-react";
+import {
+    Zap,
+    BarChart3,
+    CalendarClock,
+    Brain,
+    Plus,
+    Home,
+    TrendingUp,
+    FileText,
+} from "lucide-react";
 import UsageSummary from "@/components/usage-summary";
 import UsageChart from "@/components/usage-chart";
 import MonthlyReport from "@/components/monthly-report";
@@ -110,6 +119,7 @@ import { Button } from "./ui/button";
 import WeatherUsageCorrelation from "./WeatherUsageCorelation";
 import { LowBalanceNotification } from "./low-balance-notification";
 import { useElectricityStorage } from "@/hooks/use-local-storage";
+import SmartAlerts from "./small-alerts";
 
 export default function ElectricityTracker({
     initialReadings,
@@ -133,7 +143,7 @@ export default function ElectricityTracker({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showMigrationAlert, setShowMigrationAlert] = useState(false);
     const [missedReadings, setMissedReadings] = useState<string[]>([]);
-    const [activeTab, setActiveTab] = useState("update");
+    const [activeTab, setActiveTab] = useState("dashboard");
     // Add state for submission tracking
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -705,11 +715,284 @@ export default function ElectricityTracker({
     }
 
     return (
-        <div className="grid gap-6">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
             <LowBalanceNotification
                 currentBalance={latestReading}
                 onBuyTokens={handleBuyTokens}
             />
+            <div
+                className="border-b bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm 
+            sticky top-0 z-40 shadow-sm"
+            >
+                <div className="container mx-auto px-4 py-4">
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                                <Zap className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />
+                                Electricity Tracker
+                            </h1>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                Monitor and manage your electricity consumption
+                            </p>
+                        </div>
+                    </div>
+                    {/* Navigation Tabs */}
+                    <Tabs
+                        value={activeTab}
+                        onValueChange={setActiveTab}
+                        className="w-full"
+                    >
+                        <TabsList className="w-full justify-between h-auto p-1 bg-slate-100 dark:bg-slate-900">
+                            <TabsTrigger
+                                value="dashboard"
+                                className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
+                            >
+                                <Home className="h-4 w-4" />
+                                <span className="hidden sm:inline">
+                                    Dashboard
+                                </span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="analytics"
+                                className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
+                            >
+                                <TrendingUp className="h-4 w-4" />
+                                <span className="hidden sm:inline">
+                                    Analytics
+                                </span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="reports"
+                                className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
+                            >
+                                <FileText className="h-4 w-4" />
+                                <span className="hidden sm:inline">
+                                    Reports
+                                </span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="ai-insights"
+                                className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
+                            >
+                                <Brain className="h-4 w-4" />
+                                <span className="hidden sm:inline">
+                                    AI Insights
+                                </span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="token"
+                                className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
+                            >
+                                <Plus className="h-4 w-4" />
+                                <span className="hidden sm:inline">
+                                    Add Token
+                                </span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="backdated"
+                                className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
+                            >
+                                <CalendarClock className="h-4 w-4" />
+                                <span className="hidden sm:inline">
+                                    Backdated
+                                </span>
+                            </TabsTrigger>
+                        </TabsList>
+
+                        <div className="container mx-auto px-0 py-6">
+                            {/* Alerts Section */}
+                            <div className="space-y-4 mb-6">
+                                {showMigrationAlert && (
+                                    <MigrationAlert
+                                        handleMigrateData={handleMigrateData}
+                                        isSubmitting={isSubmitting}
+                                        setShowMigrationAlert={
+                                            setShowMigrationAlert
+                                        }
+                                    />
+                                )}
+                                {missedReadings.length > 0 && (
+                                    <MissedReadings
+                                        missedReadings={missedReadings}
+                                    />
+                                )}
+                                {showNotification && (
+                                    <UpdateReminderNotification />
+                                )}
+                            </div>
+
+                            {/* Tab Content */}
+                            <TabsContent
+                                value="dashboard"
+                                className="mt-0 space-y-6"
+                            >
+                                <Card className="shadow-lg">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Zap className="h-5 w-5 text-yellow-500" />
+                                            Current Status
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Real-time electricity monitoring and
+                                            updates
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-6">
+                                            <DashboardSummary
+                                                latestReading={latestReading}
+                                                totalUnits={totalUnits}
+                                                nextUpdate={nextUpdate}
+                                                getTimeString={getTimeString}
+                                                timeUntilUpdate={
+                                                    timeUntilUpdate
+                                                }
+                                                readings={readings}
+                                            />
+                                            
+                                            <SmartAlerts
+                                                readings={readings}
+                                                tokens={tokens}
+                                            />
+                                                
+                                            <div className="space-y-4">
+                                                <UpdateMeterReading
+                                                    currentReading={
+                                                        currentReading
+                                                    }
+                                                    setCurrentReading={
+                                                        setCurrentReading
+                                                    }
+                                                    handleAddReading={
+                                                        handleAddReading
+                                                    }
+                                                    isSubmitting={isSubmitting}
+                                                    isSubmitted={isSubmitted}
+                                                />
+                                                {!notificationsEnabled && (
+                                                    <NotificationsAlert
+                                                        enableNotifications={
+                                                            enableNotifications
+                                                        }
+                                                    />
+                                                )}
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                <Card className="shadow-lg">
+                                    <CardHeader>
+                                        <CardTitle>Usage Summary</CardTitle>
+                                        <CardDescription>
+                                            Overview of your electricity
+                                            consumption patterns
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <UsageSummary
+                                            readings={readings}
+                                            tokens={tokens}
+                                        />
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+
+                            <TabsContent
+                                value="analytics"
+                                className="mt-0 space-y-6"
+                            >
+                                <Card className="shadow-lg">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <BarChart3 className="h-5 w-5 text-blue-500" />
+                                            Usage Analytics
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Detailed visualization of your
+                                            electricity consumption
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <UsageChart readings={readings} />
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+
+                            <TabsContent value="reports" className="mt-0">
+                                <Card className="shadow-lg">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <FileText className="h-5 w-5 text-green-500" />
+                                            Monthly Reports
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Generate and export detailed usage
+                                            reports
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <MonthlyReport
+                                            readings={readings}
+                                            tokens={tokens}
+                                        />
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+
+                            <TabsContent value="ai-insights" className="mt-0">
+                                <AIInsights hasData={readings.length > 2} />
+                            </TabsContent>
+
+                            <TabsContent value="token" className="mt-0">
+                                <Card className="shadow-lg">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Plus className="h-5 w-5 text-purple-500" />
+                                            Add Electricity Token
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Record purchased electricity units
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <AddToken
+                                            tokenUnits={tokenUnits}
+                                            tokenCost={tokenCost}
+                                            setTokenCost={setTokenCost}
+                                            setTokenUnits={setTokenUnits}
+                                            handleAddToken={handleAddToken}
+                                            isSubmitting={isSubmitting}
+                                            tokens={tokens}
+                                        />
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+
+                            <TabsContent value="backdated" className="mt-0">
+                                <Card className="shadow-lg">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <CalendarClock className="h-5 w-5 text-blue-500" />
+                                            Add Backdated Reading
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Record readings for past dates and
+                                            times
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <BackdatedReadingForm
+                                            onSubmit={handleAddBackdatedReading}
+                                            isSubmitting={isSubmitting}
+                                        />
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+                        </div>
+                    </Tabs>
+                </div>
+            </div>
             {/* Migration alert */}
             {showMigrationAlert && (
                 <MigrationAlert
@@ -764,146 +1047,6 @@ export default function ElectricityTracker({
                     </div>
                 </CardContent>
             </Card>
-
-            <Tabs
-                defaultValue="summary"
-                value={activeTab}
-                onValueChange={setActiveTab}
-            >
-                <TabsList className="grid h-auto grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
-                    <TabsTrigger
-                        value="summary"
-                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
-                    >
-                        Usage Summary
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="chart"
-                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
-                    >
-                        Usage Chart
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="token"
-                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
-                    >
-                        Add Token
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="backdated"
-                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
-                    >
-                        <span className="flex items-center gap-1">
-                            <CalendarClock className="h-4 w-4" />
-                            <span>Backdated</span>
-                        </span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="reports"
-                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
-                    >
-                        Reports
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="ai-insights"
-                        className="hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white"
-                    >
-                        <span className="flex items-center gap-1">
-                            <Brain className="h-4 w-4" />
-                            <span>AI Insights</span>
-                        </span>
-                    </TabsTrigger>
-                </TabsList>
-                <TabsContent value="summary">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Usage Summary</CardTitle>
-                            <CardDescription>
-                                View your electricity usage patterns
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <UsageSummary readings={readings} tokens={tokens} />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="chart">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Usage Chart</CardTitle>
-                            <CardDescription>
-                                Visualize your electricity consumption
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <UsageChart readings={readings} />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="token">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Add Electricity Token</CardTitle>
-                            <CardDescription>
-                                Enter units from purchased electricity token
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <AddToken
-                                tokenUnits={tokenUnits}
-                                tokenCost={tokenCost}
-                                setTokenCost={setTokenCost}
-                                setTokenUnits={setTokenUnits}
-                                handleAddToken={handleAddToken}
-                                isSubmitting={isSubmitting}
-                                tokens={tokens}
-                            />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="backdated">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <CalendarClock className="h-5 w-5 text-blue-500" />
-                                Add Backdated Reading
-                            </CardTitle>
-                            <CardDescription>
-                                Record a reading for a specific date and time
-                                (e.g., missed readings)
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <BackdatedReadingForm
-                                onSubmit={handleAddBackdatedReading}
-                                isSubmitting={isSubmitting}
-                            />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="reports">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <BarChart3 className="h-5 w-5 text-green-500" />
-                                Monthly Reports
-                            </CardTitle>
-                            <CardDescription>
-                                View detailed monthly usage reports
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <MonthlyReport
-                                readings={readings}
-                                tokens={tokens}
-                            />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="ai-insights">
-                    <AIInsights hasData={readings.length > 2} />
-                </TabsContent>
-            </Tabs>
         </div>
     );
 }
