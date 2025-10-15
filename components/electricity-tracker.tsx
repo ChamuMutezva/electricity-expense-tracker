@@ -155,6 +155,7 @@ export default function ElectricityTracker({
         checkMigrationNeeded,
         clearElectricityData,
     } = useElectricityStorage(dbConnected);
+
     // Check for local storage data on component mount
     useEffect(() => {
         if (!dbConnected) {
@@ -722,19 +723,13 @@ export default function ElectricityTracker({
             />
             <div
                 className="border-b bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm 
-            sticky top-0 z-40 shadow-sm"
+             top-0 z-40 shadow-sm"
             >
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-                                <Zap className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />
-                                Electricity Tracker
-                            </h1>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Monitor and manage your electricity consumption
-                            </p>
-                        </div>
+                        <h2 className="text-base font-bold md:text-2xl text-foreground mt-1">
+                            Monitor and manage your electricity consumption
+                        </h2>
                     </div>
                     {/* Navigation Tabs */}
                     <Tabs
@@ -849,12 +844,15 @@ export default function ElectricityTracker({
                                                 }
                                                 readings={readings}
                                             />
-                                            
+                                            <WeatherUsageCorrelation />
+                                            {showNotification && (
+                                                <UpdateReminderNotification />
+                                            )}
                                             <SmartAlerts
                                                 readings={readings}
                                                 tokens={tokens}
                                             />
-                                                
+
                                             <div className="space-y-4">
                                                 <UpdateMeterReading
                                                     currentReading={
@@ -993,60 +991,6 @@ export default function ElectricityTracker({
                     </Tabs>
                 </div>
             </div>
-            {/* Migration alert */}
-            {showMigrationAlert && (
-                <MigrationAlert
-                    handleMigrateData={handleMigrateData}
-                    isSubmitting={isSubmitting}
-                    setShowMigrationAlert={setShowMigrationAlert}
-                />
-            )}
-
-            {/* Missed Readings Alert */}
-            {missedReadings.length > 0 && (
-                <MissedReadings missedReadings={missedReadings} />
-            )}
-
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Zap className="h-5 w-5 text-yellow-500" />
-                        <h2>Current Electricity Status</h2>
-                    </CardTitle>
-                    <CardDescription>
-                        Track and update your electricity meter readings
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid gap-6">
-                        <DashboardSummary
-                            latestReading={latestReading}
-                            totalUnits={totalUnits}
-                            nextUpdate={nextUpdate}
-                            getTimeString={getTimeString}
-                            timeUntilUpdate={timeUntilUpdate}
-                            readings={readings}
-                        />
-                        <WeatherUsageCorrelation />
-                        {showNotification && <UpdateReminderNotification />}
-
-                        <div className="grid gap-4">
-                            <UpdateMeterReading
-                                currentReading={currentReading}
-                                setCurrentReading={setCurrentReading}
-                                handleAddReading={handleAddReading}
-                                isSubmitting={isSubmitting}
-                                isSubmitted={isSubmitted}
-                            />
-                            {!notificationsEnabled && (
-                                <NotificationsAlert
-                                    enableNotifications={enableNotifications}
-                                />
-                            )}
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     );
 }

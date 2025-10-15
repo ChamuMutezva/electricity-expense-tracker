@@ -1,6 +1,6 @@
 /**
  * HomePage is the main entry point for the Electricity Expense Tracker application.
- * 
+ *
  * This Next.js page component is responsible for:
  * - Setting the page metadata (title and description).
  * - Checking the database connection status.
@@ -8,7 +8,7 @@
  * - Displaying an alert if the database is not connected, with a fallback to local storage mode.
  * - Rendering the main ElectricityTracker component with the fetched or default data.
  * - Providing a theme toggle for light/dark mode.
- * 
+ *
  * @returns {Promise<JSX.Element>} The rendered home page component.
  */
 import type { Metadata } from "next";
@@ -21,7 +21,7 @@ import {
 } from "@/actions/electricity-actions";
 import { isDatabaseConnected } from "@/lib/db";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Database } from "lucide-react";
+import { Database, Zap } from "lucide-react";
 import { ElectricityReading, TokenPurchase } from "@/lib/types";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -56,8 +56,9 @@ export default async function HomePage() {
         <main className="container mx-auto py-8 px-4">
             <div>
                 <div className="flex justify-between items-start">
-                    <h1 className="text-3xl font-bold mb-8">
-                        Electricity Expense Tracker
+                    <h1 className=" text-2xl md:text-3xl font-bold mb-8 flex justify-start items-center gap-2">
+                        <Zap className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />
+                        Electricity Tracker
                     </h1>
                     <ThemeToggle />
                 </div>
