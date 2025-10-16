@@ -65,19 +65,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MigrationAlert from "@/components/migration-alert";
 import MissedReadings from "@/components/missed-readings";
 import {
-    Zap,
-    BarChart3,
     CalendarClock,
     Brain,
     Plus,
@@ -85,10 +76,6 @@ import {
     TrendingUp,
     FileText,
 } from "lucide-react";
-import UsageSummary from "@/components/usage-summary";
-import UsageChart from "@/components/usage-chart";
-import MonthlyReport from "@/components/monthly-report";
-import BackdatedReadingForm from "@/components/backdated-reading-form";
 import { getTimeString, getNextUpdateTime } from "@/lib/date-utils";
 import type {
     ElectricityReading,
@@ -105,21 +92,20 @@ import {
     getTotalUnitsUsed,
 } from "@/actions/electricity-actions";
 import { useToast } from "@/hooks/use-toast";
-import AddToken from "./add-token";
-import { UpdateMeterReading } from "./update-mete-reading";
-import NotificationsAlert from "./NotificationsAlert";
 import {
     parseLocalStorageReadings,
     parseLocalStorageTokens,
 } from "@/lib/storage";
 import UpdateReminderNotification from "./UpdateReminderNotification";
-import DashboardSummary from "./DashboardSummary";
-import AIInsights from "./ai-insights";
 import { Button } from "./ui/button";
-import WeatherUsageCorrelation from "./WeatherUsageCorelation";
 import { LowBalanceNotification } from "./low-balance-notification";
 import { useElectricityStorage } from "@/hooks/use-local-storage";
-import SmartAlerts from "./small-alerts";
+import AnalyticsTabs from "./Tabs/AnalyticsTabs";
+import ReportsTabs from "./Tabs/ReportsTabs";
+import AIInsightsTabs from "./Tabs/AIInsightsTabs";
+import AddTokenTabs from "./Tabs/AddTokenTabs";
+import BackdatedTabs from "./Tabs/BackdatedTabs";
+import DashboardTabs from "./Tabs/DashboardTabs";
 
 export default function ElectricityTracker({
     initialReadings,
@@ -815,178 +801,40 @@ export default function ElectricityTracker({
                                     <UpdateReminderNotification />
                                 )}
                             </div>
-
-                            {/* Tab Content */}
-                            <TabsContent
-                                value="dashboard"
-                                className="mt-0 space-y-6"
-                            >
-                                <Card className="shadow-lg">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <Zap className="h-5 w-5 text-yellow-500" />
-                                            Current Status
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Real-time electricity monitoring and
-                                            updates
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-6">
-                                            <DashboardSummary
-                                                latestReading={latestReading}
-                                                totalUnits={totalUnits}
-                                                nextUpdate={nextUpdate}
-                                                getTimeString={getTimeString}
-                                                timeUntilUpdate={
-                                                    timeUntilUpdate
-                                                }
-                                                readings={readings}
-                                            />
-                                            <WeatherUsageCorrelation />
-                                            {showNotification && (
-                                                <UpdateReminderNotification />
-                                            )}
-                                            <SmartAlerts
-                                                readings={readings}
-                                                tokens={tokens}
-                                            />
-
-                                            <div className="space-y-4">
-                                                <UpdateMeterReading
-                                                    currentReading={
-                                                        currentReading
-                                                    }
-                                                    setCurrentReading={
-                                                        setCurrentReading
-                                                    }
-                                                    handleAddReading={
-                                                        handleAddReading
-                                                    }
-                                                    isSubmitting={isSubmitting}
-                                                    isSubmitted={isSubmitted}
-                                                />
-                                                {!notificationsEnabled && (
-                                                    <NotificationsAlert
-                                                        enableNotifications={
-                                                            enableNotifications
-                                                        }
-                                                    />
-                                                )}
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-
-                                <Card className="shadow-lg">
-                                    <CardHeader>
-                                        <CardTitle>Usage Summary</CardTitle>
-                                        <CardDescription>
-                                            Overview of your electricity
-                                            consumption patterns
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <UsageSummary
-                                            readings={readings}
-                                            tokens={tokens}
-                                        />
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-
-                            <TabsContent
-                                value="analytics"
-                                className="mt-0 space-y-6"
-                            >
-                                <Card className="shadow-lg">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <BarChart3 className="h-5 w-5 text-blue-500" />
-                                            Usage Analytics
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Detailed visualization of your
-                                            electricity consumption
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <UsageChart readings={readings} />
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-
-                            <TabsContent value="reports" className="mt-0">
-                                <Card className="shadow-lg">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <FileText className="h-5 w-5 text-green-500" />
-                                            Monthly Reports
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Generate and export detailed usage
-                                            reports
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <MonthlyReport
-                                            readings={readings}
-                                            tokens={tokens}
-                                        />
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-
-                            <TabsContent value="ai-insights" className="mt-0">
-                                <AIInsights hasData={readings.length > 2} />
-                            </TabsContent>
-
-                            <TabsContent value="token" className="mt-0">
-                                <Card className="shadow-lg">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <Plus className="h-5 w-5 text-purple-500" />
-                                            Add Electricity Token
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Record purchased electricity units
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <AddToken
-                                            tokenUnits={tokenUnits}
-                                            tokenCost={tokenCost}
-                                            setTokenCost={setTokenCost}
-                                            setTokenUnits={setTokenUnits}
-                                            handleAddToken={handleAddToken}
-                                            isSubmitting={isSubmitting}
-                                            tokens={tokens}
-                                        />
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-
-                            <TabsContent value="backdated" className="mt-0">
-                                <Card className="shadow-lg">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <CalendarClock className="h-5 w-5 text-blue-500" />
-                                            Add Backdated Reading
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Record readings for past dates and
-                                            times
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <BackdatedReadingForm
-                                            onSubmit={handleAddBackdatedReading}
-                                            isSubmitting={isSubmitting}
-                                        />
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
+                          
+                            <DashboardTabs
+                                latestReading={latestReading}
+                                totalUnits={totalUnits}
+                                nextUpdate={nextUpdate}
+                                getTimeString={getTimeString}
+                                timeUntilUpdate={timeUntilUpdate}
+                                readings={readings}
+                                tokens={tokens}
+                                currentReading={currentReading}
+                                setCurrentReading={setCurrentReading}
+                                handleAddReading={handleAddReading}
+                                isSubmitting={isSubmitting}
+                                isSubmitted={isSubmitted}
+                                enableNotifications={enableNotifications}
+                                notificationsEnabled={notificationsEnabled}
+                                showNotification={showNotification}
+                            />
+                            <AnalyticsTabs readings={readings} />
+                            <ReportsTabs readings={readings} tokens={tokens} />
+                            <AIInsightsTabs hasData={readings.length > 2} />
+                            <AddTokenTabs
+                                tokenUnits={tokenUnits}
+                                tokenCost={tokenCost}
+                                setTokenCost={setTokenCost}
+                                setTokenUnits={setTokenUnits}
+                                handleAddToken={handleAddToken}
+                                isSubmitting={isSubmitting}
+                                tokens={tokens}
+                            />
+                            <BackdatedTabs
+                                onSubmit={handleAddBackdatedReading}
+                                isSubmitting={isSubmitting}
+                            />
                         </div>
                     </Tabs>
                 </div>
