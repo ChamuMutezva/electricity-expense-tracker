@@ -158,7 +158,9 @@ export default function ElectricityTracker({
 
     // Check for local storage data on component mount
     useEffect(() => {
-        if (!dbConnected) {
+        if (dbConnected) {
+            setShowMigrationAlert(checkMigrationNeeded());
+        } else {
             setReadings(
                 parseLocalStorageReadings(
                     localStorage.getItem("electricityReadings")
@@ -169,8 +171,6 @@ export default function ElectricityTracker({
                     localStorage.getItem("electricityTokens")
                 )
             );
-        } else {
-            setShowMigrationAlert(checkMigrationNeeded());
         }
     }, [dbConnected, checkMigrationNeeded]);
 
@@ -293,7 +293,7 @@ export default function ElectricityTracker({
         setIsSubmitted(true);
 
         // Validate input
-        if (!currentReading || isNaN(Number(currentReading))) {
+        if (!currentReading || Number.isNaN(currentReading)) {
             toast({
                 title: "❌ Invalid Input",
                 description: "Please enter a valid meter reading",
@@ -532,8 +532,8 @@ export default function ElectricityTracker({
 
     // Add a new token purchase - with fallback to local storage
     const handleAddToken = async () => {
-        if (!tokenUnits || isNaN(Number(tokenUnits))) return;
-        if (!tokenCost || isNaN(Number(tokenCost))) return;
+        if (!tokenUnits || Number.isNaN(tokenUnits)) return;
+        if (!tokenCost || Number.isNaN(tokenCost)) return;
 
         try {
             setIsSubmitting(true);
