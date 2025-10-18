@@ -87,3 +87,46 @@ export interface ElectricityTrackerProps {
     initialTotalUnits: number;
     dbConnected: boolean;
 }
+
+export interface ElectricityState {
+    isLoading: boolean;
+    isSubmitted: boolean;
+    isSubmitting: boolean;
+    showMigrationAlert: boolean;
+    showNotification: boolean;
+    activeTab: string;
+    missedReadings: string[];
+    tokenUnits: string;
+    tokenCost: string;
+    currentReading: string;
+    timeUntilUpdate: string;
+    tokens: TokenPurchase[];
+    totalUnits: number;
+    latestReading: number;
+    nextUpdate: Date | null;
+    readings: ElectricityReading[];
+}
+//  const [readings, setReadings] =   useState<ElectricityReading[]>(initialReadings);
+export type ElectricityAction =
+    | { type: "SET_LOADING"; payload: boolean }
+    | { type: "SET_IS_SUBMITTED"; payload: boolean }
+    | { type: "SET_IS_SUBMITTING"; payload: boolean }
+    | { type: "SET_SHOW_MIGRATION_ALERT"; payload: boolean }
+    | { type: "SET_SHOW_NOTIFICATION"; payload: boolean }
+    | { type: "SET_ACTIVE_TAB"; payload: string }
+    | { type: "SET_MISSED_READINGS"; payload: string[] }
+    | { type: "SET_TOKEN_UNITS"; payload: string }
+    | { type: "SET_TOKEN_COST"; payload: string }
+    | { type: "SET_CURRENT_READING"; payload: string }
+    | { type: "SET_TIME_UNTIL_UPDATE"; payload: string }
+    | { type: "SET_TOKENS"; payload: TokenPurchase[] }
+    | { type: "ADD_TOKEN"; payload: TokenPurchase }
+    | { type: "SET_TOTAL_UNITS"; payload: number }
+    | { type: "SET_LATEST_READING"; payload: number }
+    | { type: "SET_NEXT_UPDATE"; payload: Date }
+    | { type: "SET_READINGS"; payload: ElectricityReading[] }
+    | { type: "ADD_NEW_READING"; payload: ElectricityReading }
+    | {
+          type: "UPDATE_READING";
+          payload: { readingId: string; updatedReading: ElectricityReading };
+      };

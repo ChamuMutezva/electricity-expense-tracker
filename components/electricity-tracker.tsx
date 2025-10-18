@@ -64,7 +64,7 @@
  */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useReducer } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MigrationAlert from "@/components/migration-alert";
 import MissedReadings from "@/components/missed-readings";
@@ -106,6 +106,10 @@ import AIInsightsTabs from "./Tabs/AIInsightsTabs";
 import AddTokenTabs from "./Tabs/AddTokenTabs";
 import BackdatedTabs from "./Tabs/BackdatedTabs";
 import DashboardTabs from "./Tabs/DashboardTabs";
+import {
+    reducer,
+    initialElectricityState,
+} from "@/app/utility/electricityReducer";
 
 export default function ElectricityTracker({
     initialReadings,
@@ -114,26 +118,29 @@ export default function ElectricityTracker({
     initialTotalUnits,
     dbConnected,
 }: Readonly<ElectricityTrackerProps>) {
-    const [readings, setReadings] =
-        useState<ElectricityReading[]>(initialReadings);
-    const [tokens, setTokens] = useState<TokenPurchase[]>(initialTokens);
-    const [currentReading, setCurrentReading] = useState("");
-    const [tokenUnits, setTokenUnits] = useState("");
-    const [tokenCost, setTokenCost] = useState("");
-    // const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-    const [nextUpdate, setNextUpdate] = useState<Date | null>(null);
-    const [timeUntilUpdate, setTimeUntilUpdate] = useState<string>("");
-    const [showNotification, setShowNotification] = useState(false);
-    const [latestReading, setLatestReading] = useState(initialLatestReading);
-    const [totalUnits, setTotalUnits] = useState(initialTotalUnits);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showMigrationAlert, setShowMigrationAlert] = useState(false);
-    const [missedReadings, setMissedReadings] = useState<string[]>([]);
-    const [activeTab, setActiveTab] = useState("dashboard");
-    // Add state for submission tracking
-    const [isSubmitted, setIsSubmitted] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    //  const [readings, setReadings] = useState<ElectricityReading[]>(initialReadings);
+
     const { toast } = useToast();
+    const [state, dispatch] = useReducer(reducer, initialElectricityState);
+
+    const {
+        isLoading,
+        isSubmitted,
+        isSubmitting,
+        showMigrationAlert,
+        showNotification,
+        activeTab,
+        missedReadings,
+        tokenUnits,
+        tokenCost,
+        currentReading,
+        timeUntilUpdate,
+        tokens,
+        totalUnits,
+        latestReading,
+        nextUpdate,
+        readings,
+    } = state;
 
     const {
         notificationsEnabled,
@@ -145,20 +152,49 @@ export default function ElectricityTracker({
     // Check for local storage data on component mount
     useEffect(() => {
         if (dbConnected) {
-            setShowMigrationAlert(checkMigrationNeeded());
+            dispatch({
+                type: "SET_TOKENS",
+                payload: initialTokens,
+            });
+            dispatch({
+                type: "SET_SHOW_MIGRATION_ALERT",
+                payload: checkMigrationNeeded(),
+            });
+            dispatch({
+                type: "SET_TOTAL_UNITS",
+                payload: initialTotalUnits,
+            });
+            dispatch({
+                type: "SET_LATEST_READING",
+                payload: initialLatestReading,
+            });
+            dispatch({
+                type: "SET_READINGS",
+                payload: initialReadings,
+            });
         } else {
-            setReadings(
-                parseLocalStorageReadings(
+            dispatch({
+                type: "SET_READINGS",
+                payload: parseLocalStorageReadings(
                     localStorage.getItem("electricityReadings")
-                )
-            );
-            setTokens(
-                parseLocalStorageTokens(
+                ),
+            });
+
+            dispatch({
+                type: "SET_TOKENS",
+                payload: parseLocalStorageTokens(
                     localStorage.getItem("electricityTokens")
-                )
-            );
+                ),
+            });
         }
-    }, [dbConnected, checkMigrationNeeded]);
+    }, [
+        dbConnected,
+        checkMigrationNeeded,
+        initialTokens,
+        initialTotalUnits,
+        initialLatestReading,
+        initialReadings,
+    ]);
 
     // Save readings to localStorage if database is not connected
     useEffect(() => {
@@ -174,28 +210,38 @@ export default function ElectricityTracker({
     // Calculate next update time and set timer
     useEffect(() => {
         const next = getNextUpdateTime();
-        setNextUpdate(next);
+        dispatch({ type: "SET_NEXT_UPDATE", payload: next });
 
         const interval = setInterval(() => {
             const now = new Date();
             const next = getNextUpdateTime();
-            setNextUpdate(next);
-
+            dispatch({ type: "SET_NEXT_UPDATE", payload: next });
             // Calculate time until next update
             const diffMs = next.getTime() - now.getTime();
             const diffMins = Math.floor(diffMs / 60000);
             const diffHours = Math.floor(diffMins / 60);
             const remainingMins = diffMins % 60;
 
-            setTimeUntilUpdate(`${diffHours}h ${remainingMins}m`);
+            dispatch({
+                type: "SET_TIME_UNTIL_UPDATE",
+                payload: `${diffHours}h ${remainingMins}m`,
+            });
 
             // Show notification 5 minutes before update time
             if (notificationsEnabled && diffMins <= 5 && diffMins > 0) {
                 const period = getPeriodFromHour(next.getHours());
                 showUpdateNotification(period);
-                setShowNotification(true);
+                dispatch({
+                    type: "SET_SHOW_NOTIFICATION",
+                    payload: true,
+                });
             } else {
-                setShowNotification(false);
+                //setShowNotification(false);
+
+                dispatch({
+                    type: "SET_SHOW_NOTIFICATION",
+                    payload: false,
+                });
             }
         }, 60000); // Check every 1 minute
 
@@ -213,7 +259,6 @@ export default function ElectricityTracker({
                 const readingDate = new Date(r.timestamp);
                 return readingDate.toISOString().split("T")[0] === todayStr;
             });
-
             // Check which periods we have readings for
             const hasMorning = todayReadings.some(
                 (r) => r.period === "morning"
@@ -239,7 +284,8 @@ export default function ElectricityTracker({
                 missed.push("night (9:00 PM)");
             }
 
-            setMissedReadings(missed);
+            //  setMissedReadings(missed);
+            dispatch({ type: "SET_MISSED_READINGS", payload: missed });
         };
 
         checkMissedReadings();
@@ -276,7 +322,7 @@ export default function ElectricityTracker({
 
     // Enhanced add reading function with duplicate handling
     const handleAddReading = async (forceUpdate = false) => {
-        setIsSubmitted(true);
+        dispatch({ type: "SET_IS_SUBMITTED", payload: true });
 
         // Validate input
         if (!currentReading || Number.isNaN(currentReading)) {
@@ -285,12 +331,13 @@ export default function ElectricityTracker({
                 description: "Please enter a valid meter reading",
                 variant: "destructive",
             });
-            setIsSubmitted(false);
+
+            dispatch({ type: "SET_IS_SUBMITTED", payload: false });
             return;
         }
 
         try {
-            setIsSubmitting(true);
+            dispatch({ type: "SET_IS_SUBMITTING", payload: true });
             const readingValue = Number(currentReading);
 
             // Additional validation if needed
@@ -300,7 +347,8 @@ export default function ElectricityTracker({
                     description: "Reading must be greater than 0",
                     variant: "destructive",
                 });
-                setIsSubmitted(false);
+
+                dispatch({ type: "SET_IS_SUBMITTED", payload: false });
                 return;
             }
 
@@ -332,14 +380,13 @@ export default function ElectricityTracker({
 
                 // Update local state
                 if (result.isUpdate) {
-                    // Update existing reading in state
-                    setReadings((prev) =>
-                        prev.map((r) =>
-                            r.reading_id === result.reading.reading_id
-                                ? result.reading
-                                : r
-                        )
-                    );
+                    dispatch({
+                        type: "UPDATE_READING",
+                        payload: {
+                            readingId: result.reading.reading_id,
+                            updatedReading: result.reading,
+                        },
+                    });
                     toast({
                         title: "Reading Updated",
                         description: `${getPeriodFromHour(
@@ -350,7 +397,11 @@ export default function ElectricityTracker({
                     });
                 } else {
                     // Add new reading
-                    setReadings((prev) => [...prev, result.reading]);
+                    // setReadings((prev) => [...prev, result.reading]);
+                    dispatch({
+                        type: "ADD_NEW_READING",
+                        payload: result.reading,
+                    });
                     toast({
                         title: "✅ Reading Added Successfully!",
                         description: `New reading of ${readingValue} kWh has been recorded.`,
@@ -359,7 +410,7 @@ export default function ElectricityTracker({
                     });
                 }
 
-                setLatestReading(readingValue);
+                dispatch({ type: "SET_LATEST_READING", payload: readingValue });
             } else {
                 // Use local storage if database is not connected
                 const now = new Date();
@@ -393,7 +444,11 @@ export default function ElectricityTracker({
                         reading: readingValue,
                         timestamp: now,
                     };
-                    setReadings(updatedReadings);
+
+                    dispatch({
+                        type: "SET_READINGS",
+                        payload: updatedReadings,
+                    });
                     toast({
                         title: "✅ Reading Updated Successfully!",
                         description: `${period} reading updated to ${readingValue} kWh.`,
@@ -408,19 +463,19 @@ export default function ElectricityTracker({
                         reading: readingValue,
                         period,
                     };
-                    setReadings((prev) => [...prev, newReading]);
+                    // setReadings((prev) => [...prev, newReading]);
+                    dispatch({ type: "ADD_NEW_READING", payload: newReading });
                     toast({
                         title: "✅ Reading Added Successfully!",
                         description: `New reading of ${readingValue} kWh has been recorded.`,
                         className: "border-blue-500 bg-blue-50 text-blue-800",
                     });
                 }
-
-                setLatestReading(readingValue);
+                dispatch({ type: "SET_LATEST_READING", payload: readingValue });
             }
 
-            setCurrentReading("");
-            setIsSubmitted(false); // Reset submission state after success
+            dispatch({ type: "SET_CURRENT_READING", payload: "" });
+            dispatch({ type: "SET_IS_SUBMITTED", payload: false });
         } catch (error: unknown) {
             if (
                 typeof error === "object" &&
@@ -455,7 +510,7 @@ export default function ElectricityTracker({
                 });
             }
         } finally {
-            setIsSubmitting(false);
+            dispatch({ type: "SET_IS_SUBMITTING", payload: false });
         }
     };
 
@@ -464,19 +519,23 @@ export default function ElectricityTracker({
         readingData: Omit<ElectricityReading, "id" | "reading_id">
     ) => {
         try {
-            setIsSubmitting(true);
+            dispatch({ type: "SET_IS_SUBMITTING", payload: true });
 
             if (dbConnected) {
                 // Use server action if database is connected
                 const newReading = await addBackdatedReading(readingData);
 
                 // Update local state
-                setReadings((prev) => [...prev, newReading]);
+                // setReadings((prev) => [...prev, newReading]);
+                dispatch({ type: "ADD_NEW_READING", payload: newReading });
 
                 // Update latest reading if this is the most recent
                 const now = new Date();
                 if (readingData.timestamp > now) {
-                    setLatestReading(Number(readingData.reading));
+                    dispatch({
+                        type: "SET_LATEST_READING",
+                        payload: Number(readingData.reading),
+                    });
                 }
             } else {
                 // Use local storage if database is not connected
@@ -488,12 +547,16 @@ export default function ElectricityTracker({
                     period: readingData.period,
                 };
 
-                setReadings((prev) => [...prev, newReading]);
+                // setReadings((prev) => [...prev, newReading]);
+                dispatch({ type: "ADD_NEW_READING", payload: newReading });
 
                 // Update latest reading if this is the most recent
                 const now = new Date();
                 if (readingData.timestamp > now) {
-                    setLatestReading(Number(readingData.reading));
+                    dispatch({
+                        type: "SET_LATEST_READING",
+                        payload: Number(readingData.reading),
+                    });
                 }
             }
 
@@ -512,7 +575,7 @@ export default function ElectricityTracker({
                 variant: "destructive",
             });
         } finally {
-            setIsSubmitting(false);
+            dispatch({ type: "SET_IS_SUBMITTING", payload: false });
         }
     };
 
@@ -522,7 +585,7 @@ export default function ElectricityTracker({
         if (!tokenCost || Number.isNaN(tokenCost)) return;
 
         try {
-            setIsSubmitting(true);
+            dispatch({ type: "SET_IS_SUBMITTING", payload: true });
 
             if (dbConnected) {
                 // Use server action if database is connected
@@ -532,8 +595,11 @@ export default function ElectricityTracker({
                 );
 
                 // Update local state
-                setTokens((prev) => [...prev, newToken]);
-                setLatestReading(Number(newToken.new_reading));
+                dispatch({ type: "ADD_TOKEN", payload: newToken });
+                dispatch({
+                    type: "SET_LATEST_READING",
+                    payload: Number(newToken.new_reading),
+                });
             } else {
                 // Use local storage if database is not connected
                 const units = Number(tokenUnits);
@@ -551,7 +617,7 @@ export default function ElectricityTracker({
                 };
 
                 // Add to tokens list
-                setTokens((prev) => [...prev, newToken]);
+                dispatch({ type: "ADD_TOKEN", payload: newToken });
 
                 // Create a new reading entry with the updated meter value
                 const now = new Date();
@@ -566,12 +632,16 @@ export default function ElectricityTracker({
                 };
 
                 // Add to readings list
-                setReadings((prev) => [...prev, newReadingEntry]);
-                setLatestReading(calculatedNewReading);
+                // setReadings((prev) => [...prev, newReadingEntry]);
+                dispatch({ type: "ADD_NEW_READING", payload: newReadingEntry });
+                dispatch({
+                    type: "SET_LATEST_READING",
+                    payload: calculatedNewReading,
+                });
             }
 
-            setTokenUnits("");
-            setTokenCost("");
+            dispatch({ type: "SET_TOKEN_UNITS", payload: "" });
+            dispatch({ type: "SET_TOKEN_COST", payload: "" });
 
             toast({
                 title: "Token Added",
@@ -585,7 +655,7 @@ export default function ElectricityTracker({
                 variant: "destructive",
             });
         } finally {
-            setIsSubmitting(false);
+            dispatch({ type: "SET_IS_SUBMITTING", payload: false });
         }
     };
 
@@ -596,11 +666,11 @@ export default function ElectricityTracker({
             const savedTokens = localStorage.getItem("electricityTokens");
 
             if (!savedReadings && !savedTokens) {
-                setShowMigrationAlert(false);
+                dispatch({ type: "SET_SHOW_MIGRATION_ALERT", payload: false });
                 return;
             }
 
-            setIsSubmitting(true);
+            dispatch({ type: "SET_IS_SUBMITTING", payload: true });
 
             // Format data for migration with proper typing
             const localReadings: ElectricityReading[] = savedReadings
@@ -643,7 +713,10 @@ export default function ElectricityTracker({
 
                 if (success) {
                     clearElectricityData();
-                    setShowMigrationAlert(false);
+                    dispatch({
+                        type: "SET_SHOW_MIGRATION_ALERT",
+                        payload: false,
+                    });
 
                     toast({
                         title: "Data Migrated",
@@ -672,29 +745,29 @@ export default function ElectricityTracker({
                 variant: "destructive",
             });
         } finally {
-            setIsSubmitting(false);
+            dispatch({ type: "SET_IS_SUBMITTING", payload: false });
         }
     };
 
     useEffect(() => {
         const fetchMonthlyData = async () => {
             try {
-                setIsLoading(true);
+                dispatch({ type: "SET_LOADING", payload: true });
                 const data = await getTotalUnitsUsed();
                 console.log("Monthly usage data from API:", data);
-                setTotalUnits(data);
+                // setTotalUnits(data);
+                dispatch({ type: "SET_TOTAL_UNITS", payload: data });
             } catch (error) {
                 console.error("Error fetching monthly data:", error);
             } finally {
-                setIsLoading(false);
+                dispatch({ type: "SET_LOADING", payload: false });
             }
         };
-        // console.log(totalUnits)
         fetchMonthlyData();
     }, [tokens, readings]);
 
     const handleBuyTokens = () => {
-        setActiveTab("tokens");
+        dispatch({ type: "SET_ACTIVE_TAB", payload: "tokens" });
     };
 
     if (isLoading) {
@@ -720,7 +793,12 @@ export default function ElectricityTracker({
                     {/* Navigation Tabs */}
                     <Tabs
                         value={activeTab}
-                        onValueChange={setActiveTab}
+                        onValueChange={(value) =>
+                            dispatch({
+                                type: "SET_ACTIVE_TAB",
+                                payload: value,
+                            })
+                        }
                         className="w-full"
                     >
                         <TabsList className="w-full justify-between h-auto p-1 bg-slate-100 dark:bg-slate-900">
@@ -787,8 +865,11 @@ export default function ElectricityTracker({
                                     <MigrationAlert
                                         handleMigrateData={handleMigrateData}
                                         isSubmitting={isSubmitting}
-                                        setShowMigrationAlert={
-                                            setShowMigrationAlert
+                                        setShowMigrationAlert={() =>
+                                            dispatch({
+                                                type: "SET_SHOW_MIGRATION_ALERT",
+                                                payload: false,
+                                            })
                                         }
                                     />
                                 )}
@@ -801,7 +882,7 @@ export default function ElectricityTracker({
                                     <UpdateReminderNotification />
                                 )}
                             </div>
-                          
+
                             <DashboardTabs
                                 latestReading={latestReading}
                                 totalUnits={totalUnits}
@@ -811,7 +892,12 @@ export default function ElectricityTracker({
                                 readings={readings}
                                 tokens={tokens}
                                 currentReading={currentReading}
-                                setCurrentReading={setCurrentReading}
+                                setCurrentReading={(value) =>
+                                    dispatch({
+                                        type: "SET_CURRENT_READING",
+                                        payload: value,
+                                    })
+                                }
                                 handleAddReading={handleAddReading}
                                 isSubmitting={isSubmitting}
                                 isSubmitted={isSubmitted}
@@ -825,8 +911,18 @@ export default function ElectricityTracker({
                             <AddTokenTabs
                                 tokenUnits={tokenUnits}
                                 tokenCost={tokenCost}
-                                setTokenCost={setTokenCost}
-                                setTokenUnits={setTokenUnits}
+                                setTokenCost={(value) =>
+                                    dispatch({
+                                        type: "SET_TOKEN_COST",
+                                        payload: value,
+                                    })
+                                }
+                                setTokenUnits={(value) =>
+                                    dispatch({
+                                        type: "SET_TOKEN_UNITS",
+                                        payload: value,
+                                    })
+                                }
                                 handleAddToken={handleAddToken}
                                 isSubmitting={isSubmitting}
                                 tokens={tokens}
