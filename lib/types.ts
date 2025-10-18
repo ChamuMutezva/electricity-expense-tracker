@@ -19,6 +19,42 @@ export interface TokenPurchase {
     total_cost?: number;
 }
 
+// Interfaces for local storage data structure
+export interface LocalStorageElectricityReading {
+    id?: string | number;
+    reading_id?: string;
+    timestamp: string | number | Date;
+    reading: number;
+    period: "morning" | "evening" | "night";
+}
+
+export interface LocalStorageTokenPurchase {
+    id?: string | number;
+    token_id?: string;
+    timestamp: string | number | Date;
+    units: number;
+    newReading?: number;
+    new_reading?: number;
+}
+
+export interface DailyUsage {
+  date: string
+  morning?: number
+  evening?: number
+  night?: number
+  total: number
+}
+export interface UsageSummary {
+  averageUsage: number
+  peakUsageDay: {
+    date: string
+    usage: number
+  }
+  totalTokensPurchased: number
+  dailyUsage: DailyUsage[]
+}
+
+
 // Database result types
 export interface ElectricityReadingDBResult {
     id: number;
