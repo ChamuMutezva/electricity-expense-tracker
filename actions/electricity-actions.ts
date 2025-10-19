@@ -470,19 +470,17 @@ export async function getTotalUnitsUsed(): Promise<number> {
     return Number.parseFloat(totalConsumption.toFixed(2));
 }
 
-/* Retrieves a usage summary of electricity consumption and token purchases.
+/**
+ * SIMPLIFIED & FIXED: Enhanced getUsageSummary with correct token handling
  *
- * @returns A promise that resolves to a {@link UsageSummary} object containing:
- * - `averageUsage`: The average daily electricity usage.
- * - `peakUsageDay`: An object with the date and usage value of the day with the highest usage.
- * - `totalTokensPurchased`: The total number of electricity units purchased via tokens.
- * - `dailyUsage`: An array of daily usage breakdowns, each including readings for morning, evening, night, and total usage for the day.
+ * Key insight: For days with token purchases, calculate usage as:
+ * Daily usage = (Starting reading + All tokens purchased) - Ending reading
  *
- * @remarks
- * - If the database is not connected, returns a summary with zeroed/default values.
- * - Groups all electricity readings by day and calculates usage between periods (morning, evening, night).
- * - Calculates the average daily usage and identifies the day with the highest usage.
- * - Sums all token purchases to compute the total tokens purchased.
+ * Example:
+ * - Morning: 50 kWh
+ * - Token added: 50 kWh
+ * - Evening: 92 kWh
+ * - Usage = (50 + 50) - 92 = 8 kWh ✅
  */
 export async function getUsageSummary(): Promise<UsageSummary> {
     if (!isDatabaseConnected()) {
@@ -494,112 +492,127 @@ export async function getUsageSummary(): Promise<UsageSummary> {
         };
     }
 
-    // Get all readings and sort chronologically
+    // Get all readings and identify token readings
     const readings = (await getElectricityReadings())
-        .map((r) => ({ ...r, reading: Number(r.reading) }))
+        .map((r) => ({
+            ...r,
+            reading: Number(r.reading),
+            isTokenReading: r.reading_id.startsWith("token-reading-"),
+        }))
         .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-
-    // Get all token purchases
+   //  console.log("Total Readings", readings);
     const tokens = await getTokenPurchases();
     const totalTokensPurchased = tokens.reduce(
         (sum, token) => sum + Number(token.units),
         0
     );
 
-    // Group readings by date (day)
-    const dailyReadingsMap: Record<string, ElectricityReading[]> = {};
-    readings.forEach((reading) => {
+    // Group readings by date
+    const dailyReadingsMap: Record<
+        string,
+        (ElectricityReading & { isTokenReading: boolean })[]
+    > = {};
+    for (const reading of readings) {
         const date = reading.timestamp.toISOString().split("T")[0];
         if (!dailyReadingsMap[date]) {
             dailyReadingsMap[date] = [];
         }
         dailyReadingsMap[date].push(reading);
-    });
+    }
+    console.log("----------------------")
+    console.log("Daily Readings Map:", dailyReadingsMap);
 
-    // Get all unique dates sorted
-    const allDates = Object.keys(dailyReadingsMap).sort();
+    // Group tokens by date for easier lookup
+    const dailyTokensMap: Record<string, TokenPurchase[]> = {};
+    for (const token of tokens) {
+        const date = token.timestamp.toISOString().split("T")[0];
+        if (!dailyTokensMap[date]) {
+            dailyTokensMap[date] = [];
+        }
+        dailyTokensMap[date].push(token);
+    }
 
+    const allDates = Object.keys(dailyReadingsMap).sort((a, b) =>
+        a.localeCompare(b)
+    );
+   
     const dailyUsage: DailyUsage[] = [];
-    let previousNightReading: number | null = null;
+    let previousEndingReading: number | null = null;
 
-    for (let i = 0; i < allDates.length; i++) {
-        const date = allDates[i];
+    for (const element of allDates) {
+        const date = element;
         const dayReadings = dailyReadingsMap[date];
+        const dayTokens = dailyTokensMap[date] || [];
 
-        // Sort readings within the day
         dayReadings.sort(
             (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
         );
 
-        // Find readings by period
-        const morningReading = dayReadings.find((r) => r.period === "morning");
-        const eveningReading = dayReadings.find((r) => r.period === "evening");
-        const nightReading = dayReadings.find((r) => r.period === "night");
+        // Get only regular readings (not token readings)
+        const regularReadings = dayReadings.filter((r) => !r.isTokenReading);
 
-        // Calculate consumption periods
-        let morningUsage = 0;
-        let eveningUsage = 0;
-        let nightUsage = 0;
+        // Find first and last regular readings of the day
+        const firstReading = regularReadings[0];
+        const lastReading = regularReadings.at(-1);
 
-        // 1. Morning usage (from previous night to current morning)
-        if (morningReading) {
-            if (i > 0) {
-                // Get previous day's night reading
-                const prevDate = allDates[i - 1];
-                const prevDayReadings = dailyReadingsMap[prevDate];
-                const prevNightReading = prevDayReadings.find(
-                    (r) => r.period === "night"
-                );
+        // Get period-specific readings for display
+        const morningReading = regularReadings.find(
+            (r) => r.period === "morning"
+        );
+        const eveningReading = regularReadings.find(
+            (r) => r.period === "evening"
+        );
+        const nightReading = regularReadings.find((r) => r.period === "night");
 
-                if (prevNightReading) {
-                    morningUsage =
-                        prevNightReading.reading - morningReading.reading;
-                }
-            } else if (previousNightReading !== null) {
-                // For first day if we have a previous night reading
-                morningUsage = previousNightReading - morningReading.reading;
-            }
+        // Calculate daily usage using the simplified formula
+        let dailyTotal = 0;
+
+        if (firstReading && lastReading) {
+            // Starting point: use previous day's ending or first reading
+            const startingReading =
+                previousEndingReading ?? firstReading.reading;
+
+            // Sum all tokens purchased on this day
+            const tokensAddedToday = dayTokens.reduce(
+                (sum, token) => sum + Number(token.units),
+                0
+            );
+
+            // Daily usage = (Starting + Tokens) - Ending
+            // This works because the meter counts down as you use electricity
+            dailyTotal =
+                startingReading + tokensAddedToday - lastReading.reading;
+
+            // Ensure non-negative
+            dailyTotal = Math.max(0, dailyTotal);
         }
-
-        // 2. Evening usage (from morning to evening)
-        if (morningReading && eveningReading) {
-            eveningUsage = morningReading.reading - eveningReading.reading;
-        }
-
-        // 3. Night usage (from evening to night)
-        if (eveningReading && nightReading) {
-            nightUsage = eveningReading.reading - nightReading.reading;
-        }
-
-        // Store the last night reading for next day's morning calculation
-        if (nightReading) {
-            previousNightReading = nightReading.reading;
-        }
-
-        // Calculate total for the day
-        const total = morningUsage + eveningUsage + nightUsage;
 
         dailyUsage.push({
             date,
             morning: morningReading?.reading,
             evening: eveningReading?.reading,
             night: nightReading?.reading,
-            total,
+            total: dailyTotal,
         });
+
+        // Update previous ending reading for next iteration
+        if (lastReading) {
+            previousEndingReading = lastReading.reading;
+        }
     }
 
-    // Calculate average usage
     const totalDailyUsage = dailyUsage.reduce((sum, day) => sum + day.total, 0);
+    const daysWithUsage = dailyUsage.filter((day) => day.total > 0).length;
     const averageUsage =
-        dailyUsage.length > 0 ? totalDailyUsage / dailyUsage.length : 0;
+        daysWithUsage > 0 ? totalDailyUsage / daysWithUsage : 0;
 
-    // Find peak usage day
     let peakUsageDay = { date: "", usage: 0 };
-    dailyUsage.forEach((day) => {
+
+    for (const day of dailyUsage) {
         if (day.total > peakUsageDay.usage) {
             peakUsageDay = { date: day.date, usage: day.total };
         }
-    });
+    }
 
     return {
         averageUsage,
@@ -608,7 +621,6 @@ export async function getUsageSummary(): Promise<UsageSummary> {
         dailyUsage,
     };
 }
-
 /**
  * Retrieves the monthly electricity usage based on readings from the database.
  *
