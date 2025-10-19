@@ -3,7 +3,7 @@ import { formatDate } from "@/lib/date-utils";
 
 interface TokenMobileSummaryTableProps {
     id: number;
-    token_id: string;
+    token_id: number | string;
     timestamp: Date;
     units: number;
     new_reading: number;

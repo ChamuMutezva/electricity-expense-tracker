@@ -17,6 +17,7 @@ type AddTokenProps = {
     handleAddToken: () => void;
     isSubmitting: boolean;
     tokens: Array<{
+        id: number;
         token_id: string | number;
         timestamp: Date;
         units: number;
