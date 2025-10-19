@@ -326,7 +326,7 @@ export default function UsageSummary({
                     <table className="w-full">
                         {/* Header */}
                         <thead className="sticky top-0 z-10">
-                            <tr className="bg-muted/50 text-sm font-medium border-b">
+                            <tr className="bg-muted text-sm font-medium border-b">
                                 <th className="p-3 text-left min-w-[100px]">
                                     Date
                                 </th>
@@ -354,7 +354,7 @@ export default function UsageSummary({
                                         className="border-t text-sm hover:bg-muted/50 transition-colors"
                                     >
                                         <td className="p-3 font-medium">
-                                            {formatDateLabel(day.date)}
+                                            {formatDate(new Date(day.date))}
                                         </td>
                                         <td className="p-3">
                                             {day.morning !== undefined ? (
