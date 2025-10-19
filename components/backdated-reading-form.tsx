@@ -76,9 +76,7 @@ export default function BackdatedReadingForm({
         () => new Date(now.getFullYear(), now.getMonth(), now.getDate()),
         [now]
     );
-
-    console.log(period);
-
+    
     // Check if selected date is today
     const isSelectedDateToday = useMemo(() => {
         if (!date) return false;
@@ -197,10 +195,7 @@ export default function BackdatedReadingForm({
 
         // Debug logging
         logTimezoneInfo("[CLIENT] Submitting backdated reading", timestamp);
-        console.log(
-            `[CLIENT] Calculated period: ${calculatedPeriod}, Hours: ${timestamp.getHours()}`
-        );
-
+    
         await onSubmit({
             timestamp,
             reading: Number(reading),

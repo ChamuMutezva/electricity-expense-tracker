@@ -26,43 +26,22 @@ export default function PDFReportGenerator({
 }: Readonly<PDFReportGeneratorProps>) {
     const [selectedMonth, setSelectedMonth] = useState<string>("");
     const [generating, setGenerating] = useState(false);
-    const [availableMonths, setAvailableMonths] = useState<string[]>([]);
-
-    // Debug: Log the received data
-    useEffect(() => {
-        console.log("PDFReportGenerator received:");
-        console.log("Readings:", readings);
-        console.log("Readings length:", readings?.length ?? 0);
-        console.log("Tokens:", tokens);
-        console.log("Tokens length:", tokens?.length ?? 0);
-
-        if (readings && readings.length > 0) {
-            console.log("Sample reading:", readings[0]);
-            console.log("Reading timestamp:", readings[0]?.timestamp);
-            console.log(
-                "Reading timestamp type:",
-                typeof readings[0]?.timestamp
-            );
-        }
-    }, [readings, tokens]);
+    const [availableMonths, setAvailableMonths] = useState<string[]>([]);   
 
     // Compare function for sorting months alphabetically
     const compareMonths = (a: string, b: string) => a.localeCompare(b);
 
     // Get available months from readings, memoized with useCallback
-    const getAvailableMonths = useCallback(() => {
-        console.log("Getting available months from readings:", readings);
+    const getAvailableMonths = useCallback(() => {        
 
-        if (!readings || readings.length === 0) {
-            console.log("No readings available");
+        if (!readings || readings.length === 0) {            
             return [];
         }
 
         const months = new Set<string>();
 
         readings.forEach((reading, index) => {
-            console.log(`Processing reading ${index}:`, reading);
-
+            
             try {
                 // Handle different timestamp formats
                 let date: Date;
@@ -79,8 +58,6 @@ export default function PDFReportGenerator({
                     return;
                 }
 
-                console.log(`Parsed date for reading ${index}:`, date);
-
                 if (isNaN(date.getTime())) {
                     console.warn(`Invalid date for reading ${index}:`, date);
                     return;
@@ -89,7 +66,6 @@ export default function PDFReportGenerator({
                 const monthKey = `${date.getFullYear()}-${String(
                     date.getMonth() + 1
                 ).padStart(2, "0")}`;
-                console.log(`Month key for reading ${index}:`, monthKey);
                 months.add(monthKey);
             } catch (error) {
                 console.error(
@@ -101,7 +77,6 @@ export default function PDFReportGenerator({
         });
 
         const monthsArray = Array.from(months).sort(compareMonths).reverse();
-        console.log("Available months:", monthsArray);
         return monthsArray;
     }, [readings]);
 
@@ -140,13 +115,6 @@ export default function PDFReportGenerator({
             return;
         }
 
-        console.log("Generating PDF for month:", selectedMonth);
-        console.log("Sending data:", {
-            month: selectedMonth,
-            readings,
-            tokens,
-        });
-
         setGenerating(true);
 
         try {
@@ -162,8 +130,6 @@ export default function PDFReportGenerator({
                 }),
             });
 
-            console.log("PDF API response status:", response.status);
-
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error("PDF API error:", errorText);
@@ -174,7 +140,6 @@ export default function PDFReportGenerator({
 
             // Get the PDF blob
             const blob = await response.blob();
-            console.log("PDF blob size:", blob.size);
 
             // Create download link
             const url = window.URL.createObjectURL(blob);

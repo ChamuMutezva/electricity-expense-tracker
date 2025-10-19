@@ -97,8 +97,7 @@ function formatDataForAI(
  */
 export async function generateElectricityInsights(): Promise<string> {
     try {
-        console.log("Starting AI insights generation with Google Gemini...");
-
+       
         // Check configuration first
         checkAIConfiguration();
 
@@ -107,17 +106,12 @@ export async function generateElectricityInsights(): Promise<string> {
         const tokens = await getTokenPurchases();
         const summary = await getUsageSummary();
 
-        console.log(
-            `Data retrieved: ${readings.length} readings, ${tokens.length} tokens`
-        );
-
         if (readings.length < 3) {
             return "Not enough data available for analysis. Please add more electricity readings to get meaningful insights.";
         }
 
         // Format data for AI
-        const analysisData = formatDataForAI(readings, tokens, summary);
-        console.log("Data formatted for AI analysis");
+        const analysisData = formatDataForAI(readings, tokens, summary);        
 
         const { text } = await generateText({
             model: google("gemini-1.5-flash"), // Using Gemini 1.5 Flash (free and fast)
@@ -144,8 +138,7 @@ Please provide:
 
 Keep recommendations practical and specific to this usage data.`,
         });
-
-        console.log("AI insights generated successfully with Google Gemini");
+      
         return text;
     } catch (error) {
         console.error("Error generating AI insights:", error);
@@ -187,8 +180,7 @@ export async function chatAboutElectricity(
     conversationHistory: string[] = []
 ) {
     try {
-        console.log("Starting AI chat with Google Gemini...");
-
+     
         // Check configuration first
         checkAIConfiguration();
 
@@ -196,10 +188,6 @@ export async function chatAboutElectricity(
         const readings = await getElectricityReadings();
         const tokens = await getTokenPurchases();
         const summary = await getUsageSummary();
-
-        console.log(
-            `Chat data: ${readings.length} readings, ${tokens.length} tokens`
-        );
 
         const analysisData = formatDataForAI(readings, tokens, summary);
 
@@ -210,8 +198,7 @@ export async function chatAboutElectricity(
                       "\n"
                   )}\n\n`
                 : "";
-
-        console.log("Sending request to Google Gemini...");
+  
 
         const result = await streamText({
             model: google("gemini-1.5-flash"), // Using Gemini 1.5 Flash for chat
@@ -224,9 +211,7 @@ ${JSON.stringify(analysisData, null, 2)}`,
             prompt: `${conversationContext}User question: ${question}`,
         });
 
-        console.log(
-            "AI chat response generated successfully with Google Gemini"
-        );
+     
         return result.toDataStreamResponse();
     } catch (error) {
         console.error("Error in AI chat:", error);

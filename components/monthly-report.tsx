@@ -42,27 +42,12 @@ export default function MonthlyReport({
 }: Readonly<MonthlyReportProps>) {
     const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
     const [loading, setLoading] = useState(true);
-
-    // Debug: Log received props
-    useEffect(() => {
-        console.log("MonthlyReport received:");
-        console.log("Readings prop:", readings);
-        console.log("Readings length:", readings?.length || 0);
-        console.log("Tokens prop:", tokens);
-        console.log("Tokens length:", tokens?.length || 0);
-
-        if (readings && readings.length > 0) {
-            console.log("First reading:", readings[0]);
-            console.log("Last reading:", readings[readings.length - 1]);
-        }
-    }, [readings, tokens]);
-
+ 
     useEffect(() => {
         const fetchMonthlyData = async () => {
             try {
                 setLoading(true);
-                const data = await getMonthlyUsage();
-                console.log("Monthly usage data from API:", data);
+                const data = await getMonthlyUsage();                
                 setMonthlyData(data);
             } catch (error) {
                 console.error("Error fetching monthly data:", error);

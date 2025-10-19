@@ -69,10 +69,6 @@ export async function checkExistingReading(
 
     const todayStr = getLocalDateString(); // Use local date
 
-    console.log(
-        `[SERVER] Checking for existing reading on ${todayStr} for period ${period}`
-    );
-
     // FIXED: Query by date and period, not trying to do timezone conversion in SQL
     const result = (await sql`
       SELECT id, reading_id, timestamp, reading, period, created_at
@@ -86,11 +82,6 @@ export async function checkExistingReading(
     if (result.length === 0) {
         return null;
     }
-
-    console.log(
-        `[SERVER] Found existing reading for ${period} on ${todayStr}:`,
-        result[0]
-    );
 
     return {
         id: result[0]?.id,
@@ -153,15 +144,11 @@ export async function addElectricityReading(
 
     // Debug logging
     logTimezoneInfo("[SERVER] Adding electricity reading", now);
-    console.log(`[SERVER] Current period: ${period}, Hour: ${now.getHours()}`);
 
     // Check if reading already exists for this period today
     const existingReading = await checkExistingReading(period);
 
     if (existingReading && !forceUpdate) {
-        console.log(
-            `[SERVER] Existing reading found for ${period}, not updating`
-        );
         return {
             reading: existingReading,
             isUpdate: false,
@@ -170,7 +157,6 @@ export async function addElectricityReading(
     }
 
     if (existingReading && forceUpdate) {
-        console.log(`[SERVER] Force updating existing reading for ${period}`);
         const updatedReading = await updateElectricityReading(
             existingReading.reading_id,
             reading
@@ -185,10 +171,6 @@ export async function addElectricityReading(
     // Create new reading with proper timezone handling
     const readingId = `reading-${Date.now()}`;
     const formattedTimestamp = formatDateWithTimezone(now);
-
-    console.log(
-        `[SERVER] Creating new reading with ID: ${readingId}, timestamp: ${formattedTimestamp}, period: ${period}`
-    );
 
     const result = (await sql`
       INSERT INTO electricity_readings (reading_id, timestamp, reading, period)
@@ -231,16 +213,9 @@ export async function addBackdatedReading(
 
     // Debug logging
     logTimezoneInfo("[SERVER] Adding backdated reading", readingData.timestamp);
-    console.log(
-        `[SERVER] Original period: ${readingData.period}, Calculated period: ${calculatedPeriod}`
-    );
 
     // FIXED: Use the simplified formatDateWithTimezone that preserves local time
     const formattedTimestamp = formatDateWithTimezone(readingData.timestamp);
-
-    console.log(
-        `[SERVER] Inserting backdated reading with timestamp: ${formattedTimestamp}, period: ${calculatedPeriod}`
-    );
 
     const result = (await sql`
     INSERT INTO electricity_readings (reading_id, timestamp, reading, period)
@@ -500,8 +475,9 @@ export async function getUsageSummary(): Promise<UsageSummary> {
             isTokenReading: r.reading_id.startsWith("token-reading-"),
         }))
         .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-   //  console.log("Total Readings", readings);
+    // console.log("Total Readings Fetched", readings);
     const tokens = await getTokenPurchases();
+    //console.log("Total Tokens Fetched", tokens);
     const totalTokensPurchased = tokens.reduce(
         (sum, token) => sum + Number(token.units),
         0
@@ -519,8 +495,6 @@ export async function getUsageSummary(): Promise<UsageSummary> {
         }
         dailyReadingsMap[date].push(reading);
     }
-    console.log("----------------------")
-    console.log("Daily Readings Map:", dailyReadingsMap);
 
     // Group tokens by date for easier lookup
     const dailyTokensMap: Record<string, TokenPurchase[]> = {};
@@ -535,7 +509,7 @@ export async function getUsageSummary(): Promise<UsageSummary> {
     const allDates = Object.keys(dailyReadingsMap).sort((a, b) =>
         a.localeCompare(b)
     );
-   
+
     const dailyUsage: DailyUsage[] = [];
     let previousEndingReading: number | null = null;
 
@@ -550,7 +524,7 @@ export async function getUsageSummary(): Promise<UsageSummary> {
 
         // Get only regular readings (not token readings)
         const regularReadings = dayReadings.filter((r) => !r.isTokenReading);
-
+       // console.log("regular Readings for", regularReadings);
         // Find first and last regular readings of the day
         const firstReading = regularReadings[0];
         const lastReading = regularReadings.at(-1);
@@ -563,7 +537,7 @@ export async function getUsageSummary(): Promise<UsageSummary> {
             (r) => r.period === "evening"
         );
         const nightReading = regularReadings.find((r) => r.period === "night");
-
+       // console.log("night Reading for", nightReading);
         // Calculate daily usage using the simplified formula
         let dailyTotal = 0;
 
@@ -600,7 +574,7 @@ export async function getUsageSummary(): Promise<UsageSummary> {
             previousEndingReading = lastReading.reading;
         }
     }
-
+    // console.log("Daily Usage Computed", dailyUsage);
     const totalDailyUsage = dailyUsage.reduce((sum, day) => sum + day.total, 0);
     const daysWithUsage = dailyUsage.filter((day) => day.total > 0).length;
     const averageUsage =
@@ -665,7 +639,6 @@ FROM consumption_periods
 ORDER BY month
   `) as MonthlyUsageRow[];
 
-    console.log("Monthly Usage Result:", result);
     // Ensure result is treated as an array with a map method
     const resultArray = Array.isArray(result) ? result : [];
 

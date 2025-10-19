@@ -58,7 +58,7 @@ export default function UsageSummary({
                 setLoading(true);
                 const data = await getUsageSummary();
                 setSummary(data);
-                // console.log("Fetched usage summary:", data);
+               //  console.log("Fetched usage summary:", data);
                 // Extract unique months from daily usage
                 const monthsSet = new Set<string>();
                 for (const day of data.dailyUsage) {
