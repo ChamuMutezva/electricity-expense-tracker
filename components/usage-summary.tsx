@@ -15,6 +15,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useMediaQuery } from "react-responsive";
 import {
     Select,
     SelectContent,
@@ -32,6 +33,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/date-utils";
 import { Calendar, TrendingUp, TrendingDown, Minus, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import MobileSummaryTable from "./MobileSummaryTable";
+import TokenMobileSummaryTable from "./TokenMobileSummaryTable";
 
 interface UsageSummaryProps {
     readings: ElectricityReading[];
@@ -51,6 +54,7 @@ export default function UsageSummary({
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState<string>("all");
     const [availableMonths, setAvailableMonths] = useState<MonthOption[]>([]);
+    const isMobile = useMediaQuery({ maxWidth: 768 });
 
     useEffect(() => {
         const fetchSummary = async () => {
@@ -58,7 +62,7 @@ export default function UsageSummary({
                 setLoading(true);
                 const data = await getUsageSummary();
                 setSummary(data);
-               //  console.log("Fetched usage summary:", data);
+                //  console.log("Fetched usage summary:", data);
                 // Extract unique months from daily usage
                 const monthsSet = new Set<string>();
                 for (const day of data.dailyUsage) {
@@ -322,98 +326,104 @@ export default function UsageSummary({
                         </span>
                     </div>
                 </div>
-                <div className="relative overflow-auto max-h-[500px]">
-                    <table className="w-full">
-                        {/* Header */}
-                        <thead className="sticky top-0 z-10">
-                            <tr className="bg-muted text-sm font-medium border-b">
-                                <th className="p-3 text-left min-w-[100px]">
-                                    Date
-                                </th>
-                                <th className="p-3 text-left min-w-[80px]">
-                                    Morning
-                                </th>
-                                <th className="p-3 text-left min-w-[80px]">
-                                    Evening
-                                </th>
-                                <th className="p-3 text-left min-w-[80px]">
-                                    Night
-                                </th>
-                                <th className="p-3 text-left min-w-[100px]">
-                                    Total Usage
-                                </th>
-                            </tr>
-                        </thead>
+                {isMobile ? (
+                    <MobileSummaryTable data={filteredDailyUsage} />
+                ) : (
+                    <div className="relative overflow-auto max-h-[500px]">
+                        <table className="w-full">
+                            {/* Header */}
+                            <thead className="sticky top-0 z-10">
+                                <tr className="bg-muted text-sm font-medium border-b">
+                                    <th className="p-3 text-left min-w-[100px]">
+                                        Date
+                                    </th>
+                                    <th className="p-3 text-left min-w-[80px]">
+                                        Morning
+                                    </th>
+                                    <th className="p-3 text-left min-w-[80px]">
+                                        Evening
+                                    </th>
+                                    <th className="p-3 text-left min-w-[80px]">
+                                        Night
+                                    </th>
+                                    <th className="p-3 text-left min-w-[100px]">
+                                        Total Usage
+                                    </th>
+                                </tr>
+                            </thead>
 
-                        {/* Body */}
-                        <tbody>
-                            {filteredDailyUsage.length > 0 ? (
-                                filteredDailyUsage.map((day) => (
-                                    <tr
-                                        key={day.date}
-                                        className="border-t text-sm hover:bg-muted/50 transition-colors"
-                                    >
-                                        <td className="p-3 font-medium">
-                                            {formatDate(new Date(day.date))}
-                                        </td>
-                                        <td className="p-3">
-                                            {day.morning !== undefined ? (
-                                                <span className="text-blue-600 font-medium">
-                                                    {day.morning} kWh
-                                                </span>
-                                            ) : (
-                                                <span className="text-muted-foreground">
-                                                    -
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="p-3">
-                                            {day.evening !== undefined ? (
-                                                <span className="text-orange-600 font-medium">
-                                                    {day.evening} kWh
-                                                </span>
-                                            ) : (
-                                                <span className="text-muted-foreground">
-                                                    -
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="p-3">
-                                            {day.night !== undefined ? (
-                                                <span className="text-purple-600 font-medium">
-                                                    {day.night} kWh
-                                                </span>
-                                            ) : (
-                                                <span className="text-muted-foreground">
-                                                    -
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="p-3">
-                                            <div className="flex items-center gap-1">
-                                                <Zap className="h-4 w-4 text-yellow-500" />
-                                                <span className="font-bold">
-                                                    {day.total?.toFixed(2) ||
-                                                        "0.00"}{" "}
-                                                    kWh
-                                                </span>
-                                            </div>
+                            {/* Body */}
+                            <tbody>
+                                {filteredDailyUsage.length > 0 ? (
+                                    filteredDailyUsage.map((day) => (
+                                        <tr
+                                            key={day.date}
+                                            className="border-t text-sm hover:bg-muted/50 transition-colors"
+                                        >
+                                            <td className="p-3 font-medium">
+                                                {formatDate(new Date(day.date))}
+                                            </td>
+                                            <td className="p-3">
+                                                {day.morning !== undefined ? (
+                                                    <span className="text-blue-600 font-medium">
+                                                        {day.morning} kWh
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-muted-foreground">
+                                                        -
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="p-3">
+                                                {day.evening !== undefined ? (
+                                                    <span className="text-orange-600 font-medium">
+                                                        {day.evening} kWh
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-muted-foreground">
+                                                        -
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="p-3">
+                                                {day.night !== undefined ? (
+                                                    <span className="text-purple-600 font-medium">
+                                                        {day.night} kWh
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-muted-foreground">
+                                                        -
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="p-3">
+                                                <div className="flex items-center gap-1">
+                                                    <Zap className="h-4 w-4 text-yellow-500" />
+                                                    <span className="font-bold">
+                                                        {day.total?.toFixed(
+                                                            2
+                                                        ) || "0.00"}{" "}
+                                                        kWh
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td
+                                            colSpan={5}
+                                            className="p-8 text-center text-muted-foreground"
+                                        >
+                                            No data available for selected
+                                            period
                                         </td>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td
-                                        colSpan={5}
-                                        className="p-8 text-center text-muted-foreground"
-                                    >
-                                        No data available for selected period
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
 
             {/* Token Purchase History */}
@@ -427,54 +437,62 @@ export default function UsageSummary({
                     </h3>
                     <div className="border rounded-lg overflow-hidden">
                         <div className="relative overflow-auto max-h-[300px]">
-                            <table className="w-full">
-                                {/* Header */}
-                                <thead className="sticky top-0 z-10">
-                                    <tr className="bg-muted text-sm font-medium">
-                                        <th className="p-3 text-left min-w-[100px]">
-                                            Date
-                                        </th>
-                                        <th className="p-3 text-left min-w-[100px]">
-                                            Units Added
-                                        </th>
-                                        <th className="p-3 text-left min-w-[100px]">
-                                            New Reading
-                                        </th>
-                                        <th className="p-3 text-left min-w-[80px]">
-                                            Total Cost
-                                        </th>
-                                    </tr>
-                                </thead>
-
-                                {/* Body */}
-                                <tbody>
-                                    {filteredTokens.map((token) => (
-                                        <tr
-                                            key={token.token_id}
-                                            className="border-t text-sm hover:bg-muted/50 transition-colors"
-                                        >
-                                            <td className="p-3">
-                                                {formatDate(token.timestamp)}
-                                            </td>
-                                            <td className="p-3">
-                                                <span className="text-green-600 font-semibold">
-                                                    +{token.units} kWh
-                                                </span>
-                                            </td>
-                                            <td className="p-3 font-medium">
-                                                {token.new_reading} kWh
-                                            </td>
-                                            <td className="p-3">
-                                                {token.total_cost
-                                                    ? `R ${token.total_cost.toFixed(
-                                                          2
-                                                      )}`
-                                                    : "-"}
-                                            </td>
+                            {isMobile ? (
+                                <TokenMobileSummaryTable
+                                    filteredTokens={filteredTokens}
+                                />
+                            ) : (
+                                <table className="w-full">
+                                    {/* Header */}
+                                    <thead className="sticky top-0 z-10">
+                                        <tr className="bg-muted text-sm font-medium">
+                                            <th className="p-3 text-left min-w-[100px]">
+                                                Date
+                                            </th>
+                                            <th className="p-3 text-left min-w-[100px]">
+                                                Units Added
+                                            </th>
+                                            <th className="p-3 text-left min-w-[100px]">
+                                                New Reading
+                                            </th>
+                                            <th className="p-3 text-left min-w-[80px]">
+                                                Total Cost
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+
+                                    {/* Body */}
+                                    <tbody>
+                                        {filteredTokens.map((token) => (
+                                            <tr
+                                                key={token.token_id}
+                                                className="border-t text-sm hover:bg-muted/50 transition-colors"
+                                            >
+                                                <td className="p-3">
+                                                    {formatDate(
+                                                        token.timestamp
+                                                    )}
+                                                </td>
+                                                <td className="p-3">
+                                                    <span className="text-green-600 font-semibold">
+                                                        +{token.units} kWh
+                                                    </span>
+                                                </td>
+                                                <td className="p-3 font-medium">
+                                                    {token.new_reading} kWh
+                                                </td>
+                                                <td className="p-3">
+                                                    {token.total_cost
+                                                        ? `R ${token.total_cost.toFixed(
+                                                              2
+                                                          )}`
+                                                        : "-"}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
                         </div>
                     </div>
                 </div>

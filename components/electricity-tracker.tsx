@@ -187,7 +187,7 @@ function ElectricityTrackerContent({
                                 className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
                             >
                                 <Home className="h-4 w-4" />
-                                <span className="hidden sm:inline">
+                                <span className="hidden md:inline">
                                     Dashboard
                                 </span>
                             </TabsTrigger>
@@ -196,7 +196,7 @@ function ElectricityTrackerContent({
                                 className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
                             >
                                 <TrendingUp className="h-4 w-4" />
-                                <span className="hidden sm:inline">
+                                <span className="hidden md:inline">
                                     Analytics
                                 </span>
                             </TabsTrigger>
@@ -205,7 +205,7 @@ function ElectricityTrackerContent({
                                 className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
                             >
                                 <FileText className="h-4 w-4" />
-                                <span className="hidden sm:inline">
+                                <span className="hidden md:inline">
                                     Reports
                                 </span>
                             </TabsTrigger>
@@ -214,7 +214,7 @@ function ElectricityTrackerContent({
                                 className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
                             >
                                 <Brain className="h-4 w-4" />
-                                <span className="hidden sm:inline">
+                                <span className="hidden md:inline">
                                     AI Insights
                                 </span>
                             </TabsTrigger>
@@ -223,7 +223,7 @@ function ElectricityTrackerContent({
                                 className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
                             >
                                 <Plus className="h-4 w-4" />
-                                <span className="hidden sm:inline">
+                                <span className="hidden md:inline">
                                     Add Token
                                 </span>
                             </TabsTrigger>
@@ -232,7 +232,7 @@ function ElectricityTrackerContent({
                                 className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
                             >
                                 <CalendarClock className="h-4 w-4" />
-                                <span className="hidden sm:inline">
+                                <span className="hidden md:inline">
                                     Backdated
                                 </span>
                             </TabsTrigger>
