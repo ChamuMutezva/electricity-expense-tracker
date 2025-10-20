@@ -97,7 +97,6 @@ function formatDataForAI(
  */
 export async function generateElectricityInsights(): Promise<string> {
     try {
-       
         // Check configuration first
         checkAIConfiguration();
 
@@ -111,7 +110,7 @@ export async function generateElectricityInsights(): Promise<string> {
         }
 
         // Format data for AI
-        const analysisData = formatDataForAI(readings, tokens, summary);        
+        const analysisData = formatDataForAI(readings, tokens, summary);
 
         const { text } = await generateText({
             model: google("gemini-1.5-flash"), // Using Gemini 1.5 Flash (free and fast)
@@ -138,7 +137,7 @@ Please provide:
 
 Keep recommendations practical and specific to this usage data.`,
         });
-      
+
         return text;
     } catch (error) {
         console.error("Error generating AI insights:", error);
@@ -180,7 +179,6 @@ export async function chatAboutElectricity(
     conversationHistory: string[] = []
 ) {
     try {
-     
         // Check configuration first
         checkAIConfiguration();
 
@@ -198,9 +196,8 @@ export async function chatAboutElectricity(
                       "\n"
                   )}\n\n`
                 : "";
-  
 
-        const result = await streamText({
+        const result = streamText({
             model: google("gemini-1.5-flash"), // Using Gemini 1.5 Flash for chat
             system: `You are a helpful electricity usage advisor. You have access to the user's electricity consumption data and can answer questions about their usage patterns, provide tips, and help them understand their electricity consumption.
 
@@ -211,7 +208,6 @@ ${JSON.stringify(analysisData, null, 2)}`,
             prompt: `${conversationContext}User question: ${question}`,
         });
 
-     
         return result.toDataStreamResponse();
     } catch (error) {
         console.error("Error in AI chat:", error);

@@ -76,13 +76,13 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
 
         // Group readings by day
         const readingsByDay: Record<string, ElectricityReading[]> = {};
-        sortedReadings.forEach((reading) => {
+        for (const reading of sortedReadings) {
             const date = reading.timestamp.toISOString().split("T")[0];
             if (!readingsByDay[date]) {
                 readingsByDay[date] = [];
             }
             readingsByDay[date].push(reading);
-        });
+        }
 
         // Calculate consumption for each day and period
         const consumption: DailyConsumption[] = [];
@@ -118,7 +118,7 @@ export default function UsageChart({ readings }: Readonly<UsageChartProps>) {
         });
 
         // Also calculate consumption between days (last reading of previous day to first reading of next day)
-        const days = Object.keys(readingsByDay).sort();
+        const days = Object.keys(readingsByDay).sort((a, b) => a.localeCompare(b));
         for (let i = 1; i < days.length; i++) {
             const prevDay = days[i - 1];
             const currentDay = days[i];

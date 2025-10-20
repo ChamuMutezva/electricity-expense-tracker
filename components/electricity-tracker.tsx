@@ -118,6 +118,7 @@ import { useElectricityReadings } from "@/hooks/use-electricity-readings";
 import { useElectricityTokens } from "@/hooks/use-electricity-tokens";
 import { useMissedReadings } from "@/hooks/use-missed-readings";
 import { useTotalUnitsCalculation } from "@/hooks/use-total-units-calculation";
+import { ElectricityLoading } from "./electricity-loading";
 
 function ElectricityTrackerContent({
     dbConnected,
@@ -156,7 +157,7 @@ function ElectricityTrackerContent({
     };
 
     if (state.isLoading) {
-        return <div>Loading units used readings...</div>;
+        return <ElectricityLoading />;
     }
 
     return (

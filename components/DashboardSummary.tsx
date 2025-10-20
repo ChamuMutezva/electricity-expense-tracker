@@ -57,11 +57,16 @@ export default function DashboardSummary({
             if (usage > 0) totalUsage += usage;
         }
 
-        const avgDailyUsage = totalUsage / 7; 
+        function getEfficiency(avgDailyUsage: number) {
+            if (avgDailyUsage < 5) return "high";
+            if (avgDailyUsage > 10) return "low";
+            return "normal";
+        }
+
+        const avgDailyUsage = totalUsage / 7;
         const nextWeekUsage = avgDailyUsage * 7;
         const estimatedCost = nextWeekUsage * 0.15; // $0.15 per kWh
-        const efficiency =
-            avgDailyUsage < 5 ? "high" : avgDailyUsage > 10 ? "low" : "normal";
+        const efficiency = getEfficiency(avgDailyUsage);
 
         setPredictions({
             nextWeekUsage: Number(nextWeekUsage.toFixed(2)),
