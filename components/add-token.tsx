@@ -28,7 +28,7 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { formatDate } from "@/lib/date-utils";
 import { useMediaQuery } from "react-responsive";
-import TokenMobileSummaryTable from "./TokenMobileSummaryTable";
+import TokenMobileSummaryTable from "./usageSummaryComponents/TokenMobileSummaryTable";
 
 type AddTokenProps = {
     tokenUnits: string | number;

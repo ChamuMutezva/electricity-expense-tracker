@@ -57,7 +57,7 @@ export default function DashboardSummary({
             if (usage > 0) totalUsage += usage;
         }
 
-        const avgDailyUsage = totalUsage / 6; // 6 days of usage data
+        const avgDailyUsage = totalUsage / 7; 
         const nextWeekUsage = avgDailyUsage * 7;
         const estimatedCost = nextWeekUsage * 0.15; // $0.15 per kWh
         const efficiency =

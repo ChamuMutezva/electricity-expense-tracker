@@ -171,7 +171,7 @@ export function useElectricityReadings(dbConnected: boolean) {
                     typeof error === "object" &&
                     error !== null &&
                     "existingReading" in error &&
-                    "navigator" in window &&
+                    "navigator" in globalThis &&
                     "vibrate" in navigator
                 ) {
                     navigator.vibrate(100);

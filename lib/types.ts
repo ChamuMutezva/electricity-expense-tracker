@@ -18,12 +18,12 @@ export interface TokenPurchase {
     created_at?: Date;
     total_cost?: number;
 }
-
+type CurrentTimeStamp = string | number | Date;
 // Interfaces for local storage data structure
 export interface LocalStorageElectricityReading {
     id?: string | number;
     reading_id?: string;
-    timestamp: string | number | Date;
+    timestamp: CurrentTimeStamp;
     reading: number;
     period: "morning" | "evening" | "night";
 }
@@ -31,7 +31,7 @@ export interface LocalStorageElectricityReading {
 export interface LocalStorageTokenPurchase {
     id?: string | number;
     token_id?: string;
-    timestamp: string | number | Date;
+    timestamp: CurrentTimeStamp;
     units: number;
     newReading?: number;
     new_reading?: number;

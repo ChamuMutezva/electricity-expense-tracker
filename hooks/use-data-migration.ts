@@ -81,7 +81,7 @@ export function useDataMigration(
                             "Your local data has been successfully migrated to the database.",
                     });
 
-                    window.location.reload();
+                    globalThis.location.reload();
                 } else {
                     throw new Error("Migration failed");
                 }

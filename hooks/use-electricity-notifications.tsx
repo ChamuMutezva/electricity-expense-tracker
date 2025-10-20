@@ -41,7 +41,7 @@ export function useElectricityNotifications(notificationsEnabled: boolean) {
   }, [notificationsEnabled, dispatch])
 
   const showUpdateNotification = (period: string) => {
-    if ("Notification" in window && Notification.permission === "granted") {
+    if ("Notification" in globalThis && Notification.permission === "granted") {
       new Notification("Electricity Update Reminder", {
         body: `It's almost time for your ${period} electricity reading update!`,
         icon: "/favicon.ico",
@@ -50,7 +50,7 @@ export function useElectricityNotifications(notificationsEnabled: boolean) {
   }
 
   const enableNotifications = async () => {
-    if ("Notification" in window) {
+    if ("Notification" in globalThis) {
       const permission = await Notification.requestPermission()
       return permission === "granted"
     }
