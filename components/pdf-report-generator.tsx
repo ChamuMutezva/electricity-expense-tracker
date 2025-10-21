@@ -58,7 +58,7 @@ export default function PDFReportGenerator({
                     return;
                 }
 
-                if (isNaN(date.getTime())) {
+                if (Number.isNaN(date.getTime())) {
                     console.warn(`Invalid date for reading ${index}:`, date);
                     return;
                 }

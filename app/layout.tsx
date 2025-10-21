@@ -12,16 +12,35 @@
  *
  * @see {@link https://nextjs.org/docs/pages/building-your-application/routing/pages-and-layouts#layouts}
  */
+import type React from "react";
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { Inter, Roboto_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 
 export const metadata: Metadata = {
-    title: "Electricity Expense Tracker",
-    description: "Track your daily electricity usage and expenses",
-    generator: "v0.dev",
+    title: "Electricity Expense Tracker - Monitor Your Power Usage",
+    description:
+        "Track, analyze, and optimize your electricity consumption with AI-powered insights and detailed analytics",
+    keywords: [
+        "electricity",
+        "power",
+        "energy",
+        "tracker",
+        "consumption",
+        "analytics",
+        "meter reading",
+    ],
+    authors: [{ name: "Chamu Mutezva" }],
+    openGraph: {
+        title: "Electricity Expense Tracker",
+        description:
+            "Monitor and optimize your electricity usage with smart analytics",
+        type: "website",
+    },  
 };
 
 const inter = Inter({
@@ -48,15 +67,18 @@ export default function RootLayout({
             className={`${inter.variable} ${robotoMono.variable}`}
         >
             <body className="font-sans">
-                <ThemeProvider
-                    attribute="class"
-                    defaultTheme="system"
-                    enableSystem
-                    disableTransitionOnChange
-                >
-                    {children}
-                    <Analytics />
-                </ThemeProvider>
+                <ErrorBoundary>
+                    <ThemeProvider
+                        attribute="class"
+                        defaultTheme="system"
+                        enableSystem
+                        disableTransitionOnChange
+                    >
+                        {children}
+                         <KeyboardShortcuts />
+                        <Analytics />
+                    </ThemeProvider>
+                </ErrorBoundary>
             </body>
         </html>
     );

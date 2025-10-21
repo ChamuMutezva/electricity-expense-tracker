@@ -474,10 +474,8 @@ export async function getUsageSummary(): Promise<UsageSummary> {
             reading: Number(r.reading),
             isTokenReading: r.reading_id.startsWith("token-reading-"),
         }))
-        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-    //  console.log("Total Readings Fetched", readings);
-    const tokens = await getTokenPurchases();
-    //console.log("Total Tokens Fetched", tokens);
+        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());    
+    const tokens = await getTokenPurchases();    
     const totalTokensPurchased = tokens.reduce(
         (sum, token) => sum + Number(token.units),
         0
@@ -523,8 +521,7 @@ export async function getUsageSummary(): Promise<UsageSummary> {
         );
 
         // Get only regular readings (not token readings)
-       // const regularReadings = dayReadings.filter((r) => !r.isTokenReading);
-        // console.log("regular Readings for", regularReadings);
+       // const regularReadings = dayReadings.filter((r) => !r.isTokenReading);        
         // Find first and last regular readings of the day
         const firstReading = dayReadings[0];
         const lastReading = dayReadings.at(-1);
@@ -536,8 +533,7 @@ export async function getUsageSummary(): Promise<UsageSummary> {
         const eveningReading = dayReadings.find(
             (r) => r.period === "evening"
         );
-        const nightReading = dayReadings.find((r) => r.period === "night");
-        // console.log("night Reading for", nightReading);
+        const nightReading = dayReadings.find((r) => r.period === "night");        
         // Calculate daily usage using the simplified formula
         let dailyTotal = 0;
 
@@ -574,7 +570,7 @@ export async function getUsageSummary(): Promise<UsageSummary> {
             previousEndingReading = lastReading.reading;
         }
     }
-    console.log("Daily Usage Computed", dailyUsage);
+    
     const totalDailyUsage = dailyUsage.reduce((sum, day) => sum + day.total, 0);
     const daysWithUsage = dailyUsage.filter((day) => day.total > 0).length;
     const averageUsage =

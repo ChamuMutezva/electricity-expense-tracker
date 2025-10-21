@@ -56,7 +56,7 @@ export default async function HomePage() {
         <main className="container mx-auto py-8 px-4">
             <div>
                 <div className="flex justify-between items-start">
-                    <h1 className=" text-2xl md:text-3xl font-bold mb-8 flex justify-start items-center gap-2">
+                    <h1 className="text-2xl md:text-3xl font-bold mb-8 flex justify-start items-center gap-2">
                         <Zap className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />
                         Electricity Tracker
                     </h1>

@@ -18,15 +18,15 @@ function MobileSummaryTable({
             {data.map((day) => (
                 <div
                     key={day.date}
-                    className="bg-white border rounded-lg p-4 shadow-sm"
+                    className="bg-primary border rounded-lg p-4 shadow-sm"
                 >
                     <div className="flex justify-between items-center mb-3 pb-2 border-b">
-                        <span className="font-semibold">
+                        <span className="text-primary font-semibold">
                             {formatDate(new Date(day.date))}
                         </span>
                         <div className="flex items-center gap-1">
                             <Zap className="h-4 w-4 text-yellow-500" />
-                            <span className="font-bold">
+                            <span className="font-bold text-primary">
                                 {day.total?.toFixed(2) || "0.00"} kWh
                             </span>
                         </div>
