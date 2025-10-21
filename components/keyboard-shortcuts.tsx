@@ -123,13 +123,13 @@ export function KeyboardShortcuts() {
                     </div>
 
                     <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <p className="text-xs text-blue-800 dark:text-blue-200">
+                        <div className="text-xs text-blue-800 dark:text-blue-200">
                             <strong>Tip:</strong> Press{" "}
                             <Badge variant="outline" className="mx-1 font-mono">
                                 ?
                             </Badge>{" "}
                             anytime to view this dialog
-                        </p>
+                        </div>
                     </div>
                 </DialogContent>
             </Dialog>

@@ -19,7 +19,7 @@ function TokenMobileSummaryTable({
             {filteredTokens.map((token) => (
                 <div
                     key={token.token_id}
-                    className="bg-white border rounded-lg p-4 shadow-sm"
+                    className="bg-card border rounded-lg p-4 shadow-sm"
                 >
                     <div className="flex justify-between items-center mb-3 pb-2 border-b">
                         <span className="font-semibold">
