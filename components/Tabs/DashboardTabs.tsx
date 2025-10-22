@@ -16,6 +16,7 @@ import UpdateReminderNotification from "../UpdateReminderNotification";
 import UsageSummary from "../usage-summary";
 import WeatherUsageCorrelation from "../WeatherUsageCorelation";
 import { ElectricityReading, TokenPurchase } from "@/lib/types";
+import { ProtectedContent } from "@/components/auth/protected-content";
 
 type DashboardTabsProps = {
     latestReading: number;
@@ -67,14 +68,16 @@ function DashboardTabs({
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-6">
-                        <DashboardSummary
-                            latestReading={latestReading}
-                            totalUnits={totalUnits}
-                            nextUpdate={nextUpdate}
-                            getTimeString={getTimeString}
-                            timeUntilUpdate={timeUntilUpdate}
-                            readings={readings}
-                        />
+                        <ProtectedContent message="Sign in to view your dashboard and update electricity readings">
+                            <DashboardSummary
+                                latestReading={latestReading}
+                                totalUnits={totalUnits}
+                                nextUpdate={nextUpdate}
+                                getTimeString={getTimeString}
+                                timeUntilUpdate={timeUntilUpdate}
+                                readings={readings}
+                            />
+                        </ProtectedContent>
                         <WeatherUsageCorrelation />
                         {showNotification && <UpdateReminderNotification />}
                         <SmartAlerts readings={readings} tokens={tokens} />

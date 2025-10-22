@@ -46,6 +46,7 @@ import { CalendarIcon, Clock, Info, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ElectricityReading } from "@/lib/types";
 import { getPeriodFromHour, logTimezoneInfo } from "@/lib/timezone-utils";
+import { ProtectedContent } from "@/components/auth/protected-content";
 
 interface BackdatedReadingFormProps {
     onSubmit: (
@@ -67,7 +68,7 @@ export default function BackdatedReadingForm({
     );
     const [showSuccess, setShowSuccess] = useState(false);
     const [lastSubmittedTime, setLastSubmittedTime] = useState<string>("");
-
+    console.log(period)
     // Get current date and time for validation
     const now = useMemo(() => new Date(), []);
     const currentHour = now.getHours();
@@ -76,7 +77,7 @@ export default function BackdatedReadingForm({
         () => new Date(now.getFullYear(), now.getMonth(), now.getDate()),
         [now]
     );
-    
+
     // Check if selected date is today
     const isSelectedDateToday = useMemo(() => {
         if (!date) return false;
@@ -195,7 +196,7 @@ export default function BackdatedReadingForm({
 
         // Debug logging
         logTimezoneInfo("[CLIENT] Submitting backdated reading", timestamp);
-    
+
         await onSubmit({
             timestamp,
             reading: Number(reading),
@@ -343,172 +344,178 @@ export default function BackdatedReadingForm({
                 </AlertDescription>
             </Alert>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="date">Date</Label>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className={cn(
-                                        "w-full justify-start text-left font-normal",
-                                        !date && "text-muted-foreground",
-                                        isSelectedDateFuture &&
-                                            "border-red-300 bg-red-50"
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {date ? (
-                                        format(date, "PPP")
-                                    ) : (
-                                        <span>Pick a date</span>
-                                    )}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                    mode="single"
-                                    selected={date}
-                                    onSelect={handleDateChange}
-                                    disabled={(date) => {
-                                        // Disable future dates
-                                        return date > new Date();
-                                    }}
-                                    initialFocus
-                                />
-                            </PopoverContent>
-                        </Popover>
-                        {isSelectedDateToday && (
-                            <p className="text-xs text-blue-600">
-                                Today - only past times available
-                            </p>
-                        )}
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="time">Time</Label>
+            <ProtectedContent message="Sign in to add backdated electricity readings">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Select
-                                value={time}
-                                onValueChange={handleTimeChange}
-                            >
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select time" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {getAvailableTimeOptions.map((option) => (
-                                        <SelectItem
-                                            key={option.value}
-                                            value={option.value}
-                                        >
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-
-                            {time === "custom" && (
-                                <div className="space-y-2">
-                                    <div className="flex items-center space-x-2">
-                                        <Clock className="h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            type="time"
-                                            className={cn(
-                                                "w-full",
-                                                isSelectedDateToday &&
-                                                    !isCustomTimeValid &&
-                                                    "border-orange-300 bg-orange-50"
-                                            )}
-                                            value={customTime}
-                                            onChange={(e) =>
-                                                handleCustomTimeChange(
-                                                    e.target.value
-                                                )
-                                            }
-                                        />
-                                    </div>
-                                    {isSelectedDateToday && (
-                                        <p className="text-xs text-gray-600">
-                                            Current time: {format(now, "HH:mm")}{" "}
-                                            - select an earlier time
-                                        </p>
-                                    )}
-                                </div>
+                            <Label htmlFor="date">Date</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className={cn(
+                                            "w-full justify-start text-left font-normal",
+                                            !date && "text-muted-foreground",
+                                            isSelectedDateFuture &&
+                                                "border-red-300 bg-red-50"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {date ? (
+                                            format(date, "PPP")
+                                        ) : (
+                                            <span>Pick a date</span>
+                                        )}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                    <Calendar
+                                        mode="single"
+                                        selected={date}
+                                        onSelect={handleDateChange}
+                                        disabled={(date) => {
+                                            // Disable future dates
+                                            return date > new Date();
+                                        }}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                            {isSelectedDateToday && (
+                                <p className="text-xs text-blue-600">
+                                    Today - only past times available
+                                </p>
                             )}
                         </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="time">Time</Label>
+                            <div className="space-y-2">
+                                <Select
+                                    value={time}
+                                    onValueChange={handleTimeChange}
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select time" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {getAvailableTimeOptions.map(
+                                            (option) => (
+                                                <SelectItem
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
+                                                    {option.label}
+                                                </SelectItem>
+                                            )
+                                        )}
+                                    </SelectContent>
+                                </Select>
+
+                                {time === "custom" && (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center space-x-2">
+                                            <Clock className="h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                type="time"
+                                                className={cn(
+                                                    "w-full",
+                                                    isSelectedDateToday &&
+                                                        !isCustomTimeValid &&
+                                                        "border-orange-300 bg-orange-50"
+                                                )}
+                                                value={customTime}
+                                                onChange={(e) =>
+                                                    handleCustomTimeChange(
+                                                        e.target.value
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        {isSelectedDateToday && (
+                                            <p className="text-xs text-gray-600">
+                                                Current time:{" "}
+                                                {format(now, "HH:mm")} - select
+                                                an earlier time
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="reading">Meter Reading</Label>
-                    <Input
-                        id="reading"
-                        type="number"
-                        step="0.01"
-                        placeholder="Enter meter reading"
-                        value={reading}
-                        onChange={(e) => setReading(e.target.value)}
-                        required
-                    />
-                </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="reading">Meter Reading</Label>
+                        <Input
+                            id="reading"
+                            type="number"
+                            step="0.01"
+                            placeholder="Enter meter reading"
+                            value={reading}
+                            onChange={(e) => setReading(e.target.value)}
+                            required
+                        />
+                    </div>
 
-                {/* Show what will be submitted */}
-                <div
-                    className={cn(
-                        "p-3 rounded-lg border",
-                        isFormValid
-                            ? "bg-gray-50 dark:bg-gray-900"
-                            : "bg-red-50 dark:bg-red-950 border-red-200"
-                    )}
-                >
-                    <h4 className="font-medium mb-2">Summary:</h4>
-                    <div className="text-sm space-y-1">
-                        <p>
-                            Date: {date ? format(date, "PPP") : "Not selected"}
-                            {isSelectedDateFuture && (
-                                <span className="text-red-600 ml-2">
-                                    ⚠️ Future date
-                                </span>
-                            )}
-                        </p>
-                        <p>
-                            Time: {time === "custom" ? customTime : time}
-                            {isSelectedDateToday &&
-                                time === "custom" &&
-                                !isCustomTimeValid && (
-                                    <span className="text-orange-600 ml-2">
-                                        ⚠️ Future time
+                    {/* Show what will be submitted */}
+                    <div
+                        className={cn(
+                            "p-3 rounded-lg border",
+                            isFormValid
+                                ? "bg-gray-50 dark:bg-gray-900"
+                                : "bg-red-50 dark:bg-red-950 border-red-200"
+                        )}
+                    >
+                        <h4 className="font-medium mb-2">Summary:</h4>
+                        <div className="text-sm space-y-1">
+                            <p>
+                                Date:{" "}
+                                {date ? format(date, "PPP") : "Not selected"}
+                                {isSelectedDateFuture && (
+                                    <span className="text-red-600 ml-2">
+                                        ⚠️ Future date
                                     </span>
                                 )}
-                        </p>
-                        <p>
-                            Period:{" "}
-                            <strong>
-                                {getPeriodDisplayName(detectedPeriod)}
-                            </strong>
-                        </p>
-                        <p>Reading: {reading || "Not entered"} kWh</p>
+                            </p>
+                            <p>
+                                Time: {time === "custom" ? customTime : time}
+                                {isSelectedDateToday &&
+                                    time === "custom" &&
+                                    !isCustomTimeValid && (
+                                        <span className="text-orange-600 ml-2">
+                                            ⚠️ Future time
+                                        </span>
+                                    )}
+                            </p>
+                            <p>
+                                Period:{" "}
+                                <strong>
+                                    {getPeriodDisplayName(detectedPeriod)}
+                                </strong>
+                            </p>
+                            <p>Reading: {reading || "Not entered"} kWh</p>
+                        </div>
                     </div>
-                </div>
 
-                <div className="pt-2">
-                    <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={isSubmitting || !isFormValid}
-                    >
-                        {isSubmitting ? (
-                            <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4 animate-spin" />
-                                Submitting...
-                            </div>
-                        ) : (
-                            "Add Backdated Reading"
-                        )}
-                    </Button>
-                </div>
-            </form>
+                    <div className="pt-2">
+                        <Button
+                            type="submit"
+                            className="w-full"
+                            disabled={isSubmitting || !isFormValid}
+                        >
+                            {isSubmitting ? (
+                                <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4 animate-spin" />
+                                    Submitting...
+                                </div>
+                            ) : (
+                                "Add Backdated Reading"
+                            )}
+                        </Button>
+                    </div>
+                </form>
+            </ProtectedContent>
         </div>
     );
 }

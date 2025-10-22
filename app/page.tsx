@@ -25,6 +25,7 @@ import { Database, Zap } from "lucide-react";
 import { ElectricityReading, TokenPurchase } from "@/lib/types";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { stackServerApp } from "@/stack/server";
+ import { SignInButton } from "@/components/auth/sign-in-button";
 
 export const metadata: Metadata = {
     title: "Electricity Expense Tracker",
@@ -42,7 +43,7 @@ export default async function HomePage() {
     let totalUnits = 0;
 
     // Only try to fetch data if database is connected
-    if (dbConnected) {
+    if (dbConnected && user) {
         try {
             // Fetch initial data from the database
             readings = await getElectricityReadings();
@@ -59,15 +60,12 @@ export default async function HomePage() {
             <div>
                 <div className="flex justify-between items-start">
                     <div className="flex flex-col justify-start">
-                        <h1 className="text-2xl md:text-3xl font-bold mb-8 flex justify-start items-center gap-2">
+                        <h1 className="text-2xl md:text-3xl font-bold flex justify-start items-center gap-2">
                             <Zap className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />
                             Electricity Tracker
                         </h1>
-                        <p>
-                            {user
-                                ? `Hello, ${user.displayName ?? "anon"}`
-                                : "You are not logged in"}
-                        </p>
+                      
+                        <SignInButton />
                     </div>
                     <ThemeToggle />
                 </div>

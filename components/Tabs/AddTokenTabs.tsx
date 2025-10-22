@@ -2,6 +2,7 @@ import { TabsContent } from "@radix-ui/react-tabs";
 import { Plus } from "lucide-react";
 import React from "react";
 import AddToken from "../add-token";
+import { ProtectedContent } from "../auth/protected-content";
 import {
     Card,
     CardHeader,
@@ -48,15 +49,17 @@ function AddTokenTabs({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <AddToken
-                        tokenUnits={tokenUnits}
-                        tokenCost={tokenCost}
-                        setTokenCost={setTokenCost}
-                        setTokenUnits={setTokenUnits}
-                        handleAddToken={handleAddToken}
-                        isSubmitting={isSubmitting}
-                        tokens={tokens}
-                    />
+                    <ProtectedContent message="Sign in to record electricity token purchases">
+                        <AddToken
+                            tokenUnits={tokenUnits}
+                            tokenCost={tokenCost}
+                            setTokenCost={setTokenCost}
+                            setTokenUnits={setTokenUnits}
+                            handleAddToken={handleAddToken}
+                            isSubmitting={isSubmitting}
+                            tokens={tokens}
+                        />
+                    </ProtectedContent>
                 </CardContent>
             </Card>
         </TabsContent>
