@@ -12,6 +12,8 @@
  *
  * @see {@link https://nextjs.org/docs/pages/building-your-application/routing/pages-and-layouts#layouts}
  */
+import { StackProvider, StackTheme } from "@stackframe/stack";
+import { stackClientApp } from "../stack/client";
 import type React from "react";
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -40,7 +42,7 @@ export const metadata: Metadata = {
         description:
             "Monitor and optimize your electricity usage with smart analytics",
         type: "website",
-    },  
+    },
 };
 
 const inter = Inter({
@@ -67,18 +69,22 @@ export default function RootLayout({
             className={`${inter.variable} ${robotoMono.variable}`}
         >
             <body className="font-sans">
-                <ErrorBoundary>
-                    <ThemeProvider
-                        attribute="class"
-                        defaultTheme="system"
-                        enableSystem
-                        disableTransitionOnChange
-                    >
-                        {children}
-                         <KeyboardShortcuts />
-                        <Analytics />
-                    </ThemeProvider>
-                </ErrorBoundary>
+                <StackProvider app={stackClientApp}>
+                    <StackTheme>
+                        <ErrorBoundary>
+                            <ThemeProvider
+                                attribute="class"
+                                defaultTheme="system"
+                                enableSystem
+                                disableTransitionOnChange
+                            >
+                                {children}
+                                <KeyboardShortcuts />
+                                <Analytics />
+                            </ThemeProvider>
+                        </ErrorBoundary>
+                    </StackTheme>
+                </StackProvider>
             </body>
         </html>
     );

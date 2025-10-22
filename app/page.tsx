@@ -24,6 +24,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Database, Zap } from "lucide-react";
 import { ElectricityReading, TokenPurchase } from "@/lib/types";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { stackServerApp } from "@/stack/server";
 
 export const metadata: Metadata = {
     title: "Electricity Expense Tracker",
@@ -32,6 +33,7 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
     const dbConnected = isDatabaseConnected();
+    const user = await stackServerApp.getUser();
 
     // Default values in case database is not connected
     let readings: ElectricityReading[] = [];
@@ -56,10 +58,17 @@ export default async function HomePage() {
         <main className="container mx-auto py-8 px-4">
             <div>
                 <div className="flex justify-between items-start">
-                    <h1 className="text-2xl md:text-3xl font-bold mb-8 flex justify-start items-center gap-2">
-                        <Zap className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />
-                        Electricity Tracker
-                    </h1>
+                    <div className="flex flex-col justify-start">
+                        <h1 className="text-2xl md:text-3xl font-bold mb-8 flex justify-start items-center gap-2">
+                            <Zap className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />
+                            Electricity Tracker
+                        </h1>
+                        <p>
+                            {user
+                                ? `Hello, ${user.displayName ?? "anon"}`
+                                : "You are not logged in"}
+                        </p>
+                    </div>
                     <ThemeToggle />
                 </div>
 
