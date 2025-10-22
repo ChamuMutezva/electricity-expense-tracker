@@ -83,13 +83,15 @@ function DashboardTabs({
                         <SmartAlerts readings={readings} tokens={tokens} />
 
                         <div className="space-y-4">
-                            <UpdateMeterReading
-                                currentReading={currentReading}
-                                setCurrentReading={setCurrentReading}
-                                handleAddReading={handleAddReading}
-                                isSubmitting={isSubmitting}
-                                isSubmitted={isSubmitted}
-                            />
+                            <ProtectedContent message="Sign in to view your dashboard and update electricity readings">
+                                <UpdateMeterReading
+                                    currentReading={currentReading}
+                                    setCurrentReading={setCurrentReading}
+                                    handleAddReading={handleAddReading}
+                                    isSubmitting={isSubmitting}
+                                    isSubmitted={isSubmitted}
+                                />
+                            </ProtectedContent>
                             {!notificationsEnabled && (
                                 <NotificationsAlert
                                     enableNotifications={enableNotifications}

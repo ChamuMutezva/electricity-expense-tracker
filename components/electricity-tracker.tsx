@@ -119,6 +119,7 @@ import { useElectricityTokens } from "@/hooks/use-electricity-tokens";
 import { useMissedReadings } from "@/hooks/use-missed-readings";
 import { useTotalUnitsCalculation } from "@/hooks/use-total-units-calculation";
 import { ElectricityLoading } from "./electricity-loading";
+import { useUser } from "@stackframe/stack";
 
 function ElectricityTrackerContent({
     dbConnected,
@@ -129,6 +130,7 @@ function ElectricityTrackerContent({
         setNotificationsEnabled,
         clearElectricityData,
     } = useElectricityStorage(dbConnected);
+    const user = useUser();
 
     // Use custom hooks for separated concerns
     const { enableNotifications } =
@@ -162,10 +164,12 @@ function ElectricityTrackerContent({
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-            <LowBalanceNotification
-                currentBalance={state.latestReading}
-                onBuyTokens={handleBuyTokens}
-            />
+            {user && (
+                <LowBalanceNotification
+                    currentBalance={state.latestReading}
+                    onBuyTokens={handleBuyTokens}
+                />
+            )}
 
             <div className="border-b bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm top-0 z-40 shadow-sm">
                 <div className="container mx-auto px-4 py-4">
