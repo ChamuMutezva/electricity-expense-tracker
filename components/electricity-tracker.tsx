@@ -174,12 +174,12 @@ function ElectricityTrackerContent({
             <div className="border-b bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm top-0 z-40 shadow-sm">
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex items-start flex-col justify-between mb-4">
+                        <h1 className="text-3xl md:text-4xl font-bold flex justify-start items-center gap-2 text-foreground">
+                            Electricity Tracker Prepaid Model
+                        </h1>
                         <h2 className="text-base font-bold md:text-2xl text-foreground mt-1">
                             Monitor and manage your electricity consumption
                         </h2>
-                        <p className="text-sm text-foreground/70">
-                            Prepaid Model
-                        </p>
                     </div>
 
                     <Tabs

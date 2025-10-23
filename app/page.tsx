@@ -12,6 +12,7 @@
  * @returns {Promise<JSX.Element>} The rendered home page component.
  */
 import type { Metadata } from "next";
+import Link from "next/link";
 import ElectricityTracker from "@/components/electricity-tracker";
 import {
     getElectricityReadings,
@@ -25,7 +26,7 @@ import { Database, Zap } from "lucide-react";
 import { ElectricityReading, TokenPurchase } from "@/lib/types";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { stackServerApp } from "@/stack/server";
- import { SignInButton } from "@/components/auth/sign-in-button";
+import { SignInButton } from "@/components/auth/sign-in-button";
 
 export const metadata: Metadata = {
     title: "Electricity Expense Tracker",
@@ -56,46 +57,47 @@ export default async function HomePage() {
     }
 
     return (
-        <main className="container mx-auto py-8 px-4">
-            <div>
+        <>
+            <header className="container mx-auto py-8 px-4">
                 <div className="flex justify-between items-start">
-                    <div className="flex flex-col justify-start">
-                        <h1 className="text-2xl md:text-3xl font-bold flex justify-start items-center gap-2">
-                            <Zap className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />
-                            Electricity Tracker
-                        </h1>
-                      
-                        <SignInButton />
-                    </div>
+                    <Link href={"/"} className="text-2xl md:text-3xl font-bold flex justify-start items-center gap-2">
+                        <Zap className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />
+                        Electricity Tracker
+                    </Link>
+
+                    <SignInButton />
                     <ThemeToggle />
                 </div>
+            </header>
+            <main className="container mx-auto py-8 px-4">
+                <div>
+                    {!dbConnected && (
+                        <Alert className="mb-6 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
+                            <Database className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                            <AlertTitle>Database Connection Issue</AlertTitle>
+                            <AlertDescription>
+                                <p className="mb-2">
+                                    The application cannot connect to the
+                                    database. Please make sure your DATABASE_URL
+                                    environment variable is set correctly.
+                                </p>
+                                <p className="text-sm">
+                                    The app will run in local storage mode until
+                                    the database connection is established.
+                                </p>
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                </div>
 
-                {!dbConnected && (
-                    <Alert className="mb-6 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
-                        <Database className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                        <AlertTitle>Database Connection Issue</AlertTitle>
-                        <AlertDescription>
-                            <p className="mb-2">
-                                The application cannot connect to the database.
-                                Please make sure your DATABASE_URL environment
-                                variable is set correctly.
-                            </p>
-                            <p className="text-sm">
-                                The app will run in local storage mode until the
-                                database connection is established.
-                            </p>
-                        </AlertDescription>
-                    </Alert>
-                )}
-            </div>
-
-            <ElectricityTracker
-                initialReadings={readings}
-                initialTokens={tokens}
-                initialLatestReading={latestReading}
-                initialTotalUnits={totalUnits}
-                dbConnected={dbConnected}
-            />
-        </main>
+                <ElectricityTracker
+                    initialReadings={readings}
+                    initialTokens={tokens}
+                    initialLatestReading={latestReading}
+                    initialTotalUnits={totalUnits}
+                    dbConnected={dbConnected}
+                />
+            </main>
+        </>
     );
 }
