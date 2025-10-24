@@ -153,45 +153,45 @@ export default function DashboardSummary({
             {/* Predictions Row */}
             {readings.length >= 7 && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="border-orange-200 bg-orange-50">
+                    <Card className="border-border bg-secondary-50">
                         <CardContent className="p-4">
                             <div className="flex items-center gap-2 mb-2">
-                                <TrendingUp className="h-4 w-4 text-orange-600" />
-                                <span className="text-sm font-medium text-orange-800">
+                                <TrendingUp className="h-4 w-4 text-secondary-foreground" />
+                                <span className="text-sm font-medium text-secondary-foreground">
                                     Next Week Prediction
                                 </span>
                             </div>
-                            <div className="text-xl font-bold text-orange-900">
+                            <div className="text-xl font-bold text-secondary-foreground">
                                 {predictions.nextWeekUsage} kWh
                             </div>
-                            <p className="text-xs text-orange-700">
+                            <p className="text-xs text-secondary-foreground">
                                 Based on recent usage
                             </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-emerald-200 bg-emerald-50">
+                    <Card className="border-border bg-secondary">
                         <CardContent className="p-4">
                             <div className="flex items-center gap-2 mb-2">
-                                <DollarSign className="h-4 w-4 text-emerald-600" />
-                                <span className="text-sm font-medium text-emerald-800">
+                                <DollarSign className="h-4 w-4 text-text-foreground" />
+                                <span className="text-sm font-medium text-secondary-foreground">
                                     Estimated Cost
                                 </span>
                             </div>
-                            <div className="text-xl font-bold text-emerald-900">
+                            <div className="text-xl font-bold text-secondary-foreground">
                                 ${predictions.estimatedCost}
                             </div>
-                            <p className="text-xs text-emerald-700">
+                            <p className="text-xs text-secondary-foreground">
                                 Next week estimate
                             </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-indigo-200 bg-indigo-50">
+                    <Card className="border-border bg-secondary">
                         <CardContent className="p-4">
                             <div className="flex items-center gap-2 mb-2">
-                                <Zap className="h-4 w-4 text-indigo-600" />
-                                <span className="text-sm font-medium text-indigo-800">
+                                <Zap className="h-4 w-4 text-secondary" />
+                                <span className="text-sm font-medium text-seconday-foreground">
                                     Efficiency
                                 </span>
                             </div>
@@ -202,7 +202,7 @@ export default function DashboardSummary({
                             >
                                 {predictions.efficiency.toUpperCase()}
                             </Badge>
-                            <p className="text-xs text-indigo-700 mt-1">
+                            <p className="text-xs text-secondary-foreground mt-1">
                                 Usage pattern
                             </p>
                         </CardContent>
