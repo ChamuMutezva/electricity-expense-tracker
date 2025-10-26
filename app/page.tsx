@@ -59,8 +59,8 @@ export default async function HomePage() {
     return (
         <>
             <header className="container mx-auto py-8 px-4">
-                <div className="flex justify-between items-start">
-                    <Link href={"/"} className="text-2xl md:text-3xl font-bold flex justify-start items-center gap-2">
+                <div className="flex justify-between items-center">
+                    <Link href={"/"} className="text-lg md:text-3xl font-bold flex justify-start items-center gap-2">
                         <Zap className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />
                         Electricity Tracker
                     </Link>
