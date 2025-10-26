@@ -11,6 +11,7 @@ import type {
     Period,
 } from "@/lib/types";
 import { revalidatePath } from "next/cache";
+import { stackServerApp } from "@/stack/server";
 
 // Import the new timezone utilities
 import {
@@ -20,6 +21,29 @@ import {
     getPeriodFromHour,
     logTimezoneInfo,
 } from "@/lib/timezone-utils";
+
+/**
+ * Get the current authenticated user
+ */
+async function getCurrentUser() {
+    try {
+        return await stackServerApp.getUser();
+    } catch (error) {
+        console.error("Error getting current user:", error);
+        return null;
+    }
+}
+
+/**
+ * Require authentication and throw if not authenticated
+ */
+async function requireAuth() {
+    const user = await getCurrentUser();
+    if (!user) {
+        throw new Error("Authentication required");
+    }
+    return user;
+}
 
 /**
  * Checks if the database connection is established.
@@ -66,6 +90,7 @@ export async function checkExistingReading(
     period: Period
 ): Promise<ElectricityReading | null> {
     checkDbConnection();
+    const user = await requireAuth();
 
     const todayStr = getLocalDateString(); // Use local date
 
@@ -75,6 +100,7 @@ export async function checkExistingReading(
       FROM electricity_readings
       WHERE DATE(timestamp) = ${todayStr} 
       AND period = ${period}
+      AND user_id = ${user.id}
       ORDER BY timestamp DESC
       LIMIT 1
   `) as SqlQueryResult<ElectricityReadingDBResult>;
@@ -103,13 +129,20 @@ export async function updateElectricityReading(
     newReading: number
 ): Promise<ElectricityReading> {
     checkDbConnection();
+    const user = await requireAuth();
 
     const result = (await sql`
       UPDATE electricity_readings 
       SET reading = ${newReading}, created_at = NOW()
-      WHERE reading_id = ${readingId}
+      WHERE reading_id = ${readingId} AND user_id = ${user.id}
       RETURNING id, reading_id, timestamp, reading, period, created_at
   `) as SqlQueryResult<ElectricityReadingDBResult>;
+
+    if (result.length === 0) {
+        throw new Error(
+            "Reading not found or you don't have permission to update it"
+        );
+    }
 
     revalidatePath("/");
 
@@ -138,6 +171,7 @@ export async function addElectricityReading(
     existingReading?: ElectricityReading;
 }> {
     checkDbConnection();
+    const user = await requireAuth();
 
     const now = getCurrentLocalTime(); // Get current local time
     const period = getCurrentPeriod(); // Calculate period based on current hour
@@ -169,12 +203,12 @@ export async function addElectricityReading(
     }
 
     // Create new reading with proper timezone handling
-    const readingId = `reading-${Date.now()}`;
+    const readingId = `reading-${Date.now()}-${user.id}`;
     const formattedTimestamp = formatDateWithTimezone(now);
 
     const result = (await sql`
       INSERT INTO electricity_readings (reading_id, timestamp, reading, period)
-      VALUES (${readingId}, ${formattedTimestamp}, ${reading}, ${period})
+      VALUES (${readingId}, ${formattedTimestamp}, ${reading}, ${period}, ${user.id})
       RETURNING id, reading_id, timestamp, reading, period, created_at
   `) as SqlQueryResult<ElectricityReadingDBResult>;
 
@@ -205,8 +239,9 @@ export async function addBackdatedReading(
     readingData: Omit<ElectricityReading, "id" | "reading_id">
 ): Promise<ElectricityReading> {
     checkDbConnection();
+    const user = await requireAuth();
 
-    const readingId = `reading-backdated-${Date.now()}`;
+    const readingId = `reading-backdated-${Date.now()}-${user.id}`;
 
     // Important: Calculate period based on the timestamp's hour, not just copy the provided period
     const calculatedPeriod = getPeriodFromDate(readingData.timestamp);
@@ -218,8 +253,8 @@ export async function addBackdatedReading(
     const formattedTimestamp = formatDateWithTimezone(readingData.timestamp);
 
     const result = (await sql`
-    INSERT INTO electricity_readings (reading_id, timestamp, reading, period)
-    VALUES (${readingId}, ${formattedTimestamp}, ${readingData.reading}, ${calculatedPeriod})
+    INSERT INTO electricity_readings (reading_id, timestamp, reading, period, user_id)
+    VALUES (${readingId}, ${formattedTimestamp}, ${readingData.reading}, ${calculatedPeriod}, ${user.id})
     RETURNING id, reading_id, timestamp, reading, period, created_at
   `) as SqlQueryResult<ElectricityReadingDBResult>;
 
@@ -257,32 +292,33 @@ export async function addTokenPurchase(
     cost: number
 ): Promise<TokenPurchase> {
     checkDbConnection();
+    const user = await requireAuth();
 
     // Get the latest reading
     const latestReading = await getLatestReading();
     const newReading = latestReading + units;
 
     const now = getCurrentLocalTime(); // Use local time
-    const tokenId = `token-${Date.now()}`;
+    const tokenId = `token-${Date.now()}-${user.id}`;
 
     // Insert token purchase
     const tokenResult = (await sql`
-    INSERT INTO token_purchases (token_id, timestamp, units, new_reading, total_cost)
+    INSERT INTO token_purchases (token_id, timestamp, units, new_reading, total_cost, user_id)
     VALUES (${tokenId}, ${formatDateWithTimezone(
         now
-    )}, ${units}, ${newReading}, ${cost})
+    )}, ${units}, ${newReading}, ${cost}, ${user.id})
     RETURNING id, token_id, timestamp, units, new_reading, created_at, total_cost
   `) as SqlQueryResult<TokenPurchaseDBResult>;
 
     // Also add a new reading entry with the updated meter value using local time
     const period = getCurrentPeriod(); // Use local time for period
-    const readingId = `token-reading-${Date.now()}`;
+    const readingId = `token-reading-${Date.now()}-${user.id}`;
 
     await sql`
-    INSERT INTO electricity_readings (reading_id, timestamp, reading, period)
+    INSERT INTO electricity_readings (reading_id, timestamp, reading, period, user_id)
     VALUES (${readingId}, ${formatDateWithTimezone(
         now
-    )}, ${newReading}, ${period})
+    )}, ${newReading}, ${period}, ${user.id})
   `;
 
     revalidatePath("/");
@@ -317,9 +353,16 @@ export async function getElectricityReadings(): Promise<ElectricityReading[]> {
         return [];
     }
 
+    const user = await getCurrentUser();
+    if (!user) {
+        console.log("[SERVER] No user authenticated, returning empty readings");
+        return [];
+    }
+
     const readings = (await sql`
     SELECT id, reading_id, timestamp, reading, period, created_at
     FROM electricity_readings
+     WHERE user_id = ${user.id}
     ORDER BY timestamp ASC
   `) as ElectricityReadingDBResult[];
 
@@ -354,9 +397,16 @@ export async function getTokenPurchases(): Promise<TokenPurchase[]> {
         return [];
     }
 
+    const user = await getCurrentUser();
+    if (!user) {
+        console.log("[SERVER] No user authenticated, returning empty tokens");
+        return [];
+    }
+
     const tokens = (await sql`
     SELECT id, token_id, timestamp, units, new_reading, created_at, total_cost
     FROM token_purchases
+    WHERE user_id = ${user.id}
     ORDER BY timestamp ASC
   `) as TokenPurchaseDBResult[];
 
@@ -393,9 +443,16 @@ export async function getLatestReading(): Promise<number> {
         return 0;
     }
 
+    
+  const user = await getCurrentUser()
+  if (!user) {
+    return 0
+  }
+
     const result = (await sql`
     SELECT reading
     FROM electricity_readings
+    WHERE user_id = ${user.id}
     ORDER BY timestamp DESC
     LIMIT 1
   `) as SqlQueryResult<ElectricityReadingDBResult>;
@@ -419,11 +476,17 @@ export async function getTotalUnitsUsed(): Promise<number> {
         return 0;
     }
 
+    const user = await getCurrentUser()
+  if (!user) {
+    return 0
+  }
+
     const readings = (await sql`
     SELECT reading, timestamp
-    FROM electricity_readings 
+    FROM electricity_readings
+     WHERE user_id = ${user.id} 
     ORDER BY timestamp ASC
-  `) as SqlQueryResult<{ reading: number; timestamp: string }>;
+  `) as SqlQueryResult<{ reading: number; timestamp: string, reading_id: string }>;
 
     if (readings.length < 2) {
         return 0;
@@ -434,10 +497,11 @@ export async function getTotalUnitsUsed(): Promise<number> {
     for (let i = 1; i < readings.length; i++) {
         const prevReading = Number(readings[i - 1].reading);
         const currentReading = Number(readings[i].reading);
+        // const isTokenReading = readings[i].reading_id.startsWith("token-reading-")
 
         // Only count decreases (actual consumption)
         // Ignore increases (token purchases)
-        if (prevReading > currentReading) {
+        if ( prevReading > currentReading) {
             totalConsumption += prevReading - currentReading;
         }
     }
@@ -467,6 +531,16 @@ export async function getUsageSummary(): Promise<UsageSummary> {
         };
     }
 
+     const user = await getCurrentUser()
+  if (!user) {
+    return {
+      averageUsage: 0,
+      peakUsageDay: { date: "", usage: 0 },
+      totalTokensPurchased: 0,
+      dailyUsage: [],
+    }
+  }
+
     // Get all readings and identify token readings
     const readings = (await getElectricityReadings())
         .map((r) => ({
@@ -474,8 +548,8 @@ export async function getUsageSummary(): Promise<UsageSummary> {
             reading: Number(r.reading),
             isTokenReading: r.reading_id.startsWith("token-reading-"),
         }))
-        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());    
-    const tokens = await getTokenPurchases();    
+        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    const tokens = await getTokenPurchases();
     const totalTokensPurchased = tokens.reduce(
         (sum, token) => sum + Number(token.units),
         0
@@ -521,19 +595,15 @@ export async function getUsageSummary(): Promise<UsageSummary> {
         );
 
         // Get only regular readings (not token readings)
-       // const regularReadings = dayReadings.filter((r) => !r.isTokenReading);        
+        // const regularReadings = dayReadings.filter((r) => !r.isTokenReading);
         // Find first and last regular readings of the day
         const firstReading = dayReadings[0];
         const lastReading = dayReadings.at(-1);
 
         // Get period-specific readings for display
-        const morningReading = dayReadings.find(
-            (r) => r.period === "morning"
-        );
-        const eveningReading = dayReadings.find(
-            (r) => r.period === "evening"
-        );
-        const nightReading = dayReadings.find((r) => r.period === "night");        
+        const morningReading = dayReadings.find((r) => r.period === "morning");
+        const eveningReading = dayReadings.find((r) => r.period === "evening");
+        const nightReading = dayReadings.find((r) => r.period === "night");
         // Calculate daily usage using the simplified formula
         let dailyTotal = 0;
 
@@ -570,7 +640,7 @@ export async function getUsageSummary(): Promise<UsageSummary> {
             previousEndingReading = lastReading.reading;
         }
     }
-    
+
     const totalDailyUsage = dailyUsage.reduce((sum, day) => sum + day.total, 0);
     const daysWithUsage = dailyUsage.filter((day) => day.total > 0).length;
     const averageUsage =
@@ -610,6 +680,11 @@ export async function getMonthlyUsage(): Promise<
         return [];
     }
 
+    const user = await getCurrentUser()
+  if (!user) {
+    return []
+  }
+
     const result = (await sql`
 WITH reading_changes AS (
   SELECT 
@@ -618,6 +693,7 @@ WITH reading_changes AS (
     LAG(reading) OVER (ORDER BY timestamp) as prev_reading,
     date_trunc('month', timestamp) as month
   FROM electricity_readings
+  WHERE user_id = ${user.id}
 ),
 consumption_periods AS (
   SELECT
@@ -664,6 +740,7 @@ export async function migrateFromLocalStorage(
 ): Promise<boolean> {
     try {
         checkDbConnection();
+        const user = await requireAuth()
 
         // Begin transaction
         await sql`BEGIN`;
@@ -681,12 +758,13 @@ export async function migrateFromLocalStorage(
             }
 
             await sql`
-        INSERT INTO electricity_readings (reading_id, timestamp, reading, period)
+        INSERT INTO electricity_readings (reading_id, timestamp, reading, period, user_id)
         VALUES (
           ${reading.reading_id}, 
           ${reading.timestamp.toISOString()}, 
           ${Number(reading.reading)}, 
-          ${reading.period}
+          ${reading.period},
+          ${user.id}
         )
         ON CONFLICT (reading_id) DO NOTHING
       `;
@@ -705,12 +783,14 @@ export async function migrateFromLocalStorage(
             }
 
             await sql`
-        INSERT INTO token_purchases (token_id, timestamp, units, new_reading)
+        INSERT INTO token_purchases (token_id, timestamp, units, new_reading, user_id, total_cost)
         VALUES (
           ${token.token_id}, 
           ${token.timestamp.toISOString()}, 
           ${Number(token.units)}, 
-          ${Number(token.new_reading)}
+          ${Number(token.new_reading)},
+          ${user.id},
+          ${Number(token.total_cost || 0)}
         )
         ON CONFLICT (token_id) DO NOTHING
       `;
