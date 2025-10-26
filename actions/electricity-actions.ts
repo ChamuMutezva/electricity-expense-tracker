@@ -207,7 +207,7 @@ export async function addElectricityReading(
     const formattedTimestamp = formatDateWithTimezone(now);
 
     const result = (await sql`
-      INSERT INTO electricity_readings (reading_id, timestamp, reading, period)
+      INSERT INTO electricity_readings (reading_id, timestamp, reading, period, user_id)
       VALUES (${readingId}, ${formattedTimestamp}, ${reading}, ${period}, ${user.id})
       RETURNING id, reading_id, timestamp, reading, period, created_at
   `) as SqlQueryResult<ElectricityReadingDBResult>;
