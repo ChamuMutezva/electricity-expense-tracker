@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import {
     AlertCircle,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import Image from "next/image";
 
 interface WeatherData {
     temperature: number;
@@ -80,7 +81,7 @@ export default function WeatherUsageCorrelation() {
     };
 
     // Fetch weather data
-    const fetchWeatherData = async (lat: number, lon: number) => {
+    const fetchWeatherData = useCallback(async (lat: number, lon: number) => {
         try {
             setLoading(true);
             setError("");
@@ -111,12 +112,12 @@ export default function WeatherUsageCorrelation() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     // Calculate usage impact based on weather
     const calculateUsageImpact = (weatherData: WeatherData) => {
         let impact = "";
-        let level: "low" | "medium" | "high" = "medium";
+        let level: "low" | "medium" | "high";
 
         const temp = weatherData.temperature;
         const humidity = weatherData.humidity;
@@ -170,15 +171,17 @@ export default function WeatherUsageCorrelation() {
         if (location) {
             fetchWeatherData(location.lat, location.lon);
         }
-    }, [location]);
+    }, [fetchWeatherData, location]);
 
     const getWeatherIcon = (condition: string, iconCode?: string) => {
         // You can use the OpenWeatherMap icon or custom icons
         if (iconCode) {
             return (
-                <img
+                <Image
                     src={`https://openweathermap.org/img/wn/${iconCode}@2x.png`}
                     alt={condition}
+                    width={48}
+                    height={48}
                     className="h-12 w-12"
                 />
             );
@@ -201,11 +204,11 @@ export default function WeatherUsageCorrelation() {
     const getImpactColor = (level: string) => {
         switch (level) {
             case "high":
-                return "text-red-700 bg-red-50 border-red-200";
+                return "text-destructive-foreground bg-destructive border-red-200";
             case "medium":
-                return "text-orange-700 bg-orange-50 border-orange-200";
+                return "text-card-foreground bg-card border-border";
             default:
-                return "text-green-700 bg-green-50 border-green-200";
+                return "text-muted-foreground bg-muted border-border";
         }
     };
 

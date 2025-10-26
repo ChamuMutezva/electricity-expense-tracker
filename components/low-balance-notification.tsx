@@ -63,11 +63,11 @@ export function LowBalanceNotification({
     const getAlertStyles = () => {
         switch (urgencyLevel) {
             case "critical":
-                return "border-red-500 bg-red-50 dark:bg-red-950 animate-pulse";
+                return "border-border bg-destructive animate-pulse";
             case "warning":
-                return "border-orange-500 bg-orange-50 dark:bg-orange-950";
+                return "border-border bg-primary";
             case "notice":
-                return "border-yellow-500 bg-yellow-50 dark:bg-yellow-950";
+                return "border-border bg-muted";
             default:
                 return "";
         }
