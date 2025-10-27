@@ -13,7 +13,7 @@
  */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useMediaQuery } from "react-responsive";
 import {
@@ -56,6 +56,9 @@ export default function UsageSummary({
     const [availableMonths, setAvailableMonths] = useState<MonthOption[]>([]);
     const isMobile = useMediaQuery({ maxWidth: 768 });
 
+    const readingsCount = readings.length;
+    const tokensCount = tokens.length;
+
     useEffect(() => {
         const fetchSummary = async () => {
             try {
@@ -94,21 +97,21 @@ export default function UsageSummary({
         };
 
         fetchSummary();
-    }, [readings, tokens]);
+    }, [readingsCount, tokensCount]);
 
     // Filter daily usage based on selected month
-    const getFilteredDailyUsage = () => {
+    const filteredDailyUsage = useMemo(() => {
         if (!summary) return [];
         if (selectedMonth === "all") return summary.dailyUsage;
         return summary.dailyUsage.filter((day) =>
             day.date.startsWith(selectedMonth)
         );
-    };
+    }, [summary, selectedMonth]);
 
-    const filteredDailyUsage = getFilteredDailyUsage();
+    // const filteredDailyUsage = getFilteredDailyUsage();
 
     // Calculate statistics for selected period
-    const calculatePeriodStats = () => {
+    const periodStats = useMemo(() => {
         if (filteredDailyUsage.length === 0) {
             return {
                 averageUsage: 0,
@@ -145,12 +148,12 @@ export default function UsageSummary({
             totalUsage,
             daysWithData,
         };
-    };
+    }, [filteredDailyUsage]);
 
-    const periodStats = calculatePeriodStats();
+    // const periodStats = calculatePeriodStats();
 
     // Calculate trend compared to previous period
-    const calculateTrend = () => {
+    const trend = useMemo(() => {
         if (selectedMonth === "all" || !summary) return null;
 
         const [year, month] = selectedMonth.split("-").map(Number);
@@ -181,24 +184,24 @@ export default function UsageSummary({
             isIncrease: percentChange > 0,
             isDecrease: percentChange < 0,
         };
-    };
+    }, [selectedMonth, summary, periodStats]);
 
-    const trend = calculateTrend();
+    // const trend = calculateTrend();
 
     // Calculate total tokens for selected period
-    const getFilteredTokens = () => {
+    const filteredTokens = useMemo(() => {
         if (selectedMonth === "all") return tokens;
         return tokens.filter((token) => {
             const tokenDate = token.timestamp.toISOString().substring(0, 7);
             return tokenDate === selectedMonth;
         });
-    };
+    }, [selectedMonth, tokens]);
 
-    const filteredTokens = getFilteredTokens();
-    const totalTokensInPeriod = filteredTokens.reduce(
-        (sum, t) => sum + t.units,
-        0
-    );
+    //const filteredTokens = getFilteredTokens();
+
+    const totalTokensInPeriod = useMemo(() => {
+        return filteredTokens.reduce((sum, t) => sum + t.units, 0);
+    }, [filteredTokens]);
 
     if (loading) {
         return <LoadingSkeleton />;
