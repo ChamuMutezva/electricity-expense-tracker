@@ -68,20 +68,6 @@ function DashboardTabs({
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-6">
-                        <ProtectedContent message="Sign in to view your dashboard and update electricity readings">
-                            <DashboardSummary
-                                latestReading={latestReading}
-                                totalUnits={totalUnits}
-                                nextUpdate={nextUpdate}
-                                getTimeString={getTimeString}
-                                timeUntilUpdate={timeUntilUpdate}
-                                readings={readings}
-                            />
-                        </ProtectedContent>
-                        <WeatherUsageCorrelation />
-                        {showNotification && <UpdateReminderNotification />}
-                        <SmartAlerts readings={readings} tokens={tokens} />
-
                         <div className="space-y-4">
                             <ProtectedContent message="Sign in to view your dashboard and update electricity readings">
                                 <UpdateMeterReading
@@ -98,6 +84,19 @@ function DashboardTabs({
                                 />
                             )}
                         </div>
+                        <ProtectedContent message="Sign in to view your dashboard and update electricity readings">
+                            <DashboardSummary
+                                latestReading={latestReading}
+                                totalUnits={totalUnits}
+                                nextUpdate={nextUpdate}
+                                getTimeString={getTimeString}
+                                timeUntilUpdate={timeUntilUpdate}
+                                readings={readings}
+                            />
+                        </ProtectedContent>
+                        <WeatherUsageCorrelation />
+                        {showNotification && <UpdateReminderNotification />}
+                        <SmartAlerts readings={readings} tokens={tokens} />
                     </div>
                 </CardContent>
             </Card>

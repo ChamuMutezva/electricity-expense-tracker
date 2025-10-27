@@ -67,6 +67,12 @@ const config: Config = {
                     border: "hsl(var(--sidebar-border))",
                     ring: "hsl(var(--sidebar-ring))",
                 },
+                warning: {
+                    DEFAULT: "hsl(var(--warning))",
+                    foreground: "hsl(var(--warning-foreground))",
+                    border: "hsl(var(--warning-border))",
+                    accent: "hsl(var(--warning-accent))",
+                },
             },
             borderRadius: {
                 lg: "var(--radius)",

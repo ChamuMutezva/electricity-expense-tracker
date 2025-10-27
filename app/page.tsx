@@ -72,8 +72,8 @@ export default async function HomePage() {
             <main className="container mx-auto py-8 px-4">
                 <div>
                     {!dbConnected && (
-                        <Alert className="mb-6 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
-                            <Database className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                        <Alert className="mb-6 bg-warning-accent border-warning-border text-warning-foreground">
+                            <Database className="h-4 w-4 text-warning" />
                             <AlertTitle>Database Connection Issue</AlertTitle>
                             <AlertDescription>
                                 <p className="mb-2">

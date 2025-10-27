@@ -120,7 +120,13 @@ export default function FixDataPage() {
                   <p className="text-sm text-muted-foreground">Stack Auth User ID</p>
                   <p className="font-mono text-sm break-all">{user.id}</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={copyUserId} className="ml-2 flex-shrink-0 bg-transparent">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={copyUserId} 
+                  className="ml-2 flex-shrink-0 bg-transparent"
+                  aria-label={copied ? "User ID copied" : "Copy user ID"}
+                >
                   {copied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
