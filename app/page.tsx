@@ -12,7 +12,6 @@
  * @returns {Promise<JSX.Element>} The rendered home page component.
  */
 import type { Metadata } from "next";
-import Link from "next/link";
 import ElectricityTracker from "@/components/electricity-tracker";
 import {
     getElectricityReadings,
@@ -22,11 +21,11 @@ import {
 } from "@/actions/electricity-actions";
 import { isDatabaseConnected } from "@/lib/db";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Database, Zap } from "lucide-react";
+import { Database } from "lucide-react";
 import { ElectricityReading, TokenPurchase } from "@/lib/types";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { stackServerApp } from "@/stack/server";
-import { SignInButton } from "@/components/auth/sign-in-button";
+import { getUserProfile } from "@/actions/user-profile-actions";
+import { AppHeader } from "@/components/app-header";
 
 export const metadata: Metadata = {
     title: "Electricity Expense Tracker",
@@ -42,6 +41,8 @@ export default async function HomePage() {
     let tokens: TokenPurchase[] = [];
     let latestReading = 0;
     let totalUnits = 0;
+    let userProfile = null;
+    let showMeterDialog = false;
 
     // Only try to fetch data if database is connected
     if (dbConnected && user) {
@@ -51,6 +52,8 @@ export default async function HomePage() {
             tokens = await getTokenPurchases();
             latestReading = await getLatestReading();
             totalUnits = await getTotalUnitsUsed();
+            userProfile = await getUserProfile();
+            showMeterDialog = !userProfile?.meter_number;
         } catch (error) {
             console.error("Error fetching initial data:", error);
         }
@@ -59,15 +62,10 @@ export default async function HomePage() {
     return (
         <>
             <header className="container mx-auto py-8 px-4">
-                <div className="flex justify-between items-center">
-                    <Link href={"/"} className="text-lg md:text-3xl font-bold flex justify-start items-center gap-2">
-                        <Zap className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />
-                        Electricity Tracker
-                    </Link>
-
-                    <SignInButton />
-                    <ThemeToggle />
-                </div>
+                <AppHeader
+                    meterNumber={userProfile?.meter_number}
+                    showMeterDialog={showMeterDialog}
+                />
             </header>
             <main className="container mx-auto py-8 px-4">
                 <div>

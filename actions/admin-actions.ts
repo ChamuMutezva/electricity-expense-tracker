@@ -3,8 +3,6 @@
 import { sql, isDatabaseConnected } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import {stackServerApp} from "@/stack/server"
-
-
 interface DataStatus {
   readingsWithUser: number
   readingsWithoutUser: number
