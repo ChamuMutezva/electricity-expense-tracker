@@ -49,6 +49,7 @@ export default function DashboardSummary({
         if (readings.length < 7) return;
 
         // Calculate recent usage trend
+        const averageCostPerKwh = 2.61
         const recentReadings = readings.slice(-7);
         let totalUsage = 0;
         for (let i = 1; i < recentReadings.length; i++) {
@@ -65,7 +66,7 @@ export default function DashboardSummary({
 
         const avgDailyUsage = totalUsage / 7;
         const nextWeekUsage = avgDailyUsage * 7;
-        const estimatedCost = nextWeekUsage * 0.15; // $0.15 per kWh
+        const estimatedCost = nextWeekUsage * averageCostPerKwh; 
         const efficiency = getEfficiency(avgDailyUsage);
 
         setPredictions({

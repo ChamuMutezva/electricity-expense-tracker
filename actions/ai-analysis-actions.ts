@@ -113,7 +113,7 @@ export async function generateElectricityInsights(): Promise<string> {
         const analysisData = formatDataForAI(readings, tokens, summary);
 
         const { text } = await generateText({
-            model: google("gemini-1.5-flash"), // Using Gemini 1.5 Flash (free and fast)
+            model: google("gemini-2.5-flash"), // Using Gemini 1.5 Flash (free and fast)
             system: `You are an expert electricity usage analyst. Analyze the provided electricity consumption data and provide actionable insights, tips, and recommendations. 
 
 Focus on:
