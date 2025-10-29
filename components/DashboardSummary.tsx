@@ -49,7 +49,7 @@ export default function DashboardSummary({
         if (readings.length < 7) return;
 
         // Calculate recent usage trend
-        const averageCostPerKwh = 2.61
+        const averageCostPerKwh = 2.61;
         const recentReadings = readings.slice(-7);
         let totalUsage = 0;
         for (let i = 1; i < recentReadings.length; i++) {
@@ -66,7 +66,7 @@ export default function DashboardSummary({
 
         const avgDailyUsage = totalUsage / 7;
         const nextWeekUsage = avgDailyUsage * 7;
-        const estimatedCost = nextWeekUsage * averageCostPerKwh; 
+        const estimatedCost = nextWeekUsage * averageCostPerKwh;
         const efficiency = getEfficiency(avgDailyUsage);
 
         setPredictions({
@@ -192,7 +192,7 @@ export default function DashboardSummary({
                         <CardContent className="p-4">
                             <div className="flex items-center gap-2 mb-2">
                                 <Zap className="h-4 w-4 text-secondary" />
-                                <span className="text-sm font-medium text-seconday-foreground">
+                                <span className="text-sm font-medium text-secondary-foreground">
                                     Efficiency
                                 </span>
                             </div>
