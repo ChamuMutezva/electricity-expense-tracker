@@ -29,21 +29,20 @@ export function AppHeader({
 
     return (
         <>
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                    <Link href="/" className="flex items-center gap-2 group">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground group-hover:bg-primary/90 transition-colors">
-                            <Zap className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <span className="text-2xl font-bold tracking-tight group-hover:text-primary transition-colors">
-                                Electricity Tracker
-                            </span>
-                        </div>
+            <div className="flex items-end justify-between flex-col sm:flex-row mb-6 gap-4">
+                <div className="flex items-end gap-4 justify-between flex-col sm:flex-row w-full sm:w-auto">
+                    <Link
+                        href="/"
+                        className="flex items-center justify-center gap-2 group  group-hover:bg-primary/90 transition-colors"
+                    >
+                        <Zap className="w-6 h-6 rounded-lg bg-primary text-primary-foreground" />
+                        <span className="text-2xl font-bold tracking-tight group-hover:text-primary transition-colors">
+                            Electricity Tracker
+                        </span>
                     </Link>
 
                     {meterNumber && (
-                        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted">
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted">
                             <span className="text-xs font-medium text-muted-foreground">
                                 Meter:
                             </span>

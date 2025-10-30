@@ -61,7 +61,7 @@ export default async function HomePage() {
 
     return (
         <>
-            <header className="container mx-auto py-8 px-4">
+            <header className="container mx-auto pt-8 px-4">
                 <AppHeader
                     meterNumber={userProfile?.meter_number}
                     showMeterDialog={showMeterDialog}
