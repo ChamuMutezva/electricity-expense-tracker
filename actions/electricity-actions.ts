@@ -497,7 +497,7 @@ export async function getTotalUnitsUsed(): Promise<number> {
     for (let i = 1; i < readings.length; i++) {
         const prevReading = Number(readings[i - 1].reading);
         const currentReading = Number(readings[i].reading);
-        // const isTokenReading = readings[i].reading_id.startsWith("token-reading-")
+    
 
         // Only count decreases (actual consumption)
         // Ignore increases (token purchases)

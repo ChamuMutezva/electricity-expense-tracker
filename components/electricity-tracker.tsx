@@ -190,63 +190,64 @@ function ElectricityTrackerContent({
                         }
                         className="w-full"
                     >
-                        <TabsList className="w-full justify-between h-auto p-1 bg-slate-100 dark:bg-slate-900">
-                            <TabsTrigger
-                                value="dashboard"
-                                className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
-                            >
-                                <Home className="h-4 w-4" />
-                                <span className="hidden md:inline">
-                                    Dashboard
-                                </span>
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="analytics"
-                                className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
-                            >
-                                <TrendingUp className="h-4 w-4" />
-                                <span className="hidden md:inline">
-                                    Analytics
-                                </span>
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="reports"
-                                className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
-                            >
-                                <FileText className="h-4 w-4" />
-                                <span className="hidden md:inline">
-                                    Reports
-                                </span>
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="ai-insights"
-                                className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
-                            >
-                                <Brain className="h-4 w-4" />
-                                <span className="hidden md:inline">
-                                    AI Insights
-                                </span>
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="token"
-                                className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
-                            >
-                                <Plus className="h-4 w-4" />
-                                <span className="hidden md:inline">
-                                    Add Token
-                                </span>
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="backdated"
-                                className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
-                            >
-                                <CalendarClock className="h-4 w-4" />
-                                <span className="hidden md:inline">
-                                    Backdated
-                                </span>
-                            </TabsTrigger>
-                        </TabsList>
                         <ProtectedContent message="Sign in to view your dashboard and update electricity readings">
+                            <TabsList className="w-full justify-between h-auto p-1 bg-slate-100 dark:bg-slate-900">
+                                <TabsTrigger
+                                    value="dashboard"
+                                    className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
+                                >
+                                    <Home className="h-4 w-4" />
+                                    <span className="hidden md:inline">
+                                        Dashboard
+                                    </span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="analytics"
+                                    className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
+                                >
+                                    <TrendingUp className="h-4 w-4" />
+                                    <span className="hidden md:inline">
+                                        Analytics
+                                    </span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="reports"
+                                    className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
+                                >
+                                    <FileText className="h-4 w-4" />
+                                    <span className="hidden md:inline">
+                                        Reports
+                                    </span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="ai-insights"
+                                    className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
+                                >
+                                    <Brain className="h-4 w-4" />
+                                    <span className="hidden md:inline">
+                                        AI Insights
+                                    </span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="token"
+                                    className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    <span className="hidden md:inline">
+                                        Add Token
+                                    </span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="backdated"
+                                    className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
+                                >
+                                    <CalendarClock className="h-4 w-4" />
+                                    <span className="hidden md:inline">
+                                        Backdated
+                                    </span>
+                                </TabsTrigger>
+                            </TabsList>
+
                             <div className="container mx-auto px-0 py-6">
                                 {/* Alerts Section */}
                                 <div className="space-y-4 mb-6">

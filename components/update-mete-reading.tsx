@@ -66,7 +66,9 @@ export const UpdateMeterReading = ({
     loadingText = "Updating...",
 }: UpdateMeterReadingProps) => {
     const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
-    const [existingReading, setExistingReading] = useState<{ reading: number } | null>(null);
+    const [existingReading, setExistingReading] = useState<{
+        reading: number;
+    } | null>(null);
     const [pendingReading, setPendingReading] = useState<string>("");
     // Add states for success feedback
     const [showSuccess, setShowSuccess] = useState(false);
@@ -114,7 +116,7 @@ export const UpdateMeterReading = ({
     };
 
     const handleSubmit = async () => {
-        if (!currentReading || (Number.isNaN(currentReading))) {
+        if (!currentReading || Number.isNaN(Number(currentReading))) {
             return;
         }
 
@@ -147,7 +149,7 @@ export const UpdateMeterReading = ({
             }
         }
     };
-   
+
     const handleForceUpdate = async () => {
         try {
             await handleAddReading(true); // Force update
