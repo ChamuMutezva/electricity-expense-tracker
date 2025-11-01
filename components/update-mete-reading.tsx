@@ -114,7 +114,7 @@ export const UpdateMeterReading = ({
     };
 
     const handleSubmit = async () => {
-        if (!currentReading || isNaN(Number(currentReading))) {
+        if (!currentReading || (Number.isNaN(currentReading))) {
             return;
         }
 

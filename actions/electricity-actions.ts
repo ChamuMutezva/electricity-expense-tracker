@@ -160,7 +160,7 @@ export async function updateElectricityReading(
 
 /**
  * Adds a new electricity reading to the database.
- * FIXED: Now preserves the user's local time intent correctly
+ * Preserve the user's local time intent correctly
  */
 export async function addElectricityReading(
     reading: number,
@@ -173,7 +173,7 @@ export async function addElectricityReading(
     checkDbConnection();
     const user = await requireAuth();
 
-    const now = getCurrentLocalTime(); // Get current local time
+    const now = getCurrentLocalTime(); 
     const period = getCurrentPeriod(); // Calculate period based on current hour
 
     // Debug logging

@@ -16,7 +16,6 @@ import UpdateReminderNotification from "../UpdateReminderNotification";
 import UsageSummary from "../usage-summary";
 import WeatherUsageCorrelation from "../WeatherUsageCorelation";
 import { ElectricityReading, TokenPurchase } from "@/lib/types";
-import { ProtectedContent } from "@/components/auth/protected-content";
 
 type DashboardTabsProps = {
     latestReading: number;
@@ -67,9 +66,8 @@ function DashboardTabs({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-6">
-                        <div className="space-y-4">
-                            <ProtectedContent message="Sign in to view your dashboard and update electricity readings">
+                    <div className="space-y-6">                       
+                            <div className="space-y-4">
                                 <UpdateMeterReading
                                     currentReading={currentReading}
                                     setCurrentReading={setCurrentReading}
@@ -77,14 +75,14 @@ function DashboardTabs({
                                     isSubmitting={isSubmitting}
                                     isSubmitted={isSubmitted}
                                 />
-                            </ProtectedContent>
-                            {!notificationsEnabled && (
-                                <NotificationsAlert
-                                    enableNotifications={enableNotifications}
-                                />
-                            )}
-                        </div>
-                        <ProtectedContent message="Sign in to view your dashboard and update electricity readings">
+                                {!notificationsEnabled && (
+                                    <NotificationsAlert
+                                        enableNotifications={
+                                            enableNotifications
+                                        }
+                                    />
+                                )}
+                            </div>
                             <DashboardSummary
                                 latestReading={latestReading}
                                 totalUnits={totalUnits}
@@ -92,15 +90,13 @@ function DashboardTabs({
                                 getTimeString={getTimeString}
                                 timeUntilUpdate={timeUntilUpdate}
                                 readings={readings}
-                            />
-                        </ProtectedContent>
+                            />                        
                         <WeatherUsageCorrelation />
                         {showNotification && <UpdateReminderNotification />}
                         <SmartAlerts readings={readings} tokens={tokens} />
                     </div>
                 </CardContent>
             </Card>
-
             <Card className="shadow-lg">
                 <CardHeader>
                     <CardTitle>Usage Summary</CardTitle>

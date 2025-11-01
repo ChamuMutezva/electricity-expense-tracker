@@ -29,7 +29,7 @@ export function ProtectedContent({
 
     if (!user) {
         return (
-            <Card className="border-dashed">
+            <Card className="border-dashed mt-4">
                 <CardHeader className="text-center">
                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
                         <Lock className="h-6 w-6 text-blue-600 dark:text-blue-400" />

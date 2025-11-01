@@ -120,6 +120,7 @@ import { useMissedReadings } from "@/hooks/use-missed-readings";
 import { useTotalUnitsCalculation } from "@/hooks/use-total-units-calculation";
 import { ElectricityLoading } from "./electricity-loading";
 import { useUser } from "@stackframe/stack";
+import { ProtectedContent } from "@/components/auth/protected-content";
 
 function ElectricityTrackerContent({
     dbConnected,
@@ -245,86 +246,93 @@ function ElectricityTrackerContent({
                                 </span>
                             </TabsTrigger>
                         </TabsList>
+                        <ProtectedContent message="Sign in to view your dashboard and update electricity readings">
+                            <div className="container mx-auto px-0 py-6">
+                                {/* Alerts Section */}
+                                <div className="space-y-4 mb-6">
+                                    {state.showMigrationAlert && (
+                                        <MigrationAlert
+                                            handleMigrateData={
+                                                handleMigrateData
+                                            }
+                                            isSubmitting={state.isSubmitting}
+                                            setShowMigrationAlert={() =>
+                                                dispatch({
+                                                    type: "SET_SHOW_MIGRATION_ALERT",
+                                                    payload: false,
+                                                })
+                                            }
+                                        />
+                                    )}
+                                    {state.missedReadings.length > 0 && (
+                                        <MissedReadings
+                                            missedReadings={
+                                                state.missedReadings
+                                            }
+                                        />
+                                    )}
+                                    {state.showNotification && (
+                                        <UpdateReminderNotification />
+                                    )}
+                                </div>
 
-                        <div className="container mx-auto px-0 py-6">
-                            {/* Alerts Section */}
-                            <div className="space-y-4 mb-6">
-                                {state.showMigrationAlert && (
-                                    <MigrationAlert
-                                        handleMigrateData={handleMigrateData}
-                                        isSubmitting={state.isSubmitting}
-                                        setShowMigrationAlert={() =>
-                                            dispatch({
-                                                type: "SET_SHOW_MIGRATION_ALERT",
-                                                payload: false,
-                                            })
-                                        }
-                                    />
-                                )}
-                                {state.missedReadings.length > 0 && (
-                                    <MissedReadings
-                                        missedReadings={state.missedReadings}
-                                    />
-                                )}
-                                {state.showNotification && (
-                                    <UpdateReminderNotification />
-                                )}
+                                <DashboardTabs
+                                    latestReading={state.latestReading}
+                                    totalUnits={state.totalUnits}
+                                    nextUpdate={state.nextUpdate}
+                                    getTimeString={getTimeString}
+                                    timeUntilUpdate={state.timeUntilUpdate}
+                                    readings={state.readings}
+                                    tokens={state.tokens}
+                                    currentReading={state.currentReading}
+                                    setCurrentReading={(value) =>
+                                        dispatch({
+                                            type: "SET_CURRENT_READING",
+                                            payload: value,
+                                        })
+                                    }
+                                    handleAddReading={handleAddReading}
+                                    isSubmitting={state.isSubmitting}
+                                    isSubmitted={state.isSubmitted}
+                                    enableNotifications={
+                                        handleEnableNotifications
+                                    }
+                                    notificationsEnabled={notificationsEnabled}
+                                    showNotification={state.showNotification}
+                                />
+                                <AnalyticsTabs readings={state.readings} />
+                                <ReportsTabs
+                                    readings={state.readings}
+                                    tokens={state.tokens}
+                                />
+                                <AIInsightsTabs
+                                    hasData={state.readings.length > 2}
+                                />
+                                <AddTokenTabs
+                                    tokenUnits={state.tokenUnits}
+                                    tokenCost={state.tokenCost}
+                                    setTokenCost={(value) =>
+                                        dispatch({
+                                            type: "SET_TOKEN_COST",
+                                            payload: value,
+                                        })
+                                    }
+                                    setTokenUnits={(value) =>
+                                        dispatch({
+                                            type: "SET_TOKEN_UNITS",
+                                            payload: value,
+                                        })
+                                    }
+                                    handleAddToken={handleAddToken}
+                                    isSubmitting={state.isSubmitting}
+                                    tokens={state.tokens}
+                                />
+                                <BackdatedTabs
+                                    onSubmit={handleAddBackdatedReading}
+                                    isSubmitting={state.isSubmitting}
+                                />
                             </div>
-
-                            <DashboardTabs
-                                latestReading={state.latestReading}
-                                totalUnits={state.totalUnits}
-                                nextUpdate={state.nextUpdate}
-                                getTimeString={getTimeString}
-                                timeUntilUpdate={state.timeUntilUpdate}
-                                readings={state.readings}
-                                tokens={state.tokens}
-                                currentReading={state.currentReading}
-                                setCurrentReading={(value) =>
-                                    dispatch({
-                                        type: "SET_CURRENT_READING",
-                                        payload: value,
-                                    })
-                                }
-                                handleAddReading={handleAddReading}
-                                isSubmitting={state.isSubmitting}
-                                isSubmitted={state.isSubmitted}
-                                enableNotifications={handleEnableNotifications}
-                                notificationsEnabled={notificationsEnabled}
-                                showNotification={state.showNotification}
-                            />
-                            <AnalyticsTabs readings={state.readings} />
-                            <ReportsTabs
-                                readings={state.readings}
-                                tokens={state.tokens}
-                            />
-                            <AIInsightsTabs
-                                hasData={state.readings.length > 2}
-                            />
-                            <AddTokenTabs
-                                tokenUnits={state.tokenUnits}
-                                tokenCost={state.tokenCost}
-                                setTokenCost={(value) =>
-                                    dispatch({
-                                        type: "SET_TOKEN_COST",
-                                        payload: value,
-                                    })
-                                }
-                                setTokenUnits={(value) =>
-                                    dispatch({
-                                        type: "SET_TOKEN_UNITS",
-                                        payload: value,
-                                    })
-                                }
-                                handleAddToken={handleAddToken}
-                                isSubmitting={state.isSubmitting}
-                                tokens={state.tokens}
-                            />
-                            <BackdatedTabs
-                                onSubmit={handleAddBackdatedReading}
-                                isSubmitting={state.isSubmitting}
-                            />
-                        </div>
+                        </ProtectedContent>
                     </Tabs>
                 </div>
             </div>
