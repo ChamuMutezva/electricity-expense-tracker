@@ -173,7 +173,7 @@ export async function addElectricityReading(
     checkDbConnection();
     const user = await requireAuth();
 
-    const now = getCurrentLocalTime(); 
+    const now = getCurrentLocalTime();
     const period = getCurrentPeriod(); // Calculate period based on current hour
 
     // Debug logging
@@ -443,11 +443,10 @@ export async function getLatestReading(): Promise<number> {
         return 0;
     }
 
-    
-  const user = await getCurrentUser()
-  if (!user) {
-    return 0
-  }
+    const user = await getCurrentUser();
+    if (!user) {
+        return 0;
+    }
 
     const result = (await sql`
     SELECT reading
@@ -476,17 +475,21 @@ export async function getTotalUnitsUsed(): Promise<number> {
         return 0;
     }
 
-    const user = await getCurrentUser()
-  if (!user) {
-    return 0
-  }
+    const user = await getCurrentUser();
+    if (!user) {
+        return 0;
+    }
 
     const readings = (await sql`
     SELECT reading, timestamp
     FROM electricity_readings
      WHERE user_id = ${user.id} 
     ORDER BY timestamp ASC
-  `) as SqlQueryResult<{ reading: number; timestamp: string, reading_id: string }>;
+  `) as SqlQueryResult<{
+        reading: number;
+        timestamp: string;
+        reading_id: string;
+    }>;
 
     if (readings.length < 2) {
         return 0;
@@ -497,11 +500,10 @@ export async function getTotalUnitsUsed(): Promise<number> {
     for (let i = 1; i < readings.length; i++) {
         const prevReading = Number(readings[i - 1].reading);
         const currentReading = Number(readings[i].reading);
-    
 
         // Only count decreases (actual consumption)
         // Ignore increases (token purchases)
-        if ( prevReading > currentReading) {
+        if (prevReading > currentReading) {
             totalConsumption += prevReading - currentReading;
         }
     }
@@ -528,18 +530,22 @@ export async function getUsageSummary(): Promise<UsageSummary> {
             peakUsageDay: { date: "", usage: 0 },
             totalTokensPurchased: 0,
             dailyUsage: [],
+            totalUnitsCost: 0,
+            lastAverageCostPerKwh: 0,
         };
     }
 
-     const user = await getCurrentUser()
-  if (!user) {
-    return {
-      averageUsage: 0,
-      peakUsageDay: { date: "", usage: 0 },
-      totalTokensPurchased: 0,
-      dailyUsage: [],
+    const user = await getCurrentUser();
+    if (!user) {
+        return {
+            averageUsage: 0,
+            peakUsageDay: { date: "", usage: 0 },
+            totalTokensPurchased: 0,
+            dailyUsage: [],
+            totalUnitsCost: 0,
+            lastAverageCostPerKwh: 0,
+        };
     }
-  }
 
     // Get all readings and identify token readings
     const readings = (await getElectricityReadings())
@@ -550,8 +556,13 @@ export async function getUsageSummary(): Promise<UsageSummary> {
         }))
         .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     const tokens = await getTokenPurchases();
+    // console.log("tokens ", tokens);
     const totalTokensPurchased = tokens.reduce(
         (sum, token) => sum + Number(token.units),
+        0
+    );
+    const totalUnitsCostAmt = tokens.reduce(
+        (sum, token) => sum + Number(token.total_cost || 0),
         0
     );
 
@@ -645,6 +656,10 @@ export async function getUsageSummary(): Promise<UsageSummary> {
     const daysWithUsage = dailyUsage.filter((day) => day.total > 0).length;
     const averageUsage =
         daysWithUsage > 0 ? totalDailyUsage / daysWithUsage : 0;
+    const lastTokenPurchased = tokens.at(-1);
+    const lastAverageCostPerKwh =
+        (lastTokenPurchased?.total_cost ?? 0) /
+            (lastTokenPurchased?.units ?? 1) || 0;
 
     let peakUsageDay = { date: "", usage: 0 };
 
@@ -659,6 +674,8 @@ export async function getUsageSummary(): Promise<UsageSummary> {
         peakUsageDay,
         totalTokensPurchased,
         dailyUsage,
+        totalUnitsCost: totalUnitsCostAmt,
+        lastAverageCostPerKwh,
     };
 }
 /**
@@ -680,10 +697,10 @@ export async function getMonthlyUsage(): Promise<
         return [];
     }
 
-    const user = await getCurrentUser()
-  if (!user) {
-    return []
-  }
+    const user = await getCurrentUser();
+    if (!user) {
+        return [];
+    }
 
     const result = (await sql`
 WITH reading_changes AS (
@@ -740,7 +757,7 @@ export async function migrateFromLocalStorage(
 ): Promise<boolean> {
     try {
         checkDbConnection();
-        const user = await requireAuth()
+        const user = await requireAuth();
 
         // Begin transaction
         await sql`BEGIN`;

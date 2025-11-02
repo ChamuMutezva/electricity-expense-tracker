@@ -52,6 +52,8 @@ export interface UsageSummary {
   }
   totalTokensPurchased: number
   dailyUsage: DailyUsage[]
+  totalUnitsCost: number
+  lastAverageCostPerKwh: number
 }
 
 
@@ -107,7 +109,7 @@ export interface DailyUsage {
     total: number;
 }
 
-export interface UsageSummary {
+/*export interface UsageSummary {
     averageUsage: number;
     peakUsageDay: {
         date: string;
@@ -115,7 +117,7 @@ export interface UsageSummary {
     };
     totalTokensPurchased: number;
     dailyUsage: DailyUsage[];
-}
+}*/
 export interface ElectricityTrackerProps {
     initialReadings: ElectricityReading[];
     initialTokens: TokenPurchase[];

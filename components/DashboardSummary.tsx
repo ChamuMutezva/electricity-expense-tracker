@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ElectricityReading } from "@/lib/types";
+import { getUsageSummary } from "@/actions/electricity-actions";
 
 type DashboardSummaryProps = {
     latestReading: number;
@@ -42,38 +43,37 @@ export default function DashboardSummary({
     const [predictions, setPredictions] = useState({
         nextWeekUsage: 0,
         estimatedCost: 0,
+        costPerKwvh: 0,
         efficiency: "normal" as "low" | "normal" | "high",
     });
 
     useEffect(() => {
         if (readings.length < 7) return;
-
-        // Calculate recent usage trend
-        const averageCostPerKwh = 2.61;
-        const recentReadings = readings.slice(-7);
-        let totalUsage = 0;
-        for (let i = 1; i < recentReadings.length; i++) {
-            const usage =
-                recentReadings[i - 1].reading - recentReadings[i].reading;
-            if (usage > 0) totalUsage += usage;
-        }
-
-        function getEfficiency(avgDailyUsage: number) {
-            if (avgDailyUsage < 5) return "high";
-            if (avgDailyUsage > 10) return "low";
-            return "normal";
-        }
-
-        const avgDailyUsage = totalUsage / 7;
-        const nextWeekUsage = avgDailyUsage * 7;
-        const estimatedCost = nextWeekUsage * averageCostPerKwh;
-        const efficiency = getEfficiency(avgDailyUsage);
-
-        setPredictions({
-            nextWeekUsage: Number(nextWeekUsage.toFixed(2)),
-            estimatedCost: Number(estimatedCost.toFixed(2)),
-            efficiency,
-        });
+        const fetchUsageSummary = async () => {
+            try {
+                const summary = await getUsageSummary();
+                const averageCostPerKwh = summary.lastAverageCostPerKwh || 1;
+                console.log("Usage Summary from Action:", summary);
+                function getEfficiency(avgDailyUsage: number) {
+                    if (avgDailyUsage < 5) return "high";
+                    if (avgDailyUsage > 10) return "low";
+                    return "normal";
+                }
+                const avgDailyUsage = summary.averageUsage;
+                const nextWeekUsage = avgDailyUsage * 7;
+                const estimatedCost = nextWeekUsage * averageCostPerKwh;
+                const efficiency = getEfficiency(avgDailyUsage);
+                setPredictions({
+                    nextWeekUsage: Number(nextWeekUsage.toFixed(2)),
+                    estimatedCost: Number(estimatedCost.toFixed(2)),
+                    costPerKwvh: Number(averageCostPerKwh.toFixed(2)),
+                    efficiency,
+                });
+            } catch (error) {
+                console.error("Error fetching usage summary:", error);
+            }
+        };
+        fetchUsageSummary();
     }, [readings]);
 
     const getEfficiencyColor = (efficiency: string) => {
@@ -153,7 +153,7 @@ export default function DashboardSummary({
 
             {/* Predictions Row */}
             {readings.length >= 7 && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     <Card className="border-border bg-secondary-50">
                         <CardContent className="p-4">
                             <div className="flex items-center gap-2 mb-2">
@@ -181,6 +181,23 @@ export default function DashboardSummary({
                             </div>
                             <div className="text-xl font-bold text-secondary-foreground">
                                 ${predictions.estimatedCost}
+                            </div>
+                            <p className="text-xs text-secondary-foreground">
+                                Next week estimate
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-border bg-secondary">
+                        <CardContent className="p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <DollarSign className="h-4 w-4 text-text-foreground" />
+                                <span className="text-sm font-medium text-secondary-foreground">
+                                    Cost Per kWh
+                                </span>
+                            </div>
+                            <div className="text-xl font-bold text-secondary-foreground">
+                                ${predictions.costPerKwvh}
                             </div>
                             <p className="text-xs text-secondary-foreground">
                                 Next week estimate
