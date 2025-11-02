@@ -43,7 +43,7 @@ export default function DashboardSummary({
     const [predictions, setPredictions] = useState({
         nextWeekUsage: 0,
         estimatedCost: 0,
-        costPerKwvh: 0,
+        costPerKwh: 0,
         efficiency: "normal" as "low" | "normal" | "high",
     });
 
@@ -66,7 +66,7 @@ export default function DashboardSummary({
                 setPredictions({
                     nextWeekUsage: Number(nextWeekUsage.toFixed(2)),
                     estimatedCost: Number(estimatedCost.toFixed(2)),
-                    costPerKwvh: Number(averageCostPerKwh.toFixed(2)),
+                    costPerKwh: Number(averageCostPerKwh.toFixed(2)),
                     efficiency,
                 });
             } catch (error) {
@@ -197,7 +197,7 @@ export default function DashboardSummary({
                                 </span>
                             </div>
                             <div className="text-xl font-bold text-secondary-foreground">
-                                ${predictions.costPerKwvh}
+                                ${predictions.costPerKwh}
                             </div>
                             <p className="text-xs text-secondary-foreground">
                                 Next week estimate

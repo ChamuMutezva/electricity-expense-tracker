@@ -658,9 +658,12 @@ export async function getUsageSummary(): Promise<UsageSummary> {
         daysWithUsage > 0 ? totalDailyUsage / daysWithUsage : 0;
     const lastTokenPurchased = tokens.at(-1);
     const lastAverageCostPerKwh =
-        (lastTokenPurchased?.total_cost ?? 0) /
-            (lastTokenPurchased?.units ?? 1) || 0;
-
+        lastTokenPurchased &&
+        lastTokenPurchased.units > 0 &&
+        lastTokenPurchased.total_cost &&
+        lastTokenPurchased.total_cost > 0
+            ? lastTokenPurchased.total_cost / lastTokenPurchased.units
+            : 0;
     let peakUsageDay = { date: "", usage: 0 };
 
     for (const day of dailyUsage) {
