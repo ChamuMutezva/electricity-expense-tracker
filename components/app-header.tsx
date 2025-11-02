@@ -29,22 +29,22 @@ export function AppHeader({
 
     return (
         <>
-            <div className="flex items-center justify-between gap-4 px-2">
-                <div className="flex items-center gap-4 justify-between px-2 w-full sm:w-auto">
+            <div className="flex items-center justify-between sm:gap-4 px-2">
+                <div className="flex items-center sm:gap-4 justify-between w-full sm:w-auto">
                     <Link
                         href="/"
                         className="flex items-center justify-start sm:justify-center gap-2 group transition-colors"
                     >
                         <div className="p-1 rounded-lg bg-primary group-hover:bg-primary/75 transition-colors">
-                            <Zap className="w-4 h-4 text-primary-foreground" />
+                            <Zap className="w-3 h-3 sm:w-5 sm:h-5 text-primary-foreground" />
                         </div>
-                        <span className="text-2xl font-bold tracking-tight text-primary group-hover:text-primary/75 transition-colors sr-only sm:not-sr-only">
+                        <span className="text-base md:text-2xl font-bold tracking-tight text-primary group-hover:text-primary/75 transition-colors sr-only sm:not-sr-only">
                             Electricity Tracker
                         </span>
                     </Link>
 
                     {meterNumber && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted">
+                        <div className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-muted">
                             <span className="text-xs font-medium text-muted-foreground">
                                 Meter:
                             </span>
@@ -61,7 +61,7 @@ export function AppHeader({
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon">
-                                    <Settings className="w-5 h-5" />
+                                    <Settings className="w-2.5 h-2.5 sm:w-5 sm:h-5" />
                                     <span className="sr-only">Settings</span>
                                 </Button>
                             </DropdownMenuTrigger>

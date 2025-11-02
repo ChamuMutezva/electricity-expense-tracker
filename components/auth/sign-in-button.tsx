@@ -42,8 +42,8 @@ export function SignInButton() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Avatar className="h-10 w-10">
+        <Button variant="ghost" className="relative h-5 w-5 sm:h-10 sm:w-10 rounded-full">
+          <Avatar className="w-5 h-5 sm:h-10 sm:w-10">
             <AvatarImage src={user.profileImageUrl || undefined} alt={user.displayName || "User"} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
