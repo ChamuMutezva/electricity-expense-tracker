@@ -145,13 +145,13 @@ export default function SmartAlerts({ readings, tokens }: SmartAlertsProps) {
   const getAlertStyles = (type: AlertItem["type"]) => {
     switch (type) {
       case "critical":
-        return "border-red-200 bg-red-50 text-red-800"
+        return "border-red-200 bg-red-50 text-red-800 dark:bg-red-800 dark:text-red-50"
       case "warning":
-        return "border-orange-200 bg-orange-50 text-orange-800"
+        return "border-orange-200 bg-orange-50 text-orange-800 dark:bg-orange-800 dark:text-orange-50"
       case "success":
-        return "border-green-200 bg-green-50 text-green-800"
+        return "border-green-200 bg-green-50 text-green-800 dark:bg-green-800 dark:text-green-50"
       default:
-        return "border-blue-200 bg-blue-50 text-blue-800"
+        return "border-blue-200 bg-blue-50 text-blue-800 dark:bg-blue-800 dark:text-blue-50"
     }
   }
 

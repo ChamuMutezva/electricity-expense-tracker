@@ -29,16 +29,16 @@ export function AppHeader({
 
     return (
         <>
-            <div className="flex items-end justify-between flex-col sm:flex-row mb-6 gap-4">
-                <div className="flex items-end gap-4 justify-between flex-col sm:flex-row w-full sm:w-auto">
+            <div className="flex items-center justify-between gap-4 px-2">
+                <div className="flex items-center gap-4 justify-between px-2 w-full sm:w-auto">
                     <Link
                         href="/"
-                        className="flex items-center justify-center gap-2 group transition-colors"
+                        className="flex items-center justify-start sm:justify-center gap-2 group transition-colors"
                     >
                         <div className="p-1 rounded-lg bg-primary group-hover:bg-primary/75 transition-colors">
                             <Zap className="w-4 h-4 text-primary-foreground" />
                         </div>
-                        <span className="text-2xl font-bold tracking-tight text-primary group-hover:text-primary/75 transition-colors">
+                        <span className="text-2xl font-bold tracking-tight text-primary group-hover:text-primary/75 transition-colors sr-only sm:not-sr-only">
                             Electricity Tracker
                         </span>
                     </Link>

@@ -61,13 +61,13 @@ export default async function HomePage() {
 
     return (
         <>
-            <header className="container mx-auto pt-8 px-4">
+            <header className="container fixed z-10 bg-secondary left-1/2 transform -translate-x-1/2 py-2 sm:my-2 sm:rounded-md shadow-lg">
                 <AppHeader
                     meterNumber={userProfile?.meter_number}
                     showMeterDialog={showMeterDialog}
                 />
             </header>
-            <main className="container mx-auto py-8 px-4">
+            <main className="container mx-auto pt-16 pb-8 px-4">
                 <div>
                     {!dbConnected && (
                         <Alert className="mb-6 bg-warning-accent border-warning-border text-warning-foreground">
