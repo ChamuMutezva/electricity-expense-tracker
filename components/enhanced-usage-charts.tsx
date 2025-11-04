@@ -399,7 +399,7 @@ export default function EnhancedUsageCharts({
                                 setTimePeriod(value as TimePeriod)
                             }
                         >
-                            <SelectTrigger className="w-[140px] bg-white dark:bg-gray-800">
+                            <SelectTrigger className=" bg-white dark:bg-gray-800">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -418,7 +418,7 @@ export default function EnhancedUsageCharts({
                                 setChartType(value as ChartType)
                             }
                         >
-                            <SelectTrigger className="w-[140px] bg-white dark:bg-gray-800">
+                            <SelectTrigger className=" bg-white dark:bg-gray-800">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -452,7 +452,7 @@ export default function EnhancedUsageCharts({
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
-                        <div className="min-w-[200px] text-center px-3 py-1">
+                        <div className=" text-center px-3 py-1">
                             <span className="text-sm font-medium">
                                 {formatCurrentPeriod()}
                             </span>
