@@ -65,7 +65,7 @@ export function LowBalanceNotification({
             case "critical":
                 return "border-border bg-destructive animate-pulse";
             case "warning":
-                return "border-border bg-primary";
+                return "border-border bg-destructive";
             case "notice":
                 return "border-border bg-muted";
             default:

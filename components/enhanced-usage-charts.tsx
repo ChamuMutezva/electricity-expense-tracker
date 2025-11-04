@@ -481,6 +481,8 @@ export default function EnhancedUsageCharts({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <div className="w-full overflow-x-auto">
+                    <div className="min-w-[500px] sm:min-w-0">
                     <ChartContainer
                         config={chartConfig}
                         className="h-[400px] w-full"
@@ -715,6 +717,8 @@ export default function EnhancedUsageCharts({
                             </RadialBarChart>
                         )}
                     </ChartContainer>
+                    </div>
+                    </div>
                 </CardContent>
             </Card>
 
