@@ -77,7 +77,7 @@ export async function fixNullUserIds(userId: string): Promise<FixResult> {
       }
     }
 
-    console.log(`[ADMIN] Fixing NULL user_id records for user: ${userId}`)
+  
 
     // Update electricity readings
     const updatedReadings = (await sql`

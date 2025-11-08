@@ -63,12 +63,12 @@ export default function BackdatedReadingForm({
     const [time, setTime] = useState("21:00"); // Default to night period (9:00 PM)
     const [customTime, setCustomTime] = useState("21:00");
     const [reading, setReading] = useState("");
-    const [period, setPeriod] = useState<"morning" | "evening" | "night">(
-        "night"
-    );
+  //  const [period, setPeriod] = useState<"morning" | "evening" | "night">(
+   //     "night"
+  //  );
     const [showSuccess, setShowSuccess] = useState(false);
     const [lastSubmittedTime, setLastSubmittedTime] = useState<string>("");
-    console.log(period)
+  //  console.log(period)
     // Get current date and time for validation
     const now = useMemo(() => new Date(), []);
     const currentHour = now.getHours();
@@ -215,21 +215,22 @@ export default function BackdatedReadingForm({
     // Update period based on selected time
     const handleTimeChange = (value: string) => {
         setTime(value);
-
+        /*
         if (value !== "custom") {
             const [hours] = value.split(":").map(Number);
             const detectedPeriod = getPeriodFromHour(hours);
             setPeriod(detectedPeriod);
-        }
+        }*/
     };
 
     const handleCustomTimeChange = (value: string) => {
         setCustomTime(value);
+        /*
         if (time === "custom") {
             const [hours] = value.split(":").map(Number);
             const detectedPeriod = getPeriodFromHour(hours);
             setPeriod(detectedPeriod);
-        }
+        }*/
     };
 
     // Handle date change with validation

@@ -53,7 +53,7 @@ export default function DashboardSummary({
             try {
                 const summary = await getUsageSummary();
                 const averageCostPerKwh = summary.lastAverageCostPerKwh || 1;
-                console.log("Usage Summary from Action:", summary);
+
                 function getEfficiency(avgDailyUsage: number) {
                     if (avgDailyUsage < 5) return "high";
                     if (avgDailyUsage > 10) return "low";
