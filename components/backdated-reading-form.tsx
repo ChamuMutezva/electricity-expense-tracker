@@ -68,7 +68,7 @@ export default function BackdatedReadingForm({
   //  );
     const [showSuccess, setShowSuccess] = useState(false);
     const [lastSubmittedTime, setLastSubmittedTime] = useState<string>("");
-  //  console.log(period)
+  
     // Get current date and time for validation
     const now = useMemo(() => new Date(), []);
     const currentHour = now.getHours();
@@ -214,23 +214,11 @@ export default function BackdatedReadingForm({
 
     // Update period based on selected time
     const handleTimeChange = (value: string) => {
-        setTime(value);
-        /*
-        if (value !== "custom") {
-            const [hours] = value.split(":").map(Number);
-            const detectedPeriod = getPeriodFromHour(hours);
-            setPeriod(detectedPeriod);
-        }*/
+        setTime(value);       
     };
 
     const handleCustomTimeChange = (value: string) => {
-        setCustomTime(value);
-        /*
-        if (time === "custom") {
-            const [hours] = value.split(":").map(Number);
-            const detectedPeriod = getPeriodFromHour(hours);
-            setPeriod(detectedPeriod);
-        }*/
+        setCustomTime(value);       
     };
 
     // Handle date change with validation
