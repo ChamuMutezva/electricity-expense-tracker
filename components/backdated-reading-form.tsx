@@ -63,9 +63,6 @@ export default function BackdatedReadingForm({
     const [time, setTime] = useState("21:00"); // Default to night period (9:00 PM)
     const [customTime, setCustomTime] = useState("21:00");
     const [reading, setReading] = useState("");
-  //  const [period, setPeriod] = useState<"morning" | "evening" | "night">(
-   //     "night"
-  //  );
     const [showSuccess, setShowSuccess] = useState(false);
     const [lastSubmittedTime, setLastSubmittedTime] = useState<string>("");
   
