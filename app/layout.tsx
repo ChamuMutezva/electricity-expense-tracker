@@ -21,7 +21,6 @@ import "./globals.css";
 import { Inter, Roboto_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 
 export const metadata: Metadata = {
     title: "Electricity Expense Tracker - Monitor Your Power Usage",
@@ -78,8 +77,7 @@ export default function RootLayout({
                     >
                         <StackTheme>
                             <ErrorBoundary>
-                                {children}
-                                <KeyboardShortcuts />
+                                {children}                               
                                 <Analytics />
                             </ErrorBoundary>
                         </StackTheme>
