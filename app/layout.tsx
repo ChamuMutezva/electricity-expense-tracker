@@ -70,20 +70,20 @@ export default function RootLayout({
         >
             <body className="font-sans">
                 <StackProvider app={stackClientApp}>
-                    <StackTheme>
-                        <ErrorBoundary>
-                            <ThemeProvider
-                                attribute="class"
-                                defaultTheme="system"
-                                enableSystem
-                                disableTransitionOnChange
-                            >
+                    <ThemeProvider
+                        attribute="class"
+                        defaultTheme="system"
+                        enableSystem
+                        disableTransitionOnChange
+                    >
+                        <StackTheme>
+                            <ErrorBoundary>
                                 {children}
                                 <KeyboardShortcuts />
                                 <Analytics />
-                            </ThemeProvider>
-                        </ErrorBoundary>
-                    </StackTheme>
+                            </ErrorBoundary>
+                        </StackTheme>
+                    </ThemeProvider>
                 </StackProvider>
             </body>
         </html>
