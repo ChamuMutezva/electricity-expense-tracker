@@ -403,13 +403,9 @@ export default function EnhancedUsageCharts({
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="weekly">
-                                    📅 Weekly
-                                </SelectItem>
-                                <SelectItem value="monthly">
-                                    📊 Monthly
-                                </SelectItem>
-                                <SelectItem value="all">🔍 All Data</SelectItem>
+                                <SelectItem value="weekly">Weekly</SelectItem>
+                                <SelectItem value="monthly">Monthly</SelectItem>
+                                <SelectItem value="all">All Data</SelectItem>
                             </SelectContent>
                         </Select>
                         <Select
@@ -482,242 +478,252 @@ export default function EnhancedUsageCharts({
                 </CardHeader>
                 <CardContent>
                     <div className="w-full overflow-x-auto">
-                    <div className="min-w-[500px] sm:min-w-0">
-                    <ChartContainer
-                        config={chartConfig}
-                        className="h-[400px] w-full"
-                    >
-                        {chartType === "area" && (
-                            <AreaChart data={filteredData}>
-                                <CartesianGrid
-                                    strokeDasharray="3 3"
-                                    className="opacity-30"
-                                />
-                                <XAxis
-                                    dataKey="formattedDate"
-                                    tick={{ fontSize: 12 }}
-                                    tickLine={{ stroke: "#e2e8f0" }}
-                                />
-                                <YAxis
-                                    tick={{ fontSize: 12 }}
-                                    tickLine={{ stroke: "#e2e8f0" }}
-                                    label={{
-                                        value: "kWh",
-                                        angle: -90,
-                                        position: "insideLeft",
-                                    }}
-                                />
-                                <ChartTooltip
-                                    content={<ChartTooltipContent />}
-                                />
-                                <ChartLegend content={<ChartLegendContent />} />
-                                <Area
-                                    type="monotone"
-                                    dataKey="morning"
-                                    stackId="1"
-                                    stroke={PERIOD_COLORS.morning}
-                                    fill={PERIOD_COLORS.morning}
-                                    fillOpacity={0.6}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="evening"
-                                    stackId="1"
-                                    stroke={PERIOD_COLORS.evening}
-                                    fill={PERIOD_COLORS.evening}
-                                    fillOpacity={0.6}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="night"
-                                    stackId="1"
-                                    stroke={PERIOD_COLORS.night}
-                                    fill={PERIOD_COLORS.night}
-                                    fillOpacity={0.6}
-                                />
-                            </AreaChart>
-                        )}
-
-                        {chartType === "line" && (
-                            <LineChart data={filteredData}>
-                                <CartesianGrid
-                                    strokeDasharray="3 3"
-                                    className="opacity-30"
-                                />
-                                <XAxis
-                                    dataKey="formattedDate"
-                                    tick={{ fontSize: 12 }}
-                                />
-                                <YAxis
-                                    tick={{ fontSize: 12 }}
-                                    label={{
-                                        value: "kWh",
-                                        angle: -90,
-                                        position: "insideLeft",
-                                    }}
-                                />
-                                <ChartTooltip
-                                    content={<ChartTooltipContent />}
-                                />
-                                <ChartLegend content={<ChartLegendContent />} />
-                                <Line
-                                    type="monotone"
-                                    dataKey="morning"
-                                    stroke={PERIOD_COLORS.morning}
-                                    strokeWidth={3}
-                                    dot={{
-                                        fill: PERIOD_COLORS.morning,
-                                        strokeWidth: 2,
-                                        r: 4,
-                                    }}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="evening"
-                                    stroke={PERIOD_COLORS.evening}
-                                    strokeWidth={3}
-                                    dot={{
-                                        fill: PERIOD_COLORS.evening,
-                                        strokeWidth: 2,
-                                        r: 4,
-                                    }}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="night"
-                                    stroke={PERIOD_COLORS.night}
-                                    strokeWidth={3}
-                                    dot={{
-                                        fill: PERIOD_COLORS.night,
-                                        strokeWidth: 2,
-                                        r: 4,
-                                    }}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="total"
-                                    stroke="#64748b"
-                                    strokeWidth={2}
-                                    strokeDasharray="5 5"
-                                    dot={{
-                                        fill: "#64748b",
-                                        strokeWidth: 2,
-                                        r: 3,
-                                    }}
-                                />
-                            </LineChart>
-                        )}
-
-                        {chartType === "bar" && (
-                            <BarChart data={filteredData}>
-                                <CartesianGrid
-                                    strokeDasharray="3 3"
-                                    className="opacity-30"
-                                />
-                                <XAxis
-                                    dataKey="formattedDate"
-                                    tick={{ fontSize: 12 }}
-                                />
-                                <YAxis
-                                    tick={{ fontSize: 12 }}
-                                    label={{
-                                        value: "kWh",
-                                        angle: -90,
-                                        position: "insideLeft",
-                                    }}
-                                />
-                                <ChartTooltip
-                                    content={<ChartTooltipContent />}
-                                />
-                                <ChartLegend content={<ChartLegendContent />} />
-                                <Bar
-                                    dataKey="morning"
-                                    fill={PERIOD_COLORS.morning}
-                                    radius={[0, 0, 4, 4]}
-                                />
-                                <Bar
-                                    dataKey="evening"
-                                    fill={PERIOD_COLORS.evening}
-                                    radius={[0, 0, 4, 4]}
-                                />
-                                <Bar
-                                    dataKey="night"
-                                    fill={PERIOD_COLORS.night}
-                                    radius={[4, 4, 0, 0]}
-                                />
-                            </BarChart>
-                        )}
-
-                        {chartType === "composed" && (
-                            <ComposedChart data={filteredData}>
-                                <CartesianGrid
-                                    strokeDasharray="3 3"
-                                    className="opacity-30"
-                                />
-                                <XAxis
-                                    dataKey="formattedDate"
-                                    tick={{ fontSize: 12 }}
-                                />
-                                <YAxis
-                                    tick={{ fontSize: 12 }}
-                                    label={{
-                                        value: "kWh",
-                                        angle: -90,
-                                        position: "insideLeft",
-                                    }}
-                                />
-                                <ChartTooltip
-                                    content={<ChartTooltipContent />}
-                                />
-                                <ChartLegend content={<ChartLegendContent />} />
-                                <Bar
-                                    dataKey="morning"
-                                    fill={PERIOD_COLORS.morning}
-                                    radius={[2, 2, 0, 0]}
-                                />
-                                <Bar
-                                    dataKey="evening"
-                                    fill={PERIOD_COLORS.evening}
-                                    radius={[2, 2, 0, 0]}
-                                />
-                                <Bar
-                                    dataKey="night"
-                                    fill={PERIOD_COLORS.night}
-                                    radius={[2, 2, 0, 0]}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="total"
-                                    stroke="#ef4444"
-                                    strokeWidth={3}
-                                    dot={{
-                                        fill: "#ef4444",
-                                        strokeWidth: 2,
-                                        r: 4,
-                                    }}
-                                />
-                            </ComposedChart>
-                        )}
-
-                        {chartType === "radial" && (
-                            <RadialBarChart
-                                data={periodStats}
-                                innerRadius="30%"
-                                outerRadius="90%"
+                        <div className="min-w-[500px] sm:min-w-0">
+                            <ChartContainer
+                                config={chartConfig}
+                                className="h-[400px] w-full"
                             >
-                                <RadialBar
-                                    dataKey="consumption"
-                                    cornerRadius={10}
-                                    fill={(entry) => entry.color}
-                                />
-                                <ChartTooltip
-                                    content={<ChartTooltipContent />}
-                                />
-                                <ChartLegend content={<ChartLegendContent />} />
-                            </RadialBarChart>
-                        )}
-                    </ChartContainer>
-                    </div>
+                                {chartType === "area" && (
+                                    <AreaChart data={filteredData}>
+                                        <CartesianGrid
+                                            strokeDasharray="3 3"
+                                            className="opacity-30"
+                                        />
+                                        <XAxis
+                                            dataKey="formattedDate"
+                                            tick={{ fontSize: 12 }}
+                                            tickLine={{ stroke: "#e2e8f0" }}
+                                        />
+                                        <YAxis
+                                            tick={{ fontSize: 12 }}
+                                            tickLine={{ stroke: "#e2e8f0" }}
+                                            label={{
+                                                value: "kWh",
+                                                angle: -90,
+                                                position: "insideLeft",
+                                            }}
+                                        />
+                                        <ChartTooltip
+                                            content={<ChartTooltipContent />}
+                                        />
+                                        <ChartLegend
+                                            content={<ChartLegendContent />}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="morning"
+                                            stackId="1"
+                                            stroke={PERIOD_COLORS.morning}
+                                            fill={PERIOD_COLORS.morning}
+                                            fillOpacity={0.6}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="evening"
+                                            stackId="1"
+                                            stroke={PERIOD_COLORS.evening}
+                                            fill={PERIOD_COLORS.evening}
+                                            fillOpacity={0.6}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="night"
+                                            stackId="1"
+                                            stroke={PERIOD_COLORS.night}
+                                            fill={PERIOD_COLORS.night}
+                                            fillOpacity={0.6}
+                                        />
+                                    </AreaChart>
+                                )}
+
+                                {chartType === "line" && (
+                                    <LineChart data={filteredData}>
+                                        <CartesianGrid
+                                            strokeDasharray="3 3"
+                                            className="opacity-30"
+                                        />
+                                        <XAxis
+                                            dataKey="formattedDate"
+                                            tick={{ fontSize: 12 }}
+                                        />
+                                        <YAxis
+                                            tick={{ fontSize: 12 }}
+                                            label={{
+                                                value: "kWh",
+                                                angle: -90,
+                                                position: "insideLeft",
+                                            }}
+                                        />
+                                        <ChartTooltip
+                                            content={<ChartTooltipContent />}
+                                        />
+                                        <ChartLegend
+                                            content={<ChartLegendContent />}
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="morning"
+                                            stroke={PERIOD_COLORS.morning}
+                                            strokeWidth={3}
+                                            dot={{
+                                                fill: PERIOD_COLORS.morning,
+                                                strokeWidth: 2,
+                                                r: 4,
+                                            }}
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="evening"
+                                            stroke={PERIOD_COLORS.evening}
+                                            strokeWidth={3}
+                                            dot={{
+                                                fill: PERIOD_COLORS.evening,
+                                                strokeWidth: 2,
+                                                r: 4,
+                                            }}
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="night"
+                                            stroke={PERIOD_COLORS.night}
+                                            strokeWidth={3}
+                                            dot={{
+                                                fill: PERIOD_COLORS.night,
+                                                strokeWidth: 2,
+                                                r: 4,
+                                            }}
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="total"
+                                            stroke="#64748b"
+                                            strokeWidth={2}
+                                            strokeDasharray="5 5"
+                                            dot={{
+                                                fill: "#64748b",
+                                                strokeWidth: 2,
+                                                r: 3,
+                                            }}
+                                        />
+                                    </LineChart>
+                                )}
+
+                                {chartType === "bar" && (
+                                    <BarChart data={filteredData}>
+                                        <CartesianGrid
+                                            strokeDasharray="3 3"
+                                            className="opacity-30"
+                                        />
+                                        <XAxis
+                                            dataKey="formattedDate"
+                                            tick={{ fontSize: 12 }}
+                                        />
+                                        <YAxis
+                                            tick={{ fontSize: 12 }}
+                                            label={{
+                                                value: "kWh",
+                                                angle: -90,
+                                                position: "insideLeft",
+                                            }}
+                                        />
+                                        <ChartTooltip
+                                            content={<ChartTooltipContent />}
+                                        />
+                                        <ChartLegend
+                                            content={<ChartLegendContent />}
+                                        />
+                                        <Bar
+                                            dataKey="morning"
+                                            fill={PERIOD_COLORS.morning}
+                                            radius={[0, 0, 4, 4]}
+                                        />
+                                        <Bar
+                                            dataKey="evening"
+                                            fill={PERIOD_COLORS.evening}
+                                            radius={[0, 0, 4, 4]}
+                                        />
+                                        <Bar
+                                            dataKey="night"
+                                            fill={PERIOD_COLORS.night}
+                                            radius={[4, 4, 0, 0]}
+                                        />
+                                    </BarChart>
+                                )}
+
+                                {chartType === "composed" && (
+                                    <ComposedChart data={filteredData}>
+                                        <CartesianGrid
+                                            strokeDasharray="3 3"
+                                            className="opacity-30"
+                                        />
+                                        <XAxis
+                                            dataKey="formattedDate"
+                                            tick={{ fontSize: 12 }}
+                                        />
+                                        <YAxis
+                                            tick={{ fontSize: 12 }}
+                                            label={{
+                                                value: "kWh",
+                                                angle: -90,
+                                                position: "insideLeft",
+                                            }}
+                                        />
+                                        <ChartTooltip
+                                            content={<ChartTooltipContent />}
+                                        />
+                                        <ChartLegend
+                                            content={<ChartLegendContent />}
+                                        />
+                                        <Bar
+                                            dataKey="morning"
+                                            fill={PERIOD_COLORS.morning}
+                                            radius={[2, 2, 0, 0]}
+                                        />
+                                        <Bar
+                                            dataKey="evening"
+                                            fill={PERIOD_COLORS.evening}
+                                            radius={[2, 2, 0, 0]}
+                                        />
+                                        <Bar
+                                            dataKey="night"
+                                            fill={PERIOD_COLORS.night}
+                                            radius={[2, 2, 0, 0]}
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="total"
+                                            stroke="#ef4444"
+                                            strokeWidth={3}
+                                            dot={{
+                                                fill: "#ef4444",
+                                                strokeWidth: 2,
+                                                r: 4,
+                                            }}
+                                        />
+                                    </ComposedChart>
+                                )}
+
+                                {chartType === "radial" && (
+                                    <RadialBarChart
+                                        data={periodStats}
+                                        innerRadius="30%"
+                                        outerRadius="90%"
+                                    >
+                                        <RadialBar
+                                            dataKey="consumption"
+                                            cornerRadius={10}
+                                            fill={(entry) => entry.color}
+                                        />
+                                        <ChartTooltip
+                                            content={<ChartTooltipContent />}
+                                        />
+                                        <ChartLegend
+                                            content={<ChartLegendContent />}
+                                        />
+                                    </RadialBarChart>
+                                )}
+                            </ChartContainer>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
