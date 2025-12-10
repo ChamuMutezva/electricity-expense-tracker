@@ -101,7 +101,7 @@ import {
     TrendingUp,
     FileText,
 } from "lucide-react";
-import { getTimeString } from "@/lib/date-utils";
+
 import type { ElectricityTrackerProps } from "@/lib/types";
 import UpdateReminderNotification from "./UpdateReminderNotification";
 import { LowBalanceNotification } from "./low-balance-notification";
@@ -277,12 +277,7 @@ function ElectricityTrackerContent({
                                     )}
                                 </div>
 
-                                <DashboardTabs
-                                    latestReading={state.latestReading}
-                                    totalUnits={state.totalUnits}
-                                    nextUpdate={state.nextUpdate}
-                                    getTimeString={getTimeString}
-                                    timeUntilUpdate={state.timeUntilUpdate}
+                                <DashboardTabs                                    
                                     readings={state.readings}
                                     tokens={state.tokens}
                                     currentReading={state.currentReading}

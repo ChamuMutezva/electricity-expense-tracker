@@ -22,24 +22,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import type { ElectricityReading } from "@/lib/types";
 import { getUsageSummary } from "@/actions/electricity-actions";
+import { useElectricity } from "@/contexts/ElectricityContext";
+import { getTimeString } from "@/lib/date-utils";
 
 type DashboardSummaryProps = {
-    latestReading: number;
-    totalUnits: number;
-    nextUpdate?: Date | null;
-    getTimeString: (date: Date) => string;
-    timeUntilUpdate: string;
     readings?: ElectricityReading[]; // Add this for predictions
 };
 
 export default function DashboardSummary({
-    latestReading,
-    totalUnits,
-    nextUpdate,
-    getTimeString,
-    timeUntilUpdate,
     readings = [],
 }: Readonly<DashboardSummaryProps>) {
+    const { state } = useElectricity();
     const [predictions, setPredictions] = useState({
         nextWeekUsage: 0,
         estimatedCost: 0,
@@ -88,13 +81,13 @@ export default function DashboardSummary({
     };
 
     const getBalanceStatus = () => {
-        if (latestReading < 20)
+        if (state.latestReading < 20)
             return {
                 status: "critical",
                 color: "text-red-600",
                 icon: <AlertTriangle className="h-4 w-4" />,
             };
-        if (latestReading < 50)
+        if (state.latestReading < 50)
             return {
                 status: "low",
                 color: "text-orange-600",
@@ -120,7 +113,7 @@ export default function DashboardSummary({
                                 Latest Reading
                             </h3>
                             <p className="text-2xl font-bold flex items-center gap-2">
-                                {latestReading} kWh
+                                {state.latestReading} kWh
                                 <span
                                     className={`text-sm ${balanceStatus.color}`}
                                 >
@@ -136,7 +129,7 @@ export default function DashboardSummary({
                         Total Units Used
                     </h3>
                     <p className="text-2xl font-bold">
-                        {totalUnits.toFixed(2)} kWh
+                        {state.totalUnits.toFixed(2)} kWh
                     </p>
                 </div>
 
@@ -145,9 +138,11 @@ export default function DashboardSummary({
                         Next Update
                     </h3>
                     <p className="text-2xl font-bold">
-                        {nextUpdate ? getTimeString(nextUpdate) : "--:--"}
+                        {state.nextUpdate
+                            ? getTimeString(state.nextUpdate)
+                            : "--:--"}
                     </p>
-                    <p className="text-sm">In {timeUntilUpdate}</p>
+                    <p className="text-sm">In {state.timeUntilUpdate}</p>
                 </div>
             </div>
 

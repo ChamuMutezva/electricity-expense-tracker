@@ -16,17 +16,12 @@ import UpdateReminderNotification from "../UpdateReminderNotification";
 import UsageSummary from "../usage-summary";
 import WeatherUsageCorrelation from "../WeatherUsageCorelation";
 import { ElectricityReading, TokenPurchase } from "@/lib/types";
+// import { useElectricity } from "@/contexts/ElectricityContext";
 
 type DashboardTabsProps = {
-    latestReading: number;
-    totalUnits: number;
-    nextUpdate?: Date | null;
-    getTimeString: (date: Date) => string;
-    timeUntilUpdate: string;
     readings?: ElectricityReading[];
     showNotification: boolean;
     tokens: TokenPurchase[];
-
     currentReading: string | number;
     setCurrentReading: (value: string) => void;
     handleAddReading: (forceUpdate?: boolean) => Promise<void>;
@@ -37,19 +32,12 @@ type DashboardTabsProps = {
 };
 
 function DashboardTabs({
-    latestReading,
-    totalUnits,
-    nextUpdate,
-    getTimeString,
-    timeUntilUpdate,
     readings = [],
     showNotification,
     tokens,
     currentReading,
     setCurrentReading,
     handleAddReading,
-    isSubmitting,
-    isSubmitted,
     enableNotifications,
     notificationsEnabled,
 }: Readonly<DashboardTabsProps>) {
@@ -66,31 +54,20 @@ function DashboardTabs({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-6">                       
-                            <div className="space-y-4">
-                                <UpdateMeterReading
-                                    currentReading={currentReading}
-                                    setCurrentReading={setCurrentReading}
-                                    handleAddReading={handleAddReading}
-                                    isSubmitting={isSubmitting}
-                                    isSubmitted={isSubmitted}
+                    <div className="space-y-6">
+                        <div className="space-y-4">
+                            <UpdateMeterReading
+                                currentReading={currentReading}
+                                setCurrentReading={setCurrentReading}
+                                handleAddReading={handleAddReading}
+                            />
+                            {!notificationsEnabled && (
+                                <NotificationsAlert
+                                    enableNotifications={enableNotifications}
                                 />
-                                {!notificationsEnabled && (
-                                    <NotificationsAlert
-                                        enableNotifications={
-                                            enableNotifications
-                                        }
-                                    />
-                                )}
-                            </div>
-                            <DashboardSummary
-                                latestReading={latestReading}
-                                totalUnits={totalUnits}
-                                nextUpdate={nextUpdate}
-                                getTimeString={getTimeString}
-                                timeUntilUpdate={timeUntilUpdate}
-                                readings={readings}
-                            />                        
+                            )}
+                        </div>
+                        <DashboardSummary readings={readings} />
                         <WeatherUsageCorrelation />
                         {showNotification && <UpdateReminderNotification />}
                         <SmartAlerts readings={readings} tokens={tokens} />

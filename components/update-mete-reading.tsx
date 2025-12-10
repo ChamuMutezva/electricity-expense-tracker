@@ -29,6 +29,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useElectricity } from "@/contexts/ElectricityContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,26 +46,15 @@ import { getPeriodFromHour } from "@/lib/timezone-utils";
 type UpdateMeterReadingProps = {
     currentReading: string | number;
     setCurrentReading: (value: string) => void;
-    handleAddReading: (forceUpdate?: boolean) => Promise<void>;
-    isSubmitting: boolean;
-    isSubmitted: boolean;
-    label?: string;
-    placeholder?: string;
-    buttonText?: string;
-    loadingText?: string;
+    handleAddReading: (forceUpdate?: boolean) => Promise<void>;  
 };
 
 export const UpdateMeterReading = ({
     currentReading,
     setCurrentReading,
-    handleAddReading,
-    isSubmitting,
-    isSubmitted,
-    label = "Update Electricity Reading",
-    placeholder = "Enter current meter reading",
-    buttonText = "Update",
-    loadingText = "Updating...",
+    handleAddReading,  
 }: UpdateMeterReadingProps) => {
+    const { state } = useElectricity();
     const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
     const [existingReading, setExistingReading] = useState<{
         reading: number;
@@ -218,10 +208,10 @@ export const UpdateMeterReading = ({
                                 <Button
                                     size="sm"
                                     onClick={handleForceUpdate}
-                                    disabled={isSubmitting}
+                                    disabled={state.isSubmitting}
                                     className="bg-amber-600 hover:bg-amber-700 text-white"
                                 >
-                                    {isSubmitting
+                                    {state.isSubmitting
                                         ? "Updating..."
                                         : "Yes, Update Reading"}
                                 </Button>
@@ -229,7 +219,7 @@ export const UpdateMeterReading = ({
                                     size="sm"
                                     variant="outline"
                                     onClick={handleCancelUpdate}
-                                    disabled={isSubmitting}
+                                    disabled={state.isSubmitting}
                                     className="border-amber-300 text-amber-700 hover:bg-amber-100"
                                 >
                                     Cancel
@@ -282,17 +272,17 @@ export const UpdateMeterReading = ({
 
             {/* Reading Input */}
             <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="reading">{label}</Label>
+                <Label htmlFor="reading">Update Electricity Reading</Label>
                 <div className="flex gap-2">
                     <Input
                         id="reading"
-                        placeholder={placeholder}
+                        placeholder={"Enter current meter reading"}
                         value={currentReading}
                         onChange={(e) => setCurrentReading(e.target.value)}
                         type="number"
                         step="0.01"
                         className={
-                            !currentReading && isSubmitted
+                            !currentReading && state.isSubmitted
                                 ? "border-red-500"
                                 : ""
                         }
@@ -301,29 +291,29 @@ export const UpdateMeterReading = ({
                     <Button
                         onClick={handleSubmit}
                         disabled={
-                            isSubmitting ||
+                            state.isSubmitting ||
                             showDuplicateAlert ||
                             !currentReading
                         }
                         className={`hover:decoration-wavy hover:underline hover:underline-offset-4 hover:white focus:decoration-wavy focus:underline focus:underline-offset-4 focus:white transition-all duration-200 ${
-                            isSubmitting ? "bg-blue-400 cursor-not-allowed" : ""
+                        state.isSubmitting ? "bg-blue-400 cursor-not-allowed" : ""
                         }`}
                     >
-                        {isSubmitting ? (
+                        {state.isSubmitting ? (
                             <div className="flex items-center gap-2">
                                 <RefreshCw className="h-4 w-4 animate-spin" />
-                                {loadingText}
+                                Updating...
                             </div>
                         ) : (
                             <div className="flex items-center gap-2">
                                 <Zap className="h-4 w-4" />
-                                {buttonText}
+                                Update
                             </div>
                         )}
                     </Button>
                 </div>
                 {/* Error message display */}
-                {!currentReading && isSubmitted && (
+                {!currentReading && state.isSubmitted && (
                     <p className="text-sm text-red-500">
                         Please enter a valid reading
                     </p>
